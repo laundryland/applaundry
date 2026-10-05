@@ -876,21 +876,7 @@ body {
 
 <script src="https://unpkg.com/dexie@4.0.11/dist/dexie.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script>
-const SUPABASE_URL = localStorage.getItem('supabase_url') || 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_ANON_KEY = localStorage.getItem('supabase_key') || 'YOUR_ANON_KEY';
-let supabaseClient = null;
-try{ if(SUPABASE_URL.includes('supabase.co') && !SUPABASE_URL.includes('YOUR_PROJECT')) supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }catch(e){}
-const db = new Dexie('LaundryPWA_Locked_v3');
-
-db.version(2).stores({ 
-  karyawan: 'id, outlet_id, username, level', 
-  sync_queue: '++qid, table_name, created_at',
-  struk_settings: 'id, outletId, key'
-});
-
-if(navigator.storage && navigator.storage.persist){ navigator.storage.persist(); }
-</script>
+<script>/* cleaned duplicate supabase init - use main supabaseConfig */</script>
 
 <script>
 // HYBRID STORAGE: localStorage + IndexedDB + Supabase sync untuk Master Struk
@@ -8423,25 +8409,37 @@ function importFullBackup(event){ var file=event.target.files[0]; if(!file) retu
 
 
 <script>
-// v1.2 Supabase Realtime - Global Omzet Laundry Land & ResiQ sinkron otomatis
+
+// v2.0 Supabase Realtime - FIXED: Auto-sync seperti kelolalaundry.com (tanpa upload manual)
 var supabaseClient = null;
 var supabaseChannel = null;
-var supabaseConfig = JSON.parse(localStorage.getItem('supabaseConfig')||'{"url":"","key":""}');
+var supabaseConfig = JSON.parse(localStorage.getItem('supabaseConfig')||'null') || {url: localStorage.getItem('supabase_url')||'https://nniecqbfjmmlrtmolnrt.supabase.co', key: localStorage.getItem('supabase_anon')||localStorage.getItem('supabase_key')||''};
 
 function initSupabase(){
   try{
-    var url = supabaseConfig.url || document.getElementById('supabaseUrl')?.value;
-    var key = supabaseConfig.key || document.getElementById('supabaseKey')?.value;
+    var urlEl = document.getElementById('supabaseUrl');
+    var keyEl = document.getElementById('supabaseKey');
+    var url = (supabaseConfig.url || urlEl?.value || '').trim();
+    var key = (supabaseConfig.key || keyEl?.value || '').trim();
+    // auto fix https
+    if(url && !url.startsWith('http')) url = 'https://' + url;
+    url = url.replace(/\/$/,'');
     if(!url || !key || !url.includes('supabase.co')) {
       updateSupabaseStatus('❌ Belum connect - isi URL & Key');
       return false;
     }
     if(typeof supabase==='undefined' || !supabase.createClient){
-      updateSupabaseStatus('❌ Lib Supabase belum load');
+      updateSupabaseStatus('❌ Lib Supabase belum load, refresh');
       return false;
     }
     supabaseClient = supabase.createClient(url, key);
-    updateSupabaseStatus('✅ Connected: '+url.slice(8,28)+'...');
+    // Simpan ke semua key biar kompatibel dengan file test
+    supabaseConfig = {url:url, key:key};
+    localStorage.setItem('supabaseConfig', JSON.stringify(supabaseConfig));
+    localStorage.setItem('supabase_url', url);
+    localStorage.setItem('supabase_anon', key);
+    localStorage.setItem('supabase_key', key);
+    updateSupabaseStatus('✅ Connected: '+url.slice(8,30)+'...');
     logSupabase('✅ Supabase client init: '+url);
     setupRealtime();
     loadFromSupabase();
@@ -8465,53 +8463,51 @@ function logSupabase(msg){
 function setupRealtime(){
   if(!supabaseClient) return;
   try{
-    // Channel untuk semua tabel penting
+    if(supabaseChannel){ supabaseClient.removeChannel(supabaseChannel); }
     supabaseChannel = supabaseClient.channel('global-omzet-realtime')
       .on('postgres_changes', {event:'*', schema:'public', table:'antrian'}, (payload)=>{
         logSupabase('🔔 Antrian '+payload.eventType+': '+(payload.new?.nota||payload.old?.nota||''));
         if(payload.eventType==='INSERT' && payload.new){
-          // Tambah ke antrianData lokal
           if(typeof antrianData!=='undefined'){
-            var exists = antrianData.find(a=>a.id===payload.new.id);
+            var exists = antrianData.find(a=>a.id===payload.new.id || a.nota===payload.new.nota);
             if(!exists){
-              antrianData.unshift(payload.new);
+              // Convert supabase format to local format
+              var mapped = {
+                id: payload.new.id,
+                outletId: payload.new.outlet_id||'outlet-1',
+                nota: payload.new.nota||'#NT-'+payload.new.id,
+                namaPelanggan: payload.new.pelanggan||payload.new.nama_pelanggan||'Pelanggan',
+                totalNota: payload.new.total||0,
+                statusProses: payload.new.status||'Antrian',
+                statusBayar: payload.new.status_bayar||'Belum Lunas',
+                layanan: payload.new.layanan||'',
+                tanggal: payload.new.created_at||new Date().toISOString(),
+                estimasiFormatted: payload.new.estimasi||''
+              };
+              antrianData.unshift(mapped);
               if(typeof renderAntrianList==='function') renderAntrianList();
+              if(typeof updateSummaryCounters==='function') updateSummaryCounters();
+              if(typeof hitungRingkasanKas==='function') hitungRingkasanKas();
+            }
+          }
+        }
+        if(payload.eventType==='UPDATE' && payload.new){
+          if(typeof antrianData!=='undefined'){
+            var idx = antrianData.findIndex(a=>a.id===payload.new.id || a.nota===payload.new.nota);
+            if(idx>=0){
+              antrianData[idx].statusProses = payload.new.status||antrianData[idx].statusProses;
+              antrianData[idx].statusBayar = payload.new.status_bayar||antrianData[idx].statusBayar;
+              antrianData[idx].totalNota = payload.new.total||antrianData[idx].totalNota;
+              if(typeof renderAntrianList==='function') renderAntrianList();
+              if(typeof updateSummaryCounters==='function') updateSummaryCounters();
             }
           }
         }
         if(typeof updateGlobalOmzetCard==='function') updateGlobalOmzetCard();
       })
-      .on('postgres_changes', {event:'*', schema:'public', table:'outlets'}, (payload)=>{
-        logSupabase('🏠 Outlet '+payload.eventType+': '+(payload.new?.nama||''));
-        if(payload.new && typeof outletsData!=='undefined'){
-          var idx = outletsData.findIndex(o=>o.id===payload.new.id);
-          if(idx>=0) outletsData[idx]=payload.new;
-          else outletsData.push(payload.new);
-          if(typeof renderOutletList==='function') renderOutletList();
-          if(typeof updateGlobalOmzetCard==='function') updateGlobalOmzetCard();
-        }
-      })
-      .on('postgres_changes', {event:'*', schema:'public', table:'pelanggan'}, (payload)=>{
-        logSupabase('👤 Pelanggan '+payload.eventType);
-        if(payload.new && typeof pelangganData!=='undefined'){
-          var idx = pelangganData.findIndex(p=>p.id===payload.new.id);
-          if(idx>=0) pelangganData[idx]=payload.new;
-          else pelangganData.push(payload.new);
-          if(typeof renderPelangganList==='function') renderPelangganList();
-        }
-      })
-      .on('postgres_changes', {event:'*', schema:'public', table:'layanan'}, (payload)=>{
-        logSupabase('🏷️ Layanan '+payload.eventType);
-        if(payload.new && typeof layananData!=='undefined'){
-          var idx = layananData.findIndex(l=>l.id===payload.new.id);
-          if(idx>=0) layananData[idx]=payload.new;
-          else layananData.push(payload.new);
-          if(typeof renderLayananList==='function') renderLayananList();
-        }
-      })
       .subscribe((status)=>{
         logSupabase('📡 Realtime status: '+status);
-        if(status==='SUBSCRIBED') updateSupabaseStatus('✅ Realtime aktif - Laundry Land & ResiQ sinkron');
+        if(status==='SUBSCRIBED') updateSupabaseStatus('✅ Realtime aktif - Laundry Land & ResiQ sinkron (auto seperti kelolalaundry.com)');
       });
   }catch(e){
     logSupabase('❌ Realtime error: '+e.message);
@@ -8521,64 +8517,61 @@ function setupRealtime(){
 async function loadFromSupabase(){
   if(!supabaseClient) return;
   try{
-    var {data: outlets, error: e1} = await supabaseClient.from('outlets').select('*');
-    if(outlets && outlets.length>0){
-      outletsData = outlets;
-      try{ localStorage.setItem('outletsData', JSON.stringify(outletsData)); }catch(e){}
-      if(typeof renderOutletList==='function') renderOutletList();
-      if(typeof renderHeaderOutletDropdown==='function') renderHeaderOutletDropdown();
-      logSupabase('⬇️ Loaded '+outlets.length+' outlets dari Supabase');
-    }
-    var {data: pelanggan} = await supabaseClient.from('pelanggan').select('*');
-    if(pelanggan && pelanggan.length>0){
-      pelangganData = pelanggan;
-      localStorage.setItem('pelangganData', JSON.stringify(pelangganData));
-      if(typeof renderPelangganList==='function') renderPelangganList();
-      logSupabase('⬇️ Loaded '+pelanggan.length+' pelanggan');
-    }
-    var {data: layanan} = await supabaseClient.from('layanan').select('*');
-    if(layanan && layanan.length>0){
-      layananData = layanan;
-      localStorage.setItem('layananData', JSON.stringify(layananData));
-      if(typeof renderLayananList==='function') renderLayananList();
-      logSupabase('⬇️ Loaded '+layanan.length+' layanan');
-    }
-    var {data: antrian} = await supabaseClient.from('antrian').select('*').order('created_at',{ascending:false}).limit(100);
+    var {data: antrian, error} = await supabaseClient.from('antrian').select('*').order('created_at',{ascending:false}).limit(100);
+    if(error){ logSupabase('❌ Load antrian error: '+error.message); return; }
     if(antrian && antrian.length>0){
-      antrianData = antrian;
-      localStorage.setItem('antrianData', JSON.stringify(antrianData));
-      if(typeof renderAntrianList==='function') renderAntrianList();
-      logSupabase('⬇️ Loaded '+antrian.length+' antrian');
+      logSupabase('⬇️ Loaded '+antrian.length+' antrian dari Supabase (auto-sync)');
+      // Merge to local if empty or for Global Omzet calc
+      if(typeof antrianData!=='undefined' && antrianData.length<=2){
+        // Jika data lokal cuma dummy, ganti dengan data supabase
+        var mapped = antrian.map(r=>({
+          id: r.id,
+          outletId: r.outlet_id||'outlet-1',
+          nota: r.nota||'#NT-'+r.id.slice(0,6),
+          namaPelanggan: r.pelanggan||'Pelanggan',
+          totalNota: r.total||0,
+          statusProses: r.status||'Selesai',
+          statusBayar: r.status_bayar||'Lunas',
+          layanan: r.layanan||'',
+          tanggal: r.created_at,
+          estimasiFormatted: r.created_at
+        }));
+        antrianData = mapped;
+        if(typeof renderAntrianList==='function') renderAntrianList();
+        if(typeof updateSummaryCounters==='function') updateSummaryCounters();
+        if(typeof hitungRingkasanKas==='function') hitungRingkasanKas();
+      }
+      if(typeof updateGlobalOmzetCard==='function') updateGlobalOmzetCard();
+    } else {
+      logSupabase('⬇️ Supabase kosong, siap terima nota baru');
     }
-    if(typeof updateGlobalOmzetCard==='function') updateGlobalOmzetCard();
-  }catch(e){
-    logSupabase('❌ Load error: '+e.message);
-  }
+  }catch(e){ logSupabase('❌ Load error: '+e.message); }
 }
 
 async function syncToSupabase(){
   if(!supabaseClient){ if(!initSupabase()){ alert('Isi Supabase URL & Key dulu'); return; } }
-  logSupabase('⬆️ Uploading local → Supabase...');
+  logSupabase('⬆️ Uploading local → Supabase (legacy, sekarang auto)...');
   try{
-    if(typeof outletsData!=='undefined' && outletsData.length>0){
-      var {error} = await supabaseClient.from('outlets').upsert(outletsData, {onConflict:'id'});
-      logSupabase(error ? '❌ Outlet upload error: '+error.message : '✅ '+outletsData.length+' outlets uploaded');
+    if(typeof antrianData!=='undefined'){
+      for(var i=0;i<Math.min(antrianData.length,50);i++){
+        var a = antrianData[i];
+        var payload = {
+          id: a.id||('nota-'+Date.now()+'-'+i),
+          nota: a.nota||'#NT-'+(1000+i),
+          pelanggan: a.namaPelanggan||'Pelanggan',
+          layanan: a.layanan||'Cuci',
+          total: a.totalNota||0,
+          status: a.statusProses||'Antrian',
+          status_bayar: a.statusBayar||'Belum Lunas',
+          outlet_id: a.outletId||'outlet-1',
+          created_at: a.tanggal||new Date().toISOString()
+        };
+        var {error} = await supabaseClient.from('antrian').upsert(payload, {onConflict:'id'});
+        if(error) logSupabase('❌ Antrian '+a.nota+': '+error.message);
+      }
+      logSupabase('✅ '+antrianData.length+' antrian synced');
     }
-    if(typeof pelangganData!=='undefined' && pelangganData.length>0){
-      var {error} = await supabaseClient.from('pelanggan').upsert(pelangganData, {onConflict:'id'});
-      logSupabase(error ? '❌ Pelanggan error: '+error.message : '✅ '+pelangganData.length+' pelanggan uploaded');
-    }
-    if(typeof layananData!=='undefined' && layananData.length>0){
-      var {error} = await supabaseClient.from('layanan').upsert(layananData, {onConflict:'id'});
-      logSupabase(error ? '❌ Layanan error: '+error.message : '✅ '+layananData.length+' layanan uploaded');
-    }
-    if(typeof antrianData!=='undefined' && antrianData.length>0){
-      // Upload only today's antrian to avoid huge
-      var todayData = antrianData.slice(0,50);
-      var {error} = await supabaseClient.from('antrian').upsert(todayData, {onConflict:'id'});
-      logSupabase(error ? '❌ Antrian error: '+error.message : '✅ '+todayData.length+' antrian uploaded');
-    }
-    if(typeof showNoticeToast==='function') showNoticeToast('⬆️ Sync ke Supabase selesai - Laundry Land & ResiQ sinkron');
+    if(typeof showNoticeToast==='function') showNoticeToast('⬆️ Sync ke Supabase selesai');
   }catch(e){ logSupabase('❌ Upload error: '+e.message); }
 }
 
@@ -8591,40 +8584,52 @@ async function syncFromSupabase(){
 function saveSupabaseConfig(){
   var url = document.getElementById('supabaseUrl')?.value.trim();
   var key = document.getElementById('supabaseKey')?.value.trim();
+  if(url && !url.startsWith('http')) url = 'https://'+url;
+  url = url.replace(/\/$/,'');
   if(!url || !key){ alert('Isi URL & Anon Key dulu'); return; }
   supabaseConfig = {url:url, key:key};
   localStorage.setItem('supabaseConfig', JSON.stringify(supabaseConfig));
-  if(typeof saveHybridStruk==='function') saveHybridStruk('supabaseConfig', supabaseConfig);
-  logSupabase('💾 Config saved');
+  localStorage.setItem('supabase_url', url);
+  localStorage.setItem('supabase_anon', key);
+  localStorage.setItem('supabase_key', key);
+  logSupabase('💾 Config saved: '+url);
   initSupabase();
-  if(typeof showNoticeToast==='function') showNoticeToast('✅ Supabase tersimpan - Realtime aktif!');
+  if(typeof showNoticeToast==='function') showNoticeToast('✅ Supabase tersimpan - Realtime aktif! Sekarang seperti kelolalaundry.com, nota auto-sync');
+  // close modal after 1s
+  setTimeout(()=>closeSupabaseModal(), 1000);
 }
 
-function testSupabaseConnection(){
+async function testSupabaseConnection(){
   var url = document.getElementById('supabaseUrl')?.value.trim();
   var key = document.getElementById('supabaseKey')?.value.trim();
+  if(url && !url.startsWith('http')) url = 'https://'+url;
+  url = url.replace(/\/$/,'');
   if(!url || !key){ alert('Isi URL & Key'); return; }
   supabaseConfig = {url:url, key:key};
+  localStorage.setItem('supabaseConfig', JSON.stringify(supabaseConfig));
+  localStorage.setItem('supabase_url', url);
+  localStorage.setItem('supabase_anon', key);
+  localStorage.setItem('supabase_key', key);
   logSupabase('🔍 Testing '+url+'...');
   initSupabase();
   setTimeout(async ()=>{
-    if(!supabaseClient) return;
+    if(!supabaseClient){ logSupabase('❌ Client belum init'); return; }
     try{
-      var {data, error} = await supabaseClient.from('outlets').select('count').limit(1);
-      if(error) logSupabase('❌ Test error: '+error.message);
-      else { logSupabase('✅ Test OK - Supabase connect!'); updateSupabaseStatus('✅ Test OK - Connected'); }
+      var {data, error} = await supabaseClient.from('antrian').select('id').limit(1);
+      if(error) { logSupabase('❌ Test error: '+error.message); updateSupabaseStatus('❌ Test gagal: '+error.message); }
+      else { logSupabase('✅ Test OK - '+ (data?data.length:0) +' rows, Supabase connect!'); updateSupabaseStatus('✅ Test OK - Connected & Realtime aktif'); if(typeof showNoticeToast==='function') showNoticeToast('✅ Test OK - Supabase connect!'); }
     }catch(e){ logSupabase('❌ Test exception: '+e.message); }
-  }, 1000);
+  }, 1200);
 }
 
 function openSupabaseModal(){
-  var cfg = JSON.parse(localStorage.getItem('supabaseConfig')||'{"url":"","key":""}');
+  var cfg = JSON.parse(localStorage.getItem('supabaseConfig')||'null') || {url: localStorage.getItem('supabase_url')||'https://nniecqbfjmmlrtmolnrt.supabase.co', key: localStorage.getItem('supabase_anon')||localStorage.getItem('supabase_key')||''};
   var urlEl=document.getElementById('supabaseUrl');
   var keyEl=document.getElementById('supabaseKey');
   if(urlEl) urlEl.value=cfg.url||'';
   if(keyEl) keyEl.value=cfg.key||'';
   document.getElementById('modalSupabaseOverlay').classList.add('active');
-  if(cfg.url) initSupabase();
+  if(cfg.url && cfg.key) initSupabase();
 }
 function closeSupabaseModal(){ document.getElementById('modalSupabaseOverlay').classList.remove('active'); }
 
@@ -8632,41 +8637,83 @@ function closeSupabaseModal(){ document.getElementById('modalSupabaseOverlay').c
 document.addEventListener('DOMContentLoaded', function(){
   setTimeout(function(){
     var cfg = JSON.parse(localStorage.getItem('supabaseConfig')||'null');
+    if(!cfg){
+      var url = localStorage.getItem('supabase_url');
+      var key = localStorage.getItem('supabase_anon')||localStorage.getItem('supabase_key');
+      if(url && key) cfg = {url:url, key:key};
+    }
     if(cfg && cfg.url){
       var urlEl=document.getElementById('supabaseUrl');
       var keyEl=document.getElementById('supabaseKey');
       if(urlEl) urlEl.value=cfg.url;
       if(keyEl) keyEl.value=cfg.key;
+      supabaseConfig = cfg;
       initSupabase();
+    } else {
+      // prefill default project
+      var urlEl=document.getElementById('supabaseUrl');
+      if(urlEl) urlEl.value='https://nniecqbfjmmlrtmolnrt.supabase.co';
     }
-  }, 1500);
+  }, 1000);
 });
 
-// Override simpan functions to also push to Supabase realtime
-var origSimpanOutletSupa = window.simpanOutlet;
-if(typeof origSimpanOutletSupa==='function'){
-  window.simpanOutlet = async function(){
-    var result = origSimpanOutletSupa.apply(this, arguments);
-    setTimeout(async ()=>{
-      if(supabaseClient && typeof outletsData!=='undefined'){
-        try{ await supabaseClient.from('outlets').upsert(outletsData, {onConflict:'id'}); logSupabase('⬆️ Outlet auto-sync ke Supabase'); }catch(e){}
-      }
-      if(typeof updateGlobalOmzetCard==='function') updateGlobalOmzetCard();
-    }, 800);
-    return result;
-  };
-}
+// === AUTO-SYNC seperti kelolalaundry.com - OVERRIDE simpanNotaBaru tanpa ubah tampilan ===
+(function(){
+  var _origSimpanNotaBaru = window.simpanNotaBaru;
+  if(typeof _origSimpanNotaBaru==='function'){
+    window.simpanNotaBaru = async function(){
+      // Panggil fungsi asli dulu (tampilan tetap sama)
+      var result = _origSimpanNotaBaru.apply(this, arguments);
+      // Auto-sync ke Supabase setelah 300ms
+      setTimeout(async ()=>{
+        try{
+          if(!supabaseClient) initSupabase();
+          if(!supabaseClient){ console.log('Supabase belum connect, nota hanya lokal'); return; }
+          var last = antrianData && antrianData[0] ? antrianData[0] : null;
+          if(!last) return;
+          var payload = {
+            id: last.id,
+            nota: last.nota,
+            pelanggan: last.namaPelanggan,
+            layanan: last.layanan,
+            total: last.totalNota,
+            status: last.statusProses,
+            status_bayar: last.statusBayar,
+            outlet_id: last.outletId,
+            created_at: last.tanggal
+          };
+          var {error} = await supabaseClient.from('antrian').upsert(payload, {onConflict:'id'});
+          if(error) logSupabase('❌ Auto-sync gagal: '+error.message);
+          else {
+            logSupabase('✅ Auto-sync seperti kelolalaundry.com: '+last.nota+' → Supabase');
+            if(typeof showNoticeToast==='function') showNoticeToast('☁️ Auto-sync ke cloud: '+last.nota);
+          }
+        }catch(e){ logSupabase('❌ Auto-sync exception: '+e.message); }
+      }, 400);
+      return result;
+    };
+  }
+})();
 
-// Hook antrian save
-var origTambahAntrian = window.tambahAntrianBaru || window.simpanAntrian;
-if(typeof origTambahAntrian==='function'){
-  // Will auto sync via realtime after reload, but also push
-  setInterval(async ()=>{
-    if(supabaseClient && typeof antrianData!=='undefined' && antrianData.length>0){
-      // Push latest 1 not yet pushed - simple
-    }
-  }, 10000);
-}
+// Also auto-sync when status changes (Bayar, Proses, etc)
+(function(){
+  // Hook for bayar / update status
+  var origUpdateStatus = window.updateStatusProses;
+  if(typeof origUpdateStatus==='function'){
+    window.updateStatusProses = async function(id, newStatus){
+      var res = origUpdateStatus.apply(this, arguments);
+      setTimeout(async ()=>{
+        if(!supabaseClient) return;
+        var nota = antrianData.find(a=>a.id===id);
+        if(nota){
+          await supabaseClient.from('antrian').update({status:newStatus}).eq('id', id);
+          logSupabase('✅ Status auto-sync: '+nota.nota+' → '+newStatus);
+        }
+      }, 500);
+      return res;
+    };
+  }
+})();
 </script>
 
 </body>
