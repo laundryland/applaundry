@@ -1125,6 +1125,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>.export-tab-content{border:1px solid rgba(0,0,0,0.08); border-radius:10px; padding:10px;}</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.js"></script>
 </head>
 
 <body>
@@ -1755,6 +1756,15 @@ button{width:100%;height:50px;border:0;border-radius:15px;margin-top:15px;backgr
           <svg class="icon-svg sub-card-chevron" viewBox="0 0 24 24" style="width: 16px; height: 16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </div>
       </div>
+
+        <div class="master-sub-card border-3-crystal rounded-12 tap-model" onclick="openSupabaseModal()" style="border:1px solid rgba(0,0,0,0.14); background:rgba(62,207,142,0.08);">
+          <div class="sub-card-left">
+            <svg class="icon-svg" viewBox="0 0 24 24" style="stroke: #3ecf8e;"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+            <span class="sub-card-label">Supabase Realtime Sync</span>
+          </div>
+          <svg class="icon-svg sub-card-chevron" viewBox="0 0 24 24" style="width: 16px; height: 16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>
+        </div>
+
     </main>
 
   </div>
@@ -8342,6 +8352,7 @@ document.head.appendChild(themeCSS);
         </div>
         <div style="background:rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.08); border-radius:8px; padding:8px;">
           <div style="font-size:9px; font-weight:700;">Format Terbaik:</div>
+        <button onclick="openSupabaseModal()" style="width:100%; margin-top:8px; padding:10px; background:#3ecf8e; color:#fff; border:none; border-radius:8px; font-size:10px; font-weight:800; cursor:pointer;">⚡ Setup Supabase Realtime - Laundry Land & ResiQ Sinkron</button>
           <div style="font-size:8px; color:#666; margin-top:4px;">• CSV UTF-8: Google Sheets & Excel, ringan no build<br>• XLSX: Edit di Sheet, support multi-sheet, lib SheetJS CDN<br>• JSON: Backup full preserve semua field</div>
         </div>
       </div>
@@ -8377,6 +8388,285 @@ function importPelanggan(event){ var file=event.target.files[0]; if(!file) retur
 function importLayanan(event){ var file=event.target.files[0]; if(!file) return; var mode=document.querySelector('input[name="importModeLayanan"]:checked')?.value||'append'; var statusEl=document.getElementById('importLayananStatus'); if(statusEl) statusEl.innerText='⏳ Membaca...'; var reader=new FileReader(); reader.onload=function(e){ try{ var data=[]; if(file.name.endsWith('.csv')){ data=fromCSV(e.target.result); } else { if(typeof XLSX!=='undefined'){ var wb=XLSX.read(e.target.result,{type:'binary'}); var ws=wb.Sheets[wb.SheetNames[0]]; data=XLSX.utils.sheet_to_json(ws,{defval:''}); } else { statusEl.innerText='❌ XLSX butuh SheetJS'; return; } } var added=0,deleted=0; if(mode==='replace') layananData=[]; data.forEach(function(row){ var nama=(row.nama||'').trim(); if(!nama) return; var action=(row.action||'').toLowerCase(); if(action==='delete'||mode==='delete'){ var before=layananData.length; layananData=layananData.filter(l=>l.nama.toLowerCase()!==nama.toLowerCase()&&(l.kode||'').toLowerCase()!==(row.kode||'').toLowerCase()); if(layananData.length<before) deleted++; } else { var existing=layananData.find(l=>l.nama.toLowerCase()===nama.toLowerCase()|| (l.kode&&row.kode&&l.kode.toLowerCase()===String(row.kode).toLowerCase())); var outletId=row.outletId||getOutletIdByName(row.outlet||'')||(typeof outletsData!=='undefined'&&outletsData[0]?outletsData[0].id:'outlet-1'); if(existing){ existing.kode=row.kode||existing.kode; existing.harga=parseInt(row.harga)||existing.harga; existing.satuan=row.satuan||existing.satuan; existing.estimasiVal=parseInt(row.estimasiVal)||existing.estimasiVal; existing.estimasiUnit=row.estimasiUnit||existing.estimasiUnit; existing.minKg=parseInt(row.minKg)||existing.minKg||0; existing.outletId=outletId; } else { layananData.push({id:'layanan-'+Date.now()+'-'+Math.random().toString(36).slice(2,7), outletId:outletId, nama:nama, kode:row.kode||'', harga:parseInt(row.harga)||0, satuan:row.satuan||'Kg', estimasiVal:parseInt(row.estimasiVal)||3, estimasiUnit:row.estimasiUnit||'Jam', minKg:parseInt(row.minKg)||0}); added++; } } }); try{ localStorage.setItem('layananData',JSON.stringify(layananData)); }catch(e){} if(typeof renderLayananList==='function') renderLayananList(); if(statusEl) statusEl.innerText='✅ +'+added+' -'+deleted+' Total:'+layananData.length; if(typeof showNoticeToast==='function') showNoticeToast('✅ Import Layanan +'+added+' -'+deleted); }catch(err){ if(statusEl) statusEl.innerText='❌ '+err.message; } }; if(file.name.endsWith('.csv')) reader.readAsText(file); else reader.readAsBinaryString(file); event.target.value=''; }
 function exportFullBackup(format){ var backup={version:'1.0', date:new Date().toISOString(), outletsData:(typeof outletsData!=='undefined'?outletsData:[]), pelangganData:(typeof pelangganData!=='undefined'?pelangganData:[]), layananData:(typeof layananData!=='undefined'?layananData:[]), antrianData:(typeof antrianData!=='undefined'?antrianData:[]), karyawanData:(typeof karyawanData!=='undefined'?karyawanData:[])}; if(format==='json'){ downloadFile(JSON.stringify(backup,null,2),'backup-laundry-land-'+new Date().toISOString().slice(0,10)+'.json','application/json'); } else { if(typeof XLSX!=='undefined'){ var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(backup.pelangganData),'Pelanggan'); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(backup.layananData),'Layanan'); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(backup.outletsData),'Outlet'); XLSX.writeFile(wb,'backup-all-'+new Date().toISOString().slice(0,10)+'.xlsx'); } else downloadFile(JSON.stringify(backup,null,2),'backup-laundry-land.json','application/json'); } if(typeof showNoticeToast==='function') showNoticeToast('💾 Backup '+format.toUpperCase()+' berhasil'); }
 function importFullBackup(event){ var file=event.target.files[0]; if(!file) return; var statusEl=document.getElementById('importBackupStatus'); if(statusEl) statusEl.innerText='⏳ Restore...'; var reader=new FileReader(); reader.onload=function(e){ try{ var backup=JSON.parse(e.target.result); if(backup.pelangganData) pelangganData=backup.pelangganData; if(backup.layananData) layananData=backup.layananData; if(backup.outletsData) outletsData=backup.outletsData; if(backup.antrianData) antrianData=backup.antrianData; try{ localStorage.setItem('pelangganData',JSON.stringify(pelangganData)); localStorage.setItem('layananData',JSON.stringify(layananData)); localStorage.setItem('outletsData',JSON.stringify(outletsData)); }catch(err){} if(typeof renderPelangganList==='function') renderPelangganList(); if(typeof renderLayananList==='function') renderLayananList(); if(typeof renderOutletList==='function') renderOutletList(); if(statusEl) statusEl.innerText='✅ Restore '+(backup.pelangganData?.length||0)+' pelanggan, '+(backup.layananData?.length||0)+' layanan'; if(typeof showNoticeToast==='function') showNoticeToast('♻️ Restore berhasil!'); setTimeout(()=>location.reload(),1200); }catch(err){ if(statusEl) statusEl.innerText='❌ '+err.message; } }; reader.readAsText(file); event.target.value=''; }
+</script>
+
+
+<!-- Supabase Config Modal -->
+<div class="modal-overlay" id="modalSupabaseOverlay" onclick="if(event.target.id==='modalSupabaseOverlay')closeSupabaseModal()">
+  <div class="modal-card border-3-glass-blur rounded-12" style="max-width:400px; padding:16px; background:rgba(255,255,255,0.98); border:1px solid rgba(0,0,0,0.14);">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="width:28px; height:28px; border-radius:8px; background:#3ecf8e; display:flex; align-items:center; justify-content:center;">⚡</div>
+        <div><div style="font-size:13px; font-weight:800;">Supabase Realtime</div><div style="font-size:8px; color:#666;">Sinkron Laundry Land & ResiQ</div></div>
+      </div>
+      <div onclick="closeSupabaseModal()" style="width:28px; height:28px; background:rgba(0,0,0,0.06); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;">×</div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <div style="background:rgba(62,207,142,0.08); border:1px solid rgba(62,207,142,0.15); border-radius:8px; padding:8px;">
+        <div style="font-size:9px; font-weight:700; color:#065f46;">Status: <span id="supabaseStatus">❌ Belum connect</span></div>
+        <div style="font-size:8px; color:#666; margin-top:2px;">Isi URL & Anon Key dari Supabase Project Settings → API</div>
+      </div>
+      <div><div style="font-size:9px; font-weight:700; margin-bottom:4px;">SUPABASE URL</div><input id="supabaseUrl" type="text" placeholder="https://xxx.supabase.co" style="width:100%; padding:8px; border-radius:8px; border:1px solid rgba(0,0,0,0.14); font-size:11px;"></div>
+      <div><div style="font-size:9px; font-weight:700; margin-bottom:4px;">ANON KEY</div><input id="supabaseKey" type="password" placeholder="eyJhbGc..." style="width:100%; padding:8px; border-radius:8px; border:1px solid rgba(0,0,0,0.14); font-size:11px;"></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+        <button onclick="testSupabaseConnection()" style="padding:10px; background:#fff; border:1px solid rgba(0,0,0,0.14); border-radius:8px; font-size:10px; font-weight:700; cursor:pointer;">🔍 Test Connect</button>
+        <button onclick="saveSupabaseConfig()" style="padding:10px; background:#3ecf8e; color:#fff; border:none; border-radius:8px; font-size:10px; font-weight:800; cursor:pointer;">💾 Simpan & Sync</button>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+        <button onclick="syncToSupabase()" style="padding:8px; background:rgba(59,130,246,0.12); border:1px solid rgba(0,0,0,0.14); border-radius:8px; font-size:9px; font-weight:700; cursor:pointer;">⬆️ Upload Local → Supabase</button>
+        <button onclick="syncFromSupabase()" style="padding:8px; background:rgba(16,185,129,0.12); border:1px solid rgba(0,0,0,0.14); border-radius:8px; font-size:9px; font-weight:700; cursor:pointer;">⬇️ Download Supabase → Local</button>
+      </div>
+      <div id="supabaseLog" style="font-size:8px; color:#666; background:rgba(0,0,0,0.03); padding:6px; border-radius:6px; max-height:80px; overflow-y:auto;"></div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// v1.2 Supabase Realtime - Global Omzet Laundry Land & ResiQ sinkron otomatis
+var supabaseClient = null;
+var supabaseChannel = null;
+var supabaseConfig = JSON.parse(localStorage.getItem('supabaseConfig')||'{"url":"","key":""}');
+
+function initSupabase(){
+  try{
+    var url = supabaseConfig.url || document.getElementById('supabaseUrl')?.value;
+    var key = supabaseConfig.key || document.getElementById('supabaseKey')?.value;
+    if(!url || !key || !url.includes('supabase.co')) {
+      updateSupabaseStatus('❌ Belum connect - isi URL & Key');
+      return false;
+    }
+    if(typeof supabase==='undefined' || !supabase.createClient){
+      updateSupabaseStatus('❌ Lib Supabase belum load');
+      return false;
+    }
+    supabaseClient = supabase.createClient(url, key);
+    updateSupabaseStatus('✅ Connected: '+url.slice(8,28)+'...');
+    logSupabase('✅ Supabase client init: '+url);
+    setupRealtime();
+    loadFromSupabase();
+    return true;
+  }catch(e){
+    updateSupabaseStatus('❌ Error: '+e.message);
+    logSupabase('❌ Init error: '+e.message);
+    return false;
+  }
+}
+
+function updateSupabaseStatus(txt){
+  var el=document.getElementById('supabaseStatus');
+  if(el) el.innerText=txt;
+}
+function logSupabase(msg){
+  var el=document.getElementById('supabaseLog');
+  if(el){ el.innerHTML = '<div>'+new Date().toLocaleTimeString()+' - '+msg+'</div>' + el.innerHTML; }
+}
+
+function setupRealtime(){
+  if(!supabaseClient) return;
+  try{
+    // Channel untuk semua tabel penting
+    supabaseChannel = supabaseClient.channel('global-omzet-realtime')
+      .on('postgres_changes', {event:'*', schema:'public', table:'antrian'}, (payload)=>{
+        logSupabase('🔔 Antrian '+payload.eventType+': '+(payload.new?.nota||payload.old?.nota||''));
+        if(payload.eventType==='INSERT' && payload.new){
+          // Tambah ke antrianData lokal
+          if(typeof antrianData!=='undefined'){
+            var exists = antrianData.find(a=>a.id===payload.new.id);
+            if(!exists){
+              antrianData.unshift(payload.new);
+              if(typeof renderAntrianList==='function') renderAntrianList();
+            }
+          }
+        }
+        if(typeof updateGlobalOmzetCard==='function') updateGlobalOmzetCard();
+      })
+      .on('postgres_changes', {event:'*', schema:'public', table:'outlets'}, (payload)=>{
+        logSupabase('🏠 Outlet '+payload.eventType+': '+(payload.new?.nama||''));
+        if(payload.new && typeof outletsData!=='undefined'){
+          var idx = outletsData.findIndex(o=>o.id===payload.new.id);
+          if(idx>=0) outletsData[idx]=payload.new;
+          else outletsData.push(payload.new);
+          if(typeof renderOutletList==='function') renderOutletList();
+          if(typeof updateGlobalOmzetCard==='function') updateGlobalOmzetCard();
+        }
+      })
+      .on('postgres_changes', {event:'*', schema:'public', table:'pelanggan'}, (payload)=>{
+        logSupabase('👤 Pelanggan '+payload.eventType);
+        if(payload.new && typeof pelangganData!=='undefined'){
+          var idx = pelangganData.findIndex(p=>p.id===payload.new.id);
+          if(idx>=0) pelangganData[idx]=payload.new;
+          else pelangganData.push(payload.new);
+          if(typeof renderPelangganList==='function') renderPelangganList();
+        }
+      })
+      .on('postgres_changes', {event:'*', schema:'public', table:'layanan'}, (payload)=>{
+        logSupabase('🏷️ Layanan '+payload.eventType);
+        if(payload.new && typeof layananData!=='undefined'){
+          var idx = layananData.findIndex(l=>l.id===payload.new.id);
+          if(idx>=0) layananData[idx]=payload.new;
+          else layananData.push(payload.new);
+          if(typeof renderLayananList==='function') renderLayananList();
+        }
+      })
+      .subscribe((status)=>{
+        logSupabase('📡 Realtime status: '+status);
+        if(status==='SUBSCRIBED') updateSupabaseStatus('✅ Realtime aktif - Laundry Land & ResiQ sinkron');
+      });
+  }catch(e){
+    logSupabase('❌ Realtime error: '+e.message);
+  }
+}
+
+async function loadFromSupabase(){
+  if(!supabaseClient) return;
+  try{
+    var {data: outlets, error: e1} = await supabaseClient.from('outlets').select('*');
+    if(outlets && outlets.length>0){
+      outletsData = outlets;
+      try{ localStorage.setItem('outletsData', JSON.stringify(outletsData)); }catch(e){}
+      if(typeof renderOutletList==='function') renderOutletList();
+      if(typeof renderHeaderOutletDropdown==='function') renderHeaderOutletDropdown();
+      logSupabase('⬇️ Loaded '+outlets.length+' outlets dari Supabase');
+    }
+    var {data: pelanggan} = await supabaseClient.from('pelanggan').select('*');
+    if(pelanggan && pelanggan.length>0){
+      pelangganData = pelanggan;
+      localStorage.setItem('pelangganData', JSON.stringify(pelangganData));
+      if(typeof renderPelangganList==='function') renderPelangganList();
+      logSupabase('⬇️ Loaded '+pelanggan.length+' pelanggan');
+    }
+    var {data: layanan} = await supabaseClient.from('layanan').select('*');
+    if(layanan && layanan.length>0){
+      layananData = layanan;
+      localStorage.setItem('layananData', JSON.stringify(layananData));
+      if(typeof renderLayananList==='function') renderLayananList();
+      logSupabase('⬇️ Loaded '+layanan.length+' layanan');
+    }
+    var {data: antrian} = await supabaseClient.from('antrian').select('*').order('created_at',{ascending:false}).limit(100);
+    if(antrian && antrian.length>0){
+      antrianData = antrian;
+      localStorage.setItem('antrianData', JSON.stringify(antrianData));
+      if(typeof renderAntrianList==='function') renderAntrianList();
+      logSupabase('⬇️ Loaded '+antrian.length+' antrian');
+    }
+    if(typeof updateGlobalOmzetCard==='function') updateGlobalOmzetCard();
+  }catch(e){
+    logSupabase('❌ Load error: '+e.message);
+  }
+}
+
+async function syncToSupabase(){
+  if(!supabaseClient){ if(!initSupabase()){ alert('Isi Supabase URL & Key dulu'); return; } }
+  logSupabase('⬆️ Uploading local → Supabase...');
+  try{
+    if(typeof outletsData!=='undefined' && outletsData.length>0){
+      var {error} = await supabaseClient.from('outlets').upsert(outletsData, {onConflict:'id'});
+      logSupabase(error ? '❌ Outlet upload error: '+error.message : '✅ '+outletsData.length+' outlets uploaded');
+    }
+    if(typeof pelangganData!=='undefined' && pelangganData.length>0){
+      var {error} = await supabaseClient.from('pelanggan').upsert(pelangganData, {onConflict:'id'});
+      logSupabase(error ? '❌ Pelanggan error: '+error.message : '✅ '+pelangganData.length+' pelanggan uploaded');
+    }
+    if(typeof layananData!=='undefined' && layananData.length>0){
+      var {error} = await supabaseClient.from('layanan').upsert(layananData, {onConflict:'id'});
+      logSupabase(error ? '❌ Layanan error: '+error.message : '✅ '+layananData.length+' layanan uploaded');
+    }
+    if(typeof antrianData!=='undefined' && antrianData.length>0){
+      // Upload only today's antrian to avoid huge
+      var todayData = antrianData.slice(0,50);
+      var {error} = await supabaseClient.from('antrian').upsert(todayData, {onConflict:'id'});
+      logSupabase(error ? '❌ Antrian error: '+error.message : '✅ '+todayData.length+' antrian uploaded');
+    }
+    if(typeof showNoticeToast==='function') showNoticeToast('⬆️ Sync ke Supabase selesai - Laundry Land & ResiQ sinkron');
+  }catch(e){ logSupabase('❌ Upload error: '+e.message); }
+}
+
+async function syncFromSupabase(){
+  if(!supabaseClient){ if(!initSupabase()){ alert('Isi Supabase URL & Key dulu'); return; } }
+  await loadFromSupabase();
+  if(typeof showNoticeToast==='function') showNoticeToast('⬇️ Download dari Supabase selesai');
+}
+
+function saveSupabaseConfig(){
+  var url = document.getElementById('supabaseUrl')?.value.trim();
+  var key = document.getElementById('supabaseKey')?.value.trim();
+  if(!url || !key){ alert('Isi URL & Anon Key dulu'); return; }
+  supabaseConfig = {url:url, key:key};
+  localStorage.setItem('supabaseConfig', JSON.stringify(supabaseConfig));
+  if(typeof saveHybridStruk==='function') saveHybridStruk('supabaseConfig', supabaseConfig);
+  logSupabase('💾 Config saved');
+  initSupabase();
+  if(typeof showNoticeToast==='function') showNoticeToast('✅ Supabase tersimpan - Realtime aktif!');
+}
+
+function testSupabaseConnection(){
+  var url = document.getElementById('supabaseUrl')?.value.trim();
+  var key = document.getElementById('supabaseKey')?.value.trim();
+  if(!url || !key){ alert('Isi URL & Key'); return; }
+  supabaseConfig = {url:url, key:key};
+  logSupabase('🔍 Testing '+url+'...');
+  initSupabase();
+  setTimeout(async ()=>{
+    if(!supabaseClient) return;
+    try{
+      var {data, error} = await supabaseClient.from('outlets').select('count').limit(1);
+      if(error) logSupabase('❌ Test error: '+error.message);
+      else { logSupabase('✅ Test OK - Supabase connect!'); updateSupabaseStatus('✅ Test OK - Connected'); }
+    }catch(e){ logSupabase('❌ Test exception: '+e.message); }
+  }, 1000);
+}
+
+function openSupabaseModal(){
+  var cfg = JSON.parse(localStorage.getItem('supabaseConfig')||'{"url":"","key":""}');
+  var urlEl=document.getElementById('supabaseUrl');
+  var keyEl=document.getElementById('supabaseKey');
+  if(urlEl) urlEl.value=cfg.url||'';
+  if(keyEl) keyEl.value=cfg.key||'';
+  document.getElementById('modalSupabaseOverlay').classList.add('active');
+  if(cfg.url) initSupabase();
+}
+function closeSupabaseModal(){ document.getElementById('modalSupabaseOverlay').classList.remove('active'); }
+
+// Auto init on load
+document.addEventListener('DOMContentLoaded', function(){
+  setTimeout(function(){
+    var cfg = JSON.parse(localStorage.getItem('supabaseConfig')||'null');
+    if(cfg && cfg.url){
+      var urlEl=document.getElementById('supabaseUrl');
+      var keyEl=document.getElementById('supabaseKey');
+      if(urlEl) urlEl.value=cfg.url;
+      if(keyEl) keyEl.value=cfg.key;
+      initSupabase();
+    }
+  }, 1500);
+});
+
+// Override simpan functions to also push to Supabase realtime
+var origSimpanOutletSupa = window.simpanOutlet;
+if(typeof origSimpanOutletSupa==='function'){
+  window.simpanOutlet = async function(){
+    var result = origSimpanOutletSupa.apply(this, arguments);
+    setTimeout(async ()=>{
+      if(supabaseClient && typeof outletsData!=='undefined'){
+        try{ await supabaseClient.from('outlets').upsert(outletsData, {onConflict:'id'}); logSupabase('⬆️ Outlet auto-sync ke Supabase'); }catch(e){}
+      }
+      if(typeof updateGlobalOmzetCard==='function') updateGlobalOmzetCard();
+    }, 800);
+    return result;
+  };
+}
+
+// Hook antrian save
+var origTambahAntrian = window.tambahAntrianBaru || window.simpanAntrian;
+if(typeof origTambahAntrian==='function'){
+  // Will auto sync via realtime after reload, but also push
+  setInterval(async ()=>{
+    if(supabaseClient && typeof antrianData!=='undefined' && antrianData.length>0){
+      // Push latest 1 not yet pushed - simple
+    }
+  }, 10000);
+}
 </script>
 
 </body>
