@@ -2514,7 +2514,20 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* Helper Functions */
-function getActiveOutlet() { return outletsData.find(o => o.isActive) || outletsData[0]; }
+function getActiveOutlet() { 
+  if(!outletsData || outletsData.length===0){
+    // Buat outlet default biar simpan karyawan tidak error
+    try{
+      var def = {id:'outlet-default', nama:'Laundry Land', alamat:'', wa:'', isActive:true};
+      outletsData = [def];
+      try{ localStorage.setItem('outletsData', JSON.stringify(outletsData)); }catch(e){}
+      if(typeof renderOutletList==='function') renderOutletList();
+      if(typeof syncActiveOutletHeader==='function') syncActiveOutletHeader();
+      return def;
+    }catch(e){ return {id:'outlet-default', nama:'Laundry Land'}; }
+  }
+  return outletsData.find(o => o.isActive) || outletsData[0]; 
+}
 function getActiveKaryawan() { 
   try{
     var cu = JSON.parse(localStorage.getItem('currentUser')||'null');
@@ -3743,7 +3756,10 @@ function setActiveKaryawan(id) {
 }
 
 function simpanKaryawan() {
-  const activeOutlet = getActiveOutlet();
+  var activeOutlet = null;
+  try{ activeOutlet = getActiveOutlet(); }catch(e){ activeOutlet = {id:'outlet-default', nama:'Laundry Land'}; }
+  if(!activeOutlet || !activeOutlet.id){ activeOutlet = {id:'outlet-default', nama:'Laundry Land'}; }
+
   const nama = document.getElementById('inputNamaKaryawan').value.trim();
   const wa = document.getElementById('inputWaKaryawan').value.trim();
   const alamat = document.getElementById('inputAlamatKaryawan').value.trim();
@@ -8516,7 +8532,37 @@ function exportLayanan(format){ var rows=[]; var headers=['nama','kode','harga',
 function importPelanggan(event){ var file=event.target.files[0]; if(!file) return; var mode=document.querySelector('input[name="importModePelanggan"]:checked')?.value||'append'; var statusEl=document.getElementById('importPelangganStatus'); if(statusEl) statusEl.innerText='⏳ Membaca...'; var reader=new FileReader(); reader.onload=function(e){ try{ var data=[]; if(file.name.endsWith('.csv')){ data=fromCSV(e.target.result); } else { if(typeof XLSX!=='undefined'){ var wb=XLSX.read(e.target.result,{type:'binary'}); var ws=wb.Sheets[wb.SheetNames[0]]; data=XLSX.utils.sheet_to_json(ws,{defval:''}); } else { statusEl.innerText='❌ XLSX butuh SheetJS'; return; } } var added=0,deleted=0; if(mode==='replace') pelangganData=[]; data.forEach(function(row){ var nama=(row.nama||'').trim(); if(!nama) return; var action=(row.action||'').toLowerCase(); if(action==='delete'||mode==='delete'){ var before=pelangganData.length; pelangganData=pelangganData.filter(p=>p.nama.toLowerCase()!==nama.toLowerCase()); if(pelangganData.length<before) deleted++; } else { var existing=pelangganData.find(p=>p.nama.toLowerCase()===nama.toLowerCase()); var outletId=row.outletId||getOutletIdByName(row.outlet||'')||(typeof outletsData!=='undefined'&&outletsData[0]?outletsData[0].id:'outlet-1'); if(existing){ existing.wa=row.wa||existing.wa; existing.alamat=row.alamat||existing.alamat; existing.deposito=parseInt(row.deposito)||existing.deposito||0; existing.outletId=outletId; } else { pelangganData.push({id:'pelanggan-'+Date.now()+'-'+Math.random().toString(36).slice(2,7), outletId:outletId, nama:nama, wa:row.wa||'', tanpaWa:!row.wa, simpanKontak:true, alamat:row.alamat||'', deposito:parseInt(row.deposito)||0}); added++; } } }); try{ localStorage.setItem('pelangganData',JSON.stringify(pelangganData)); }catch(e){} if(typeof renderPelangganList==='function') renderPelangganList(); if(typeof updateGlobalOmzetCard==='function') updateGlobalOmzetCard(); if(statusEl) statusEl.innerText='✅ +'+added+' tambah, -'+deleted+' hapus. Total:'+pelangganData.length; if(typeof showNoticeToast==='function') showNoticeToast('✅ Import Pelanggan +'+added+' -'+deleted); }catch(err){ if(statusEl) statusEl.innerText='❌ '+err.message; } }; if(file.name.endsWith('.csv')) reader.readAsText(file); else reader.readAsBinaryString(file); event.target.value=''; }
 function importLayanan(event){ var file=event.target.files[0]; if(!file) return; var mode=document.querySelector('input[name="importModeLayanan"]:checked')?.value||'append'; var statusEl=document.getElementById('importLayananStatus'); if(statusEl) statusEl.innerText='⏳ Membaca...'; var reader=new FileReader(); reader.onload=function(e){ try{ var data=[]; if(file.name.endsWith('.csv')){ data=fromCSV(e.target.result); } else { if(typeof XLSX!=='undefined'){ var wb=XLSX.read(e.target.result,{type:'binary'}); var ws=wb.Sheets[wb.SheetNames[0]]; data=XLSX.utils.sheet_to_json(ws,{defval:''}); } else { statusEl.innerText='❌ XLSX butuh SheetJS'; return; } } var added=0,deleted=0; if(mode==='replace') layananData=[]; data.forEach(function(row){ var nama=(row.nama||'').trim(); if(!nama) return; var action=(row.action||'').toLowerCase(); if(action==='delete'||mode==='delete'){ var before=layananData.length; layananData=layananData.filter(l=>l.nama.toLowerCase()!==nama.toLowerCase()&&(l.kode||'').toLowerCase()!==(row.kode||'').toLowerCase()); if(layananData.length<before) deleted++; } else { var existing=layananData.find(l=>l.nama.toLowerCase()===nama.toLowerCase()|| (l.kode&&row.kode&&l.kode.toLowerCase()===String(row.kode).toLowerCase())); var outletId=row.outletId||getOutletIdByName(row.outlet||'')||(typeof outletsData!=='undefined'&&outletsData[0]?outletsData[0].id:'outlet-1'); if(existing){ existing.kode=row.kode||existing.kode; existing.harga=parseInt(row.harga)||existing.harga; existing.satuan=row.satuan||existing.satuan; existing.estimasiVal=parseInt(row.estimasiVal)||existing.estimasiVal; existing.estimasiUnit=row.estimasiUnit||existing.estimasiUnit; existing.minKg=parseInt(row.minKg)||existing.minKg||0; existing.outletId=outletId; } else { layananData.push({id:'layanan-'+Date.now()+'-'+Math.random().toString(36).slice(2,7), outletId:outletId, nama:nama, kode:row.kode||'', harga:parseInt(row.harga)||0, satuan:row.satuan||'Kg', estimasiVal:parseInt(row.estimasiVal)||3, estimasiUnit:row.estimasiUnit||'Jam', minKg:parseInt(row.minKg)||0}); added++; } } }); try{ localStorage.setItem('layananData',JSON.stringify(layananData)); }catch(e){} if(typeof renderLayananList==='function') renderLayananList(); if(statusEl) statusEl.innerText='✅ +'+added+' -'+deleted+' Total:'+layananData.length; if(typeof showNoticeToast==='function') showNoticeToast('✅ Import Layanan +'+added+' -'+deleted); }catch(err){ if(statusEl) statusEl.innerText='❌ '+err.message; } }; if(file.name.endsWith('.csv')) reader.readAsText(file); else reader.readAsBinaryString(file); event.target.value=''; }
 function exportFullBackup(format){ var backup={version:'1.0', date:new Date().toISOString(), outletsData:(typeof outletsData!=='undefined'?outletsData:[]), pelangganData:(typeof pelangganData!=='undefined'?pelangganData:[]), layananData:(typeof layananData!=='undefined'?layananData:[]), antrianData:(typeof antrianData!=='undefined'?antrianData:[]), karyawanData:(typeof karyawanData!=='undefined'?karyawanData:[])}; if(format==='json'){ downloadFile(JSON.stringify(backup,null,2),'backup-laundry-land-'+new Date().toISOString().slice(0,10)+'.json','application/json'); } else { if(typeof XLSX!=='undefined'){ var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(backup.pelangganData),'Pelanggan'); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(backup.layananData),'Layanan'); XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(backup.outletsData),'Outlet'); XLSX.writeFile(wb,'backup-all-'+new Date().toISOString().slice(0,10)+'.xlsx'); } else downloadFile(JSON.stringify(backup,null,2),'backup-laundry-land.json','application/json'); } if(typeof showNoticeToast==='function') showNoticeToast('💾 Backup '+format.toUpperCase()+' berhasil'); }
-function importFullBackup(event){ var file=event.target.files[0]; if(!file) return; var statusEl=document.getElementById('importBackupStatus'); if(statusEl) statusEl.innerText='⏳ Restore...'; var reader=new FileReader(); reader.onload=function(e){ try{ var backup=JSON.parse(e.target.result); if(backup.pelangganData) pelangganData=backup.pelangganData; if(backup.layananData) layananData=backup.layananData; if(backup.outletsData) outletsData=backup.outletsData; if(backup.antrianData) antrianData=backup.antrianData; try{ localStorage.setItem('pelangganData',JSON.stringify(pelangganData)); localStorage.setItem('layananData',JSON.stringify(layananData)); localStorage.setItem('outletsData',JSON.stringify(outletsData)); }catch(err){} if(typeof renderPelangganList==='function') renderPelangganList(); if(typeof renderLayananList==='function') renderLayananList(); if(typeof renderOutletList==='function') renderOutletList(); if(statusEl) statusEl.innerText='✅ Restore '+(backup.pelangganData?.length||0)+' pelanggan, '+(backup.layananData?.length||0)+' layanan'; if(typeof showNoticeToast==='function') showNoticeToast('♻️ Restore berhasil!'); setTimeout(()=>location.reload(),1200); }catch(err){ if(statusEl) statusEl.innerText='❌ '+err.message; } }; reader.readAsText(file); event.target.value=''; }
+function importFullBackup(event){ var file=event.target.files[0]; if(!file) return; var statusEl=document.getElementById('importBackupStatus'); if(statusEl) statusEl.innerText='⏳ Restore & Sync ke Supabase...'; var reader=new FileReader(); reader.onload=async function(e){ try{ var backup=JSON.parse(e.target.result); 
+        if(backup.pelangganData) pelangganData=backup.pelangganData; 
+        if(backup.layananData) layananData=backup.layananData; 
+        if(backup.outletsData) outletsData=backup.outletsData; 
+        if(backup.antrianData) antrianData=backup.antrianData;
+        if(backup.karyawanData) karyawanData=backup.karyawanData;
+        try{ 
+          localStorage.setItem('pelangganData',JSON.stringify(pelangganData)); 
+          localStorage.setItem('layananData',JSON.stringify(layananData)); 
+          localStorage.setItem('outletsData',JSON.stringify(outletsData));
+          localStorage.setItem('antrianData',JSON.stringify(antrianData||[]));
+          localStorage.setItem('karyawanData',JSON.stringify(karyawanData||[]));
+        }catch(err){}
+        if(typeof renderPelangganList==='function') renderPelangganList(); 
+        if(typeof renderLayananList==='function') renderLayananList(); 
+        if(typeof renderOutletList==='function') renderOutletList();
+        if(typeof renderKaryawanList==='function') renderKaryawanList();
+        if(typeof renderAntrianList==='function') renderAntrianList('Semua');
+        // AUTO SYNC KE SUPABASE BIAR TAMPIL NENG SUPA
+        try{
+          if(window.syncPelangganToSupabase) await window.syncPelangganToSupabase();
+          if(window.syncLayananToSupabase) await window.syncLayananToSupabase();
+          if(window.syncOutletsToSupabase) await window.syncOutletsToSupabase();
+          if(window.syncAntrianToSupabase) await window.syncAntrianToSupabase();
+          if(window.syncKaryawanToSupabase) await window.syncKaryawanToSupabase();
+        }catch(err){ console.warn('Auto sync after restore fail', err); }
+        if(statusEl) statusEl.innerText='✅ Restore '+(backup.pelangganData?.length||0)+' pelanggan, '+(backup.layananData?.length||0)+' layanan, '+(backup.karyawanData?.length||0)+' karyawan & sync ke Supabase';
+        if(typeof showNoticeToast==='function') showNoticeToast('♻️ Restore & sync Supabase berhasil!'); 
+        setTimeout(()=>location.reload(),1500); 
+      }catch(err){ if(statusEl) statusEl.innerText='❌ '+err.message; } 
+    }; reader.readAsText(file); event.target.value=''; }
 </script>
 
 
