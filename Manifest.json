@@ -1,0 +1,23 @@
+{
+  "name": "Laundry Land - SH4NDY",
+  "short_name": "Laundry Land",
+  "description": "Kelola Laundry Multi-HP Sync Supabase",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#06111f",
+  "theme_color": "#f618a9",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
