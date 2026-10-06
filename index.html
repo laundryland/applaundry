@@ -8566,23 +8566,14 @@ async function upsertTable(table, data){
   try{
     const clean = data.map(d=>{
       const {updated_at, created_at, ...rest}=d; 
-      // Hapus kolom yang sering bikin error schema cache (camelCase vs snake_case)
-      // Supabase kamu mungkin pakai outlet_id dan is_active, bukan outletId/isActive
-      // Kita kirim versi snake_case dan hapus yang tidak ada
       let out = {...rest};
-      // mapping karyawan & lainnya
       if(out.outletId){ out.outlet_id = out.outletId; }
-      if(out.outlet_id && table==='karyawan'){ /* keep both for compatibility */ }
-      // Hapus isActive karena di screenshot error: Could not find 'isActive' column
       if('isActive' in out){ 
         out.is_active = out.isActive ? true : false;
         delete out.isActive; 
       }
-      // Hapus field yang mungkin tidak ada di tabel Supabase kamu
-      // Biar tidak 400 error, hanya kirim field yang umum ada
       return out;
     });
-    // Filter lagi: hapus undefined dan function
     const finalClean = clean.map(o=>{
       const r={};
       for(let k in o){
@@ -8590,24 +8581,37 @@ async function upsertTable(table, data){
       }
       return r;
     });
-    const {error} = await window.supabaseClient.from(table).upsert(finalClean, {onConflict:'id'});
+    console.log('🔄 Sync '+table, finalClean.length, finalClean[0]);
+    const {error, data:result} = await window.supabaseClient.from(table).upsert(finalClean, {onConflict:'id'}).select();
     if(error) {
-      console.warn('Sync '+table+' error', error.message);
-      // Jika masih error isActive / outletId, coba lagi tanpa is_active & outlet_id mapping
-      if(error.message.includes('isActive') || error.message.includes('is_active') || error.message.includes('outletId')){
+      console.warn('Sync '+table+' error', error);
+      if(typeof showNoticeToast==='function') showNoticeToast('❌ Sync '+table+' gagal: '+error.message);
+      // Retry tanpa is_active dll
+      if(error.message.includes('isActive') || error.message.includes('is_active') || error.message.includes('outletId') || error.message.includes('outlet_id')){
         const retry = finalClean.map(o=>{
           const r={...o};
-          delete r.isActive; delete r.is_active; delete r.outletId;
-          // keep outlet_id if exists
+          delete r.isActive; delete r.is_active; delete r.outletId; delete r.outlet_id;
           return r;
         });
-        const {error:err2} = await window.supabaseClient.from(table).upsert(retry, {onConflict:'id'});
-        if(err2) console.warn('Sync '+table+' retry error', err2.message);
-        else console.log('✅ '+table+' synced (retry)', retry.length);
+        console.log('🔄 Retry sync '+table+' tanpa is_active/outlet_id', retry[0]);
+        const {error:err2, data:d2} = await window.supabaseClient.from(table).upsert(retry, {onConflict:'id'}).select();
+        if(err2) {
+          console.warn('Sync '+table+' retry error', err2);
+          if(typeof showNoticeToast==='function') showNoticeToast('❌ Retry '+table+' gagal: '+err2.message);
+        } else {
+          console.log('✅ '+table+' synced (retry)', d2?.length);
+          if(typeof showNoticeToast==='function') showNoticeToast('✅ '+table+' sync retry berhasil '+d2?.length);
+        }
         return;
       }
-    } else console.log('✅ '+table+' synced', finalClean.length);
-  }catch(e){ console.warn('Sync '+table+' exception', e); }
+    } else {
+      console.log('✅ '+table+' synced', result?.length, result);
+      if(typeof showNoticeToast==='function' && table==='karyawan') showNoticeToast('✅ Karyawan sync ke Supabase '+result?.length);
+    }
+  }catch(e){ 
+    console.warn('Sync '+table+' exception', e); 
+    if(typeof showNoticeToast==='function') showNoticeToast('❌ Exception '+table+': '+e.message);
+  }
 }
 window.syncKaryawanToSupabase = () => upsertTable('karyawan', typeof karyawanData!=='undefined'?karyawanData:[]);
 window.syncOutletsToSupabase = () => upsertTable('outlets', typeof outletsData!=='undefined'?outletsData:[]);
