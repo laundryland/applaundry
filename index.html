@@ -47,7 +47,7 @@
 
 
 
-<!-- v14-delete-sync-restore: outlet+pelanggan+merge+karyawan+logo-header -->
+<!-- v15-deposito-hapus-pelanggan-layanan-fix: outlet+pelanggan+merge+karyawan+logo-header -->
 <meta charset="UTF-8">
 <!-- ============================================================ -->
 <!-- EMBEDDED SYSTEM CONTROL & ROADMAP METADATA                   -->
@@ -726,7 +726,9 @@ body {
 .switch-option.active { background: #f618a9; color: #ffffff; }
 
 /* Checkbox Label Helper */
-.checkbox-container { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #333; cursor: pointer; }
+.checkbox-container { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 600; color: #333; cursor: pointer; line-height: 1.3; }
+.checkbox-container input[type="checkbox"] { width: 16px; height: 16px; min-width:16px; min-height:16px; accent-color: #f618a9; cursor: pointer; margin:0; }
+.checkbox-container span { font-size: 11px; font-weight: 600; }
 
 /* Search Delete 'X' Button */
 .search-clear-btn { font-size: 14px; font-weight: bold; color: #888; cursor: pointer; padding: 0 4px; display: none; }
@@ -1163,6 +1165,21 @@ document.addEventListener('DOMContentLoaded', function(){
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>.export-tab-content{border:1px solid rgba(0,0,0,0.08); border-radius:10px; padding:10px;}</style>
+
+<style>
+/* Fix checkbox too big */
+#subModalTambahPelangganOverlay .checkbox-container input[type="checkbox"] {
+  width: 14px !important;
+  height: 14px !important;
+  min-width: 14px !important;
+  min-height: 14px !important;
+}
+#subModalTambahPelangganOverlay .checkbox-container {
+  font-size: 10.5px !important;
+  gap: 6px !important;
+}
+</style>
+
 </head>
 
 <body>
@@ -3620,316 +3637,21 @@ function renderPelangganList(filterQuery = '') {
             <span style="font-size: 10px; font-weight: 700;">Hapus</span>
           </div>
         </div>
-        <div class="customer-row2-right">
+                <div class="customer-row2-right">
           <div class="tap-model" onclick="openSubModalIsiDeposito('${p.id}', 'tambah')" style="display: flex; align-items: center; gap: 3px; cursor: pointer; color: #10b981;">
-            <svg class="icon-svg" viewBox="0 0 24 24" style="width: 13px; height: 13px; stroke: #10b981;"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            <span style="font-size: 10px; font-weight: 700;">+ Deposito</span>
+            <svg class="icon-svg" viewBox="0 0 24 24" style="width: 13px; height: 13px; stroke: #10b981;"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+            <span style="font-size: 10px; font-weight: 700;">+Depo</span>
           </div>
           <div class="sekat-vertical"></div>
           <div class="tap-model" onclick="openSubModalIsiDeposito('${p.id}', 'edit')" style="display: flex; align-items: center; gap: 3px; cursor: pointer; color: #f59e0b;">
-            <svg class="icon-svg" viewBox="0 0 24 24" style="width: 13px; height: 13px; stroke: #f59e0b;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-            <span style="font-size: 10px; font-weight: 700;">Edit Deposito</span>
+            <svg class="icon-svg" viewBox="0 0 24 24" style="width: 13px; height: 13px; stroke: #f59e0b;"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path></svg>
+            <span style="font-size: 10px; font-weight: 700;">Edit</span>
           </div>
-        </div>
-      </div>
-    `;
-    container.appendChild(card);
-  });
-}
-
-function openSubModalTambahPelanggan(pelangganId = null) {
-  editingPelangganId = pelangganId;
-  const titleForm = document.getElementById('title-form-pelanggan');
-  
-  if (pelangganId) {
-    const p = pelangganData.find(item => item.id === pelangganId);
-    if (p) {
-      document.getElementById('inputNamaPelanggan').value = p.nama;
-      document.getElementById('inputWaPelanggan').value = p.wa || '';
-      document.getElementById('checkTanpaWa').checked = p.tanpaWa || false;
-      document.getElementById('checkSimpanKontak').checked = p.simpanKontak || false;
-      document.getElementById('inputAlamatPelanggan').value = p.alamat || '';
-      toggleTanpaWa(document.getElementById('checkTanpaWa'));
-    }
-    if (titleForm) titleForm.innerText = 'Edit Data Pelanggan';
-  } else {
-    document.getElementById('inputNamaPelanggan').value = '';
-    document.getElementById('inputWaPelanggan').value = '';
-    document.getElementById('checkTanpaWa').checked = false;
-    document.getElementById('checkSimpanKontak').checked = true;
-    document.getElementById('inputAlamatPelanggan').value = '';
-    toggleTanpaWa(document.getElementById('checkTanpaWa'));
-    if (titleForm) titleForm.innerText = 'Tambah Data Pelanggan';
-  }
-  document.getElementById('subModalTambahPelangganOverlay').classList.add('active');
-}
-
-function closeSubModalPelanggan() { document.getElementById('subModalTambahPelangganOverlay').classList.remove('active'); }
-function closeSubModalPelangganOnBackdrop(e) { if (e.target.id === 'subModalTambahPelangganOverlay') closeSubModalPelanggan(); }
-
-function toggleTanpaWa(checkbox) {
-  const inputWa = document.getElementById('inputWaPelanggan');
-  if (checkbox.checked) { inputWa.value = ''; inputWa.disabled = true; }
-  else inputWa.disabled = false;
-}
-
-function simpanPelanggan() {
-  const activeOutlet = getActiveOutlet();
-  const nama = document.getElementById('inputNamaPelanggan').value.trim();
-  const wa = document.getElementById('inputWaPelanggan').value.trim();
-  const tanpaWa = document.getElementById('checkTanpaWa').checked;
-  const simpanKontak = document.getElementById('checkSimpanKontak').checked;
-  const alamat = document.getElementById('inputAlamatPelanggan').value.trim();
-
-  if (!nama) { showNoticeToast('Nama pelanggan tidak boleh kosong'); return; }
-
-  let pelangganObj;
-  if (editingPelangganId) {
-    const p = pelangganData.find(item => item.id === editingPelangganId);
-    if (p) { p.nama = nama; p.wa = wa; p.tanpaWa = tanpaWa; p.simpanKontak = simpanKontak; p.alamat = alamat; pelangganObj = p; }
-  } else {
-    pelangganObj = { id: 'pelanggan-' + Date.now(), outletId: activeOutlet.id, outlet_id: activeOutlet.id, nama: nama, wa: wa, tanpaWa: tanpaWa, simpanKontak: simpanKontak, alamat: alamat, deposito: 0, created_at: new Date().toISOString() };
-    pelangganData.push(pelangganObj);
-    if (isPelangganPickerForNota) { selectPelangganTargetNota(pelangganObj.id); }
-  }
-
-  // Persist ke localStorage + IndexedDB + Supabase (FIX: sebelumnya hilang setelah reload)
-  try{ localStorage.setItem('pelangganData', JSON.stringify(pelangganData)); }catch(e){}
-  try{ 
-    if(typeof db!=='undefined' && db.pelanggan) {
-      db.pelanggan.put({...pelangganObj}).catch(()=>{});
-    }
-  }catch(e){}
-  try{ if(typeof window.syncPelangganToSupabase==='function') window.syncPelangganToSupabase(); }catch(e){}
-
-  closeSubModalPelanggan();
-  renderPelangganList();
-  showNoticeToast('✅ Pelanggan disimpan & sync ke Supabase');
-}
-
-function openSubModalIsiDeposito(pelangganId, mode = 'tambah') {
-  selectedPelangganDepositoId = pelangganId;
-  modeDeposito = mode;
-  const p = pelangganData.find(item => item.id === pelangganId);
-  if (!p) return;
-
-  document.getElementById('namaPelangganTarget').innerText = p.nama;
-  const inputNominal = document.getElementById('inputNominalDeposito');
-  const titleModal = document.getElementById('titleModalDeposito');
-
-  if (mode === 'edit') {
-    if (titleModal) titleModal.innerText = 'Edit Saldo Deposito';
-    inputNominal.value = p.deposito;
-  } else {
-    if (titleModal) titleModal.innerText = 'Tambah Saldo Deposito';
-    inputNominal.value = '';
-  }
-
-  updateLiveDepositoCalculation();
-  document.getElementById('subModalIsiDepositoOverlay').classList.add('active');
-}
-
-function updateLiveDepositoCalculation() {
-  const inputNominal = parseFloat(document.getElementById('inputNominalDeposito').value) || 0;
-  const previewBox = document.getElementById('previewDepositoBonus');
-  if (!previewBox) return;
-
-  if (modeDeposito === 'tambah' && inputNominal > 0) {
-    let bonus = globalDiskonSettings.type === 'persen' ? inputNominal * (globalDiskonSettings.val / 100) : globalDiskonSettings.val;
-    const total = inputNominal + bonus;
-    previewBox.innerHTML = `Bonus Deposito (${globalDiskonSettings.type === 'persen' ? globalDiskonSettings.val + '%' : 'Rp ' + globalDiskonSettings.val.toLocaleString('id-ID')}): <strong>+Rp ${bonus.toLocaleString('id-ID')}</strong><br>Total Saldo Bertambah: <strong style="color: #10b981;">Rp ${total.toLocaleString('id-ID')}</strong>`;
-    previewBox.style.display = 'block';
-  } else {
-    previewBox.style.display = 'none';
-  }
-}
-
-function closeSubModalIsiDeposito() { document.getElementById('subModalIsiDepositoOverlay').classList.remove('active'); }
-function closeSubModalIsiDepositoOnBackdrop(e) { if (e.target.id === 'subModalIsiDepositoOverlay') closeSubModalIsiDeposito(); }
-
-function simpanDeposito() {
-  const p = pelangganData.find(item => item.id === selectedPelangganDepositoId);
-  if (!p) return;
-
-  const nominal = parseFloat(document.getElementById('inputNominalDeposito').value) || 0;
-  const activeOutlet = (typeof getActiveOutlet==='function') ? getActiveOutlet() : {id:'default'};
-  let bonus = 0;
-  let totalDiterima = nominal;
-  let tipe = 'edit';
-
-  if (modeDeposito === 'edit') {
-    p.deposito = nominal;
-    tipe = 'edit';
-    showNoticeToast(`Saldo deposito ${p.nama} diubah menjadi Rp ${nominal.toLocaleString('id-ID')}`);
-  } else {
-    bonus = globalDiskonSettings.type === 'persen' ? nominal * (globalDiskonSettings.val / 100) : globalDiskonSettings.val;
-    totalDiterima = nominal + bonus;
-    p.deposito = (p.deposito||0) + totalDiterima;
-    tipe = 'tambah';
-    showNoticeToast(`Tambah deposito Rp ${nominal.toLocaleString('id-ID')} (+ Bonus ${bonus.toLocaleString('id-ID')}) ke ${p.nama} berhasil.`);
-  }
-
-  // === AMANKAN DEPOSITO: localStorage + IndexedDB + Supabase (biar gak ilang dipisuhi pelanggan) ===
-  try{ localStorage.setItem('pelangganData', JSON.stringify(pelangganData)); }catch(e){}
-  try{ if(typeof db!=='undefined' && db.pelanggan){ db.pelanggan.put({...p}).catch(()=>{}); } }catch(e){}
-  try{ if(typeof window.syncPelangganToSupabase==='function') window.syncPelangganToSupabase(); }catch(e){}
-
-  // Simpan log deposito
-  try{
-    const logEntry = {
-      id: 'deposito-' + Date.now(),
-      pelangganId: p.id,
-      pelangganNama: p.nama,
-      outletId: activeOutlet.id,
-      outlet_id: activeOutlet.id,
-      tipe: tipe, // tambah / edit / hapus
-      nominal: nominal,
-      bonus: bonus,
-      total: totalDiterima,
-      saldoAkhir: p.deposito,
-      tanggal: new Date().toISOString(),
-      created_at: new Date().toISOString()
-    };
-    if(typeof depositoLogData==='undefined') window.depositoLogData = [];
-    depositoLogData.push(logEntry);
-    try{ localStorage.setItem('depositoLogData', JSON.stringify(depositoLogData)); }catch(e){}
-    try{ if(typeof db!=='undefined' && db.deposito_logs){ db.deposito_logs.put(logEntry).catch(()=>{}); } }catch(e){}
-    // Sync log ke Supabase tabel deposito_logs (jika ada)
-    try{ 
-      if(window.supabaseClient){
-        window.supabaseClient.from('deposito_logs').upsert([{
-          id: logEntry.id,
-          pelanggan_id: p.id,
-          pelangganId: p.id,
-          outlet_id: activeOutlet.id,
-          outletId: activeOutlet.id,
-          tipe: tipe,
-          nominal: nominal,
-          bonus: bonus,
-          total: totalDiterima,
-          saldo_akhir: p.deposito,
-          tanggal: logEntry.tanggal
-        }], {onConflict:'id'}).then(({error})=>{ if(error) console.warn('Sync deposito_logs error', error.message); else console.log('✅ deposito_logs synced'); });
-      }
-    }catch(e){}
-  }catch(e){ console.warn('Log deposito error', e); }
-
-  hitungRingkasanKas();
-  closeSubModalIsiDeposito();
-  renderPelangganList();
-}
-
-/* Master Data Outlet */
-function openModalOutlet() { resetFormOutlet(); renderOutletList(); document.getElementById('modalOutletOverlay').classList.add('active'); }
-function closeModalOutlet() { document.getElementById('modalOutletOverlay').classList.remove('active'); }
-function closeModalOutletOnBackdrop(e) { if (e.target.id === 'modalOutletOverlay') closeModalOutlet(); }
-
-function resetFormOutlet() { editingOutletId = null; document.getElementById('inputNamaOutlet').value = ''; document.getElementById('inputAlamatOutlet').value = ''; document.getElementById('inputWaOutlet').value = ''; }
-
-function setActiveOutlet(id) {
-  // CEK HAK AKSES Pilih Outlet - kasir ke bawah default false
-  try{
-    var curLevel = localStorage.getItem('currentUserLevel') || 'Operator';
-    var perms = (typeof levelPermissions!=='undefined' && levelPermissions[curLevel]) ? levelPermissions[curLevel] : null;
-    if(perms && perms['Pilih Outlet']===false){
-      if(typeof showNoticeToast==='function') showNoticeToast('⛔ Akses Pilih Outlet ditolak untuk level '+curLevel);
-      var dd=document.getElementById('headerOutletDropdown'); if(dd) dd.classList.remove('active');
-      return;
-    }
-    // Jika user adalah kasir/operator dan dia punya outletId sendiri, jangan boleh pindah ke outlet lain
-    var cu = null; try{ cu = JSON.parse(localStorage.getItem('currentUser')||'null'); }catch(e){}
-    if(cu && cu.outletId && cu.outletId!==id && curLevel!=='Owner' && curLevel!=='Admin'){
-      // Kasir hanya boleh di outletnya sendiri
-      if(typeof showNoticeToast==='function') showNoticeToast('⛔ Kasir '+cu.nama+' hanya boleh di outlet asalnya');
-      var dd2=document.getElementById('headerOutletDropdown'); if(dd2) dd2.classList.remove('active');
-      return;
-    }
-  }catch(e){}
-  
-  outletsData.forEach(o => { o.isActive = (o.id === id); });
-  // Simpan outlet aktif ke localStorage biar konsisten antar HP
-  try{ localStorage.setItem('activeOutletId', id); }catch(e){}
-  // Update karyawan isActive berdasarkan outlet - jangan pakai karyawanData[0] sebagai fallback owner lain
-  try{
-    var cu2=null; try{ cu2=JSON.parse(localStorage.getItem('currentUser')||'null'); }catch(e){}
-    if(cu2){
-      karyawanData.forEach(k=> { k.isActive = (k.id===cu2.id); });
-    } else {
-      karyawanData.forEach(k=> { k.isActive = (k.outletId===id && k.id===karyawanData.find(x=>x.outletId===id)?.id); });
-    }
-  }catch(e){}
-  
-  syncActiveOutletHeader();
-  syncActiveKaryawanHeader();
-  renderOutletList();
-  renderHeaderOutletDropdown();
-  renderKaryawanList();
-  updateSummaryCounters();
-  hitungRingkasanKas();
-  renderAntrianList(activeAntrianFilter);
-  showNoticeToast(`Outlet Aktif: ${getActiveOutlet().nama}.`);
-}
-
-function simpanOutlet() {
-  const nama = document.getElementById('inputNamaOutlet').value.trim();
-  const alamat = document.getElementById('inputAlamatOutlet').value.trim();
-  const wa = document.getElementById('inputWaOutlet').value.trim();
-  if (!nama) { showNoticeToast('Nama outlet tidak boleh kosong'); return; }
-
-  let outletObj;
-  if (editingOutletId) {
-    const o = outletsData.find(item => item.id === editingOutletId);
-    if (o) { o.nama = nama; o.alamat = alamat; o.wa = wa; outletObj = o; }
-  } else {
-    outletObj = { id: 'outlet-' + Date.now(), nama: nama, alamat: alamat, wa: wa, isActive: false, is_active: false, created_at: new Date().toISOString() };
-    outletsData.push(outletObj);
-  }
-
-  // Persist ke localStorage + IndexedDB + Supabase
-  try{ localStorage.setItem('outletsData', JSON.stringify(outletsData)); }catch(e){}
-  try{ 
-    if(typeof db!=='undefined' && db.outlets) {
-      db.outlets.put({...outletObj, outlet_id: outletObj.id, outletId: outletObj.id}).catch(()=>{});
-    }
-  }catch(e){}
-  try{ if(typeof window.syncOutletsToSupabase==='function') window.syncOutletsToSupabase(); }catch(e){}
-
-  resetFormOutlet();
-  renderOutletList();
-  renderHeaderOutletDropdown();
-  showNoticeToast('✅ Outlet disimpan & sync ke Supabase');
-}
-
-function editOutlet(id) {
-  const o = outletsData.find(item => item.id === id);
-  if (!o) return;
-  editingOutletId = o.id;
-  document.getElementById('inputNamaOutlet').value = o.nama;
-  document.getElementById('inputAlamatOutlet').value = o.alamat || '';
-  document.getElementById('inputWaOutlet').value = o.wa || '';
-}
-
-function renderOutletList() {
-  const container = document.getElementById('outletListContainer');
-  if (!container) return;
-  container.innerHTML = '';
-
-  outletsData.forEach(o => {
-    const card = document.createElement('div');
-    card.className = `customer-card-item border-3-glass-blur rounded-12 ${o.isActive ? 'active-item' : ''}`;
-    card.innerHTML = `
-      <div class="customer-card-row1 border-2-glass-blur rounded-12 tap-model" onclick="setActiveOutlet('${o.id}')" style="cursor: pointer;">
-        <div style="display: flex; flex-direction: column; gap: 2px; overflow: hidden;">
-          <span style="font-weight: 800; font-size: 13px; color: #111;">${o.nama}</span>
-          <span style="font-size: 10px; font-weight: 600; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${o.alamat || 'Alamat belum diisi'}</span>
-        </div>
-        ${o.isActive ? '<span class="active-badge">Aktif</span>' : '<span style="font-size: 9px; font-weight: 700; color: #777; background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px;">Pilih</span>'}
-      </div>
-      <div class="customer-card-row2">
-        <div style="display:flex; gap:8px;">
-          <div class="tap-model" onclick="editOutlet('${o.id}')" style="display: flex; align-items: center; gap: 4px; cursor: pointer; color: #0284c7;"><svg class="icon-svg" viewBox="0 0 24 24" style="width: 13px; height: 13px; stroke: #0284c7;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg><span style="font-size: 10px; font-weight: 700;">Edit</span></div>
           <div class="sekat-vertical"></div>
-          <div class="tap-model" onclick="confirmHapusData('outlet', '${o.id}', '${o.nama}')" style="display: flex; align-items: center; gap: 4px; cursor: pointer; color: #dc2626;"><svg class="icon-svg" viewBox="0 0 24 24" style="width: 13px; height: 13px; stroke: #dc2626;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg><span style="font-size: 10px; font-weight: 700;">Hapus</span></div>
+          <div class="tap-model" onclick="hapusDeposito('${p.id}')" style="display: flex; align-items: center; gap: 3px; cursor: pointer; color: #dc2626;">
+            <svg class="icon-svg" viewBox="0 0 24 24" style="width: 13px; height: 13px; stroke: #dc2626;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <span style="font-size: 10px; font-weight: 700;">Hapus Depo</span>
+          </div>
         </div>
       </div>
     `;
@@ -8800,49 +8522,119 @@ console.log('☁️ SUPABASE MERAH 5 TABEL ACTIVE');
 async function upsertTable(table, data){
   if(!data || !data.length) return;
   try{
+    // Whitelist kolom per tabel biar gak error "Could not find column" (penyebab pelanggan & layanan gak mau isi Supa)
+    const allowedColumns = {
+      outlets: ['id','nama','alamat','wa','is_active','isActive','outlet_id','outletId','created_at'],
+      karyawan: ['id','outlet_id','outletId','nama','username','password','level','is_active','isActive','created_at'],
+      pelanggan: ['id','outlet_id','outletId','nama','wa','alamat','deposito','created_at'],
+      layanan: ['id','outlet_id','outletId','nama','kode','harga','satuan','estimasi','estimasiUnit','minKg','created_at'],
+      antrian: ['id','outlet_id','outletId','nota','namaPelanggan','layanan','totalNota','statusProses','statusBayar','tanggal','created_at','items','pelangganId','estimasi'],
+      deposito_logs: ['id','pelanggan_id','pelangganId','pelanggan_nama','nama','outlet_id','outletId','tipe','aksi','nominal','bonus','total','saldo_akhir','tanggal','created_at','alasan']
+    };
+
     const clean = data.map(d=>{
       const {updated_at, created_at, ...rest}=d; 
       let out = {...rest};
+      // Normalisasi outlet
       if(out.outletId){ out.outlet_id = out.outletId; }
       if('isActive' in out){ 
         out.is_active = out.isActive ? true : false;
-        delete out.isActive; 
       }
-      return out;
-    });
-    const finalClean = clean.map(o=>{
+      // Untuk pelanggan: hapus field yang gak ada di Supa (tanpaWa, simpanKontak dll)
+      if(table==='pelanggan'){
+        delete out.tanpaWa;
+        delete out.simpanKontak;
+        delete out.isActive;
+        delete out.is_active;
+      }
+      if(table==='layanan'){
+        delete out.isActive;
+        delete out.is_active;
+      }
+      // Filter hanya kolom yang diizinkan (jika ada whitelist)
+      if(allowedColumns[table]){
+        const filtered={};
+        for(let k of allowedColumns[table]){
+          if(k in out) filtered[k]=out[k];
+          // support camelCase & snake_case both
+          const snake = k.replace(/([A-Z])/g, '_$1').toLowerCase();
+          const camel = k.replace(/_([a-z])/g, (g)=>g[1].toUpperCase());
+          if(k in out) filtered[k]=out[k];
+          else if(snake in out) filtered[k]=out[snake];
+          else if(camel in out) filtered[k]=out[camel];
+        }
+        // Selalu sertakan id
+        if('id' in out) filtered['id']=out['id'];
+        out=filtered;
+      }
+      // Hapus undefined & function
       const r={};
-      for(let k in o){
-        if(o[k]!==undefined && typeof o[k]!=='function') r[k]=o[k];
+      for(let k in out){
+        if(out[k]!==undefined && typeof out[k]!=='function') r[k]=out[k];
       }
       return r;
-    });
-    console.log('🔄 Sync '+table, finalClean.length, finalClean[0]);
-    const {error, data:result} = await window.supabaseClient.from(table).upsert(finalClean, {onConflict:'id'}).select();
+    }).filter(o=>Object.keys(o).length>0);
+
+    console.log('🔄 Sync '+table, clean.length, clean[0]);
+
+    const attemptUpsert = async (payload)=>{
+      return await window.supabaseClient.from(table).upsert(payload, {onConflict:'id'}).select();
+    };
+
+    let {error, data:result} = await attemptUpsert(clean);
     if(error) {
-      console.warn('Sync '+table+' error', error);
-      if(typeof showNoticeToast==='function') showNoticeToast('❌ Sync '+table+' gagal: '+error.message);
-      // Retry tanpa is_active dll
-      if(error.message.includes('isActive') || error.message.includes('is_active') || error.message.includes('outletId') || error.message.includes('outlet_id')){
-        const retry = finalClean.map(o=>{
-          const r={...o};
-          delete r.isActive; delete r.is_active; delete r.outletId; delete r.outlet_id;
-          return r;
-        });
-        console.log('🔄 Retry sync '+table+' tanpa is_active/outlet_id', retry[0]);
-        const {error:err2, data:d2} = await window.supabaseClient.from(table).upsert(retry, {onConflict:'id'}).select();
-        if(err2) {
-          console.warn('Sync '+table+' retry error', err2);
-          if(typeof showNoticeToast==='function') showNoticeToast('❌ Retry '+table+' gagal: '+err2.message);
-        } else {
-          console.log('✅ '+table+' synced (retry)', d2?.length);
-          if(typeof showNoticeToast==='function') showNoticeToast('✅ '+table+' sync retry berhasil '+d2?.length);
+      console.warn('Sync '+table+' error', error.message);
+      // Jika error karena kolom tidak ditemukan, strip kolom tersebut dan retry
+      let retryPayload = [...clean];
+      const extractMissingColumn = (msg)=>{
+        const m1 = msg.match(/Could not find the '([^']+)' column/);
+        if(m1) return m1[1];
+        const m2 = msg.match(/column "([^"]+)" does not exist/);
+        if(m2) return m2[1];
+        const m3 = msg.match(/column ([a-zA-Z0-9_]+) of relation/);
+        if(m3) return m3[1];
+        return null;
+      };
+      let missingCol = extractMissingColumn(error.message||'');
+      let retries=0;
+      while(missingCol && retries<10){
+        console.log('🔄 Strip kolom '+missingCol+' dan retry sync '+table);
+        retryPayload = retryPayload.map(o=>{ const r={...o}; delete r[missingCol]; return r; });
+        const res = await attemptUpsert(retryPayload);
+        if(!res.error){ error=null; result=res.data; break; }
+        missingCol = extractMissingColumn(res.error.message||'');
+        error=res.error;
+        retries++;
+      }
+
+      if(error){
+        if(typeof showNoticeToast==='function') showNoticeToast('❌ Sync '+table+' gagal: '+error.message);
+        // Fallback: coba tanpa is_active/outlet_id
+        if(error.message.includes('isActive') || error.message.includes('is_active') || error.message.includes('outletId') || error.message.includes('outlet_id')){
+          const retry = retryPayload.map(o=>{
+            const r={...o};
+            delete r.isActive; delete r.is_active; delete r.outletId; delete r.outlet_id;
+            return r;
+          });
+          console.log('🔄 Retry sync '+table+' tanpa is_active/outlet_id', retry[0]);
+          const {error:err2, data:d2} = await attemptUpsert(retry);
+          if(err2) {
+            console.warn('Sync '+table+' retry error', err2);
+            if(typeof showNoticeToast==='function') showNoticeToast('❌ Retry '+table+' gagal: '+err2.message);
+          } else {
+            console.log('✅ '+table+' synced (retry)', d2?.length);
+            if(typeof showNoticeToast==='function') showNoticeToast('✅ '+table+' sync berhasil '+d2?.length);
+          }
+          return;
         }
+      } else {
+        console.log('✅ '+table+' synced after strip', result?.length);
+        if(typeof showNoticeToast==='function') showNoticeToast('✅ '+table+' sync berhasil '+result?.length);
         return;
       }
     } else {
-      console.log('✅ '+table+' synced', result?.length, result);
-      if(typeof showNoticeToast==='function' && table==='karyawan') showNoticeToast('✅ Karyawan sync ke Supabase '+result?.length);
+      console.log('✅ '+table+' synced', result?.length);
+      if(typeof showNoticeToast==='function') showNoticeToast('✅ '+table+' sync ke Supabase '+result?.length);
     }
   }catch(e){ 
     console.warn('Sync '+table+' exception', e); 
