@@ -47,7 +47,7 @@
 
 
 
-<!-- v13-hardreset-restore: outlet+pelanggan+merge+karyawan+logo-header -->
+<!-- v14-delete-sync-restore: outlet+pelanggan+merge+karyawan+logo-header -->
 <meta charset="UTF-8">
 <!-- ============================================================ -->
 <!-- EMBEDDED SYSTEM CONTROL & ROADMAP METADATA                   -->
@@ -1790,7 +1790,44 @@ button{width:100%;height:50px;border:0;border-radius:15px;margin-top:15px;backgr
           <svg class="icon-svg sub-card-chevron" viewBox="0 0 24 24" style="width: 16px; height: 16px;"><polyline points="9 18 15 12 9 6"></polyline></svg>
         </div>
 
-    </main>
+    
+      <div class="master-title" style="margin-top:16px;">
+        <svg class="icon-svg" viewBox="0 0 24 24" style="stroke: #10b981; width:20px; height:20px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <span>Backup & Restore Supa</span>
+      </div>
+      <div class="sub-card-container">
+        <div class="master-sub-card border-3-crystal rounded-12 tap-model" onclick="forceRestoreFromSupabase()" style="border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.08);">
+          <div class="sub-card-left">
+            <svg class="icon-svg" viewBox="0 0 24 24" style="stroke: #10b981;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            <span style="color: #10b981; font-weight:800;">🔄 Restore dari Supabase</span>
+          </div>
+          <div style="font-size:10px; color:#555;">Jika data hilang habis Ctrl+F5</div>
+        </div>
+        <div class="master-sub-card border-3-crystal rounded-12 tap-model" onclick="forcePushToSupabase()" style="border-color: rgba(59,130,246,0.4); background: rgba(59,130,246,0.08);">
+          <div class="sub-card-left">
+            <svg class="icon-svg" viewBox="0 0 24 24" style="stroke: #3b82f6;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            <span style="color: #3b82f6; font-weight:800;">☁️ Push ke Supabase</span>
+          </div>
+          <div style="font-size:10px; color:#555;">Simpan semua lokal ke Supa</div>
+        </div>
+        <div class="master-sub-card border-3-crystal rounded-12 tap-model" onclick="clearLocalAndReload()" style="border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.08);">
+          <div class="sub-card-left">
+            <svg class="icon-svg" viewBox="0 0 24 24" style="stroke: #ef4444;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <span style="color: #ef4444; font-weight:800;">🗑️ Clear Lokal & Reload</span>
+          </div>
+          <div style="font-size:10px; color:#555;">Hapus lokal, ambil dari Supa lagi</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.7); padding:10px; border-radius:10px; margin-top:8px; border:1.5px dashed rgba(0,0,0,0.1);">
+          <div style="font-size:10px; font-weight:800; color:#111;">ℹ️ Owner vs Pendownload (Playstore):</div>
+          <div style="font-size:9px; color:#555; line-height:1.4; margin-top:4px;">
+            • Data Supa = milik Owner (1 project). Jika di-download orang lain dari Playstore, mereka akan lihat data Owner!<br>
+            • Solusi: Untuk distribusi, matikan sync Supabase & pakai mode Lokal saja, atau buat project Supabase baru per user.<br>
+            • Tombol "Clear Lokal & Reload" untuk simulasi HP baru download dari Playstore.
+          </div>
+        </div>
+      </div>
+
+</main>
 
     
     <main class="card-global-setting-main border-3-crystal rounded-12">
@@ -4218,43 +4255,72 @@ function closeModalKonfirmasiHapusOnBackdrop(e) { if (e.target.id === 'modalKonf
 
 function eksekusiHapusData() {
   if (!pendingDeleteType || !pendingDeleteId) return;
+  const deleteId = pendingDeleteId;
+  const deleteType = pendingDeleteType;
 
-  if (pendingDeleteType === 'pelanggan') {
-    pelangganData = pelangganData.filter(p => p.id !== pendingDeleteId);
+  // Helper hapus dari Supabase
+  const deleteFromSupabase = async (table, id)=>{
+    try{
+      if(window.supabaseClient){
+        const {error} = await window.supabaseClient.from(table).delete().eq('id', id);
+        if(error) console.warn('Delete '+table+' Supa error', error.message);
+        else console.log('🗑️ Deleted '+table+' dari Supa: '+id);
+      }
+    }catch(e){ console.warn('Delete Supa exception', e); }
+  };
+
+  if (deleteType === 'pelanggan') {
+    pelangganData = pelangganData.filter(p => p.id !== deleteId);
+    try{ localStorage.setItem('pelangganData', JSON.stringify(pelangganData)); }catch(e){}
+    try{ if(typeof db!=='undefined' && db.pelanggan) db.pelanggan.delete(deleteId).catch(()=>{}); }catch(e){}
+    deleteFromSupabase('pelanggan', deleteId);
     renderPelangganList();
     hitungRingkasanKas();
-    showNoticeToast('Data pelanggan berhasil dihapus.');
+    showNoticeToast('✅ Pelanggan dihapus dari App & Supa');
 
-  } else if (pendingDeleteType === 'karyawan') {
+  } else if (deleteType === 'karyawan') {
     if (karyawanData.length <= 1) { showNoticeToast('Gagal: Minimal harus ada 1 karyawan.'); closeModalKonfirmasiHapus(); return; }
-    const isDeletingActive = karyawanData.find(k => k.id === pendingDeleteId)?.isActive;
-    karyawanData = karyawanData.filter(k => k.id !== pendingDeleteId);
+    const isDeletingActive = karyawanData.find(k => k.id === deleteId)?.isActive;
+    karyawanData = karyawanData.filter(k => k.id !== deleteId);
+    try{ localStorage.setItem('karyawanData', JSON.stringify(karyawanData)); }catch(e){}
+    try{ if(typeof db!=='undefined' && db.karyawan) db.karyawan.delete(deleteId).catch(()=>{}); }catch(e){}
+    deleteFromSupabase('karyawan', deleteId);
     if (isDeletingActive && karyawanData.length > 0) { karyawanData[0].isActive = true; syncActiveKaryawanHeader(); }
     renderKaryawanList();
-    showNoticeToast('Data karyawan berhasil dihapus.');
+    showNoticeToast('✅ Karyawan dihapus dari App & Supa');
 
-  } else if (pendingDeleteType === 'outlet') {
+  } else if (deleteType === 'outlet') {
     if (outletsData.length <= 1) { showNoticeToast('Gagal: Minimal harus ada 1 outlet.'); closeModalKonfirmasiHapus(); return; }
-    const isDeletingActive = outletsData.find(o => o.id === pendingDeleteId)?.isActive;
-    outletsData = outletsData.filter(o => o.id !== pendingDeleteId);
+    const isDeletingActive = outletsData.find(o => o.id === deleteId)?.isActive;
+    outletsData = outletsData.filter(o => o.id !== deleteId);
+    try{ localStorage.setItem('outletsData', JSON.stringify(outletsData)); }catch(e){}
+    try{ if(typeof db!=='undefined' && db.outlets) db.outlets.delete(deleteId).catch(()=>{}); }catch(e){}
+    deleteFromSupabase('outlets', deleteId);
     if (isDeletingActive && outletsData.length > 0) { outletsData[0].isActive = true; setActiveOutlet(outletsData[0].id); }
     else renderOutletList();
-    showNoticeToast('Data outlet berhasil dihapus.');
+    renderHeaderOutletDropdown();
+    showNoticeToast('✅ Outlet dihapus dari App & Supa');
 
-  } else if (pendingDeleteType === 'layanan') {
-    layananData = layananData.filter(l => l.id !== pendingDeleteId);
+  } else if (deleteType === 'layanan') {
+    layananData = layananData.filter(l => l.id !== deleteId);
+    try{ localStorage.setItem('layananData', JSON.stringify(layananData)); }catch(e){}
+    try{ if(typeof db!=='undefined' && db.layanan) db.layanan.delete(deleteId).catch(()=>{}); }catch(e){}
+    deleteFromSupabase('layanan', deleteId);
     renderLayananList();
-    showNoticeToast('Jenis Layanan berhasil dihapus.');
+    showNoticeToast('✅ Layanan dihapus dari App & Supa');
 
-  } else if (pendingDeleteType === 'nota') {
-    const nota = antrianData.find(n => n.id === pendingDeleteId);
+  } else if (deleteType === 'nota') {
+    const nota = antrianData.find(n => n.id === deleteId);
     if (nota) {
       catatRiwayatNota(nota, `Menghapus Nota ${nota.nota}`);
-      antrianData = antrianData.filter(n => n.id !== pendingDeleteId);
+      antrianData = antrianData.filter(n => n.id !== deleteId);
+      try{ localStorage.setItem('antrianData', JSON.stringify(antrianData)); }catch(e){}
+      try{ if(typeof db!=='undefined' && db.antrian) db.antrian.delete(deleteId).catch(()=>{}); }catch(e){}
+      deleteFromSupabase('antrian', deleteId);
       updateSummaryCounters();
       hitungRingkasanKas();
       renderAntrianList(activeAntrianFilter);
-      showNoticeToast(`Nota ${nota.nota} berhasil dihapus.`);
+      showNoticeToast(`✅ Nota ${nota.nota} dihapus dari App & Supa`);
     }
   }
 
@@ -8936,6 +9002,43 @@ window.syncAntrianToSupabase = () => upsertTable('antrian', typeof antrianData!=
     }catch(e){ if(typeof showNoticeToast==='function') showNoticeToast('❌ Restore gagal: '+e.message); }
   };
 
+  
+  window.forcePushToSupabase = async function(){
+    if(!confirm('Push semua data lokal ke Supabase? Ini akan overwrite data di Supa dengan data di HP/Laptop ini. Lanjutkan?')) return;
+    try{
+      if(typeof showNoticeToast==='function') showNoticeToast('☁️ Push ke Supa...');
+      if(typeof window.syncOutletsToSupabase==='function') await window.syncOutletsToSupabase();
+      if(typeof window.syncPelangganToSupabase==='function') await window.syncPelangganToSupabase();
+      if(typeof window.syncKaryawanToSupabase==='function') await window.syncKaryawanToSupabase();
+      if(typeof window.syncLayananToSupabase==='function') await window.syncLayananToSupabase();
+      if(typeof window.syncAntrianToSupabase==='function') await window.syncAntrianToSupabase();
+      if(typeof showNoticeToast==='function') showNoticeToast('✅ Push ke Supa berhasil!');
+    }catch(e){ if(typeof showNoticeToast==='function') showNoticeToast('❌ Push gagal: '+e.message); }
+  };
+
+  window.clearLocalAndReload = async function(){
+    if(!confirm('Hapus semua data lokal (localStorage & IndexedDB) dan reload dari Supabase? Simulasi HP baru download dari Playstore. Lanjutkan?')) return;
+    try{
+      localStorage.removeItem('outletsData');
+      localStorage.removeItem('pelangganData');
+      localStorage.removeItem('karyawanData');
+      localStorage.removeItem('layananData');
+      localStorage.removeItem('antrianData');
+      localStorage.removeItem('depositoLogData');
+      if(typeof db!=='undefined'){
+        try{ await db.outlets.clear(); }catch(e){}
+        try{ await db.pelanggan.clear(); }catch(e){}
+        try{ await db.karyawan.clear(); }catch(e){}
+        try{ await db.layanan.clear(); }catch(e){}
+        try{ await db.antrian.clear(); }catch(e){}
+        try{ await db.deposito_logs.clear(); }catch(e){}
+      }
+      if(typeof showNoticeToast==='function') showNoticeToast('🗑️ Lokal dibersihkan, reload dari Supa...');
+      setTimeout(()=>location.reload(), 800);
+    }catch(e){ alert('Clear gagal: '+e.message); }
+  };
+
+  
   // realtime auto-refresh karyawan tiap 15 detik (kalau tambah manual di Supabase)
   setInterval(async()=>{
     try{
