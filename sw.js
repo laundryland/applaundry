@@ -1,4 +1,4 @@
-const CACHE_NAME = 'laundryland-v12-deposito-aman';
+const CACHE_NAME = 'laundryland-v13-hardreset-restore';
 self.addEventListener('install', e=>{
   self.skipWaiting();
 });
@@ -11,13 +11,11 @@ self.addEventListener('activate', e=>{
 });
 self.addEventListener('fetch', e=>{
   if(e.request.method !== 'GET' || e.request.url.includes('supabase.co')) return;
+  // NEVER cache index.html - always fetch fresh for restore
+  if(e.request.url.includes('index.html') || e.request.url.endsWith('/') || e.request.url.endsWith('/applaundry/') || e.request.url.endsWith('/applaundry')){
+    return;
+  }
   e.respondWith(
-    fetch(e.request).then(r=>{
-      // Jangan cache index.html biar selalu fresh
-      if(e.request.url.includes('index.html') || e.request.url.endsWith('/') || e.request.url.endsWith('/applaundry/')){
-        return r;
-      }
-      return r;
-    }).catch(()=>caches.match(e.request).then(r=>r||caches.match('./index.html')))
+    fetch(e.request).catch(()=>caches.match(e.request).then(r=>r||caches.match('./index.html')))
   );
 });
