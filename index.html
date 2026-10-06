@@ -894,10 +894,8 @@ body {
 <script src="https://unpkg.com/dexie@4.0.11/dist/dexie.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
-const SUPABASE_URL = localStorage.getItem('supabase_url') || 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_ANON_KEY = localStorage.getItem('supabase_key') || 'YOUR_ANON_KEY';
+// OLD SUPABASE SCRIPT REMOVED - HARDCODE AUTO ONLY
 let supabaseClient = null;
-try{ if(SUPABASE_URL.includes('supabase.co') && !SUPABASE_URL.includes('YOUR_PROJECT')) supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }catch(e){}
 const db = new Dexie('LaundryPWA_Locked_v3');
 
 db.version(2).stores({ 
@@ -979,8 +977,8 @@ async function initHybridStruk(){
     }
   }
   // Load print mode hybrid
-  let mode = await loadHybridStruk('strukPrintMode', 'text');
-  strukPrintMode = mode || 'text';
+  let mode = await loadHybridStruk('strukPrintMode', 'ios');
+  strukPrintMode = mode || 'ios';
   if(typeof updateModeUI === 'function') updateModeUI();
 }
 
@@ -1145,6 +1143,17 @@ document.addEventListener('DOMContentLoaded', function(){
 </head>
 
 <body>
+
+<script>
+// FORCE HAPUS CACHE Multi-HP Sync lama biar modal tidak muncul lagi
+try{
+  localStorage.removeItem('supabase_url');
+  localStorage.removeItem('supabase_key');
+  localStorage.removeItem('cfgUrl');
+  localStorage.removeItem('cfgKey');
+}catch(e){}
+</script>
+
 
 <!-- 🔒 SPLASH ORIGINAL 100% -->
 <style>
@@ -1888,6 +1897,7 @@ button{width:100%;height:50px;border:0;border-radius:15px;margin-top:15px;backgr
         <div class="thermal-title" id="p_outlet_name">LAUNDRY LAND</div>
         <div class="thermal-sub" id="p_outlet_address">Jl. Merdeka No. 12</div>
         <div class="thermal-sub" id="p_outlet_wa">WA: 08123456789</div>
+        <div id="p_status_bayar_row" style="margin-top:8px; background:#10b981; /* will be dynamic */ color:#fff; padding:8px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; font-weight:800; font-size:12px; width:100%;"><span style="font-weight:800;">Status Bayar:</span><strong id="p_status_bayar" style="color:#fff; background:rgba(255,255,255,0.2); padding:4px 10px; border-radius:6px;">LUNAS</strong></div>
         <div id="p_estimasi_row" style="margin-top:8px; background:#111; color:#fff; padding:8px 12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; font-weight:800; font-size:12px; border:1px solid rgba(0,0,0,0.14); width:100%;"><span style="font-weight:800; flex:1;">Estimasi:</span><span id="p_estimasi_val" style="font-size:12px; font-weight:900; color:#fff; background:rgba(255,255,255,0.12); padding:4px 10px; border-radius:6px; margin-left:auto;">15-10-26 | 10:00</span></div>
       </div>
       
@@ -1908,7 +1918,6 @@ button{width:100%;height:50px;border:0;border-radius:15px;margin-top:15px;backgr
 
       <div style="display: flex; flex-direction: column; gap: 3px;">
         <div class="thermal-total-row"><span>TOTAL TAGIHAN:</span><span id="p_grand_total">Rp 30.000</span></div>
-        <div class="thermal-info-row"><span>STATUS BAYAR:</span><strong id="p_status_bayar" style="color: #10b981;">LUNAS</strong></div>
         <div class="thermal-info-row" id="row_status_proses_print" style="display:none;"><span>STATUS PROSES:</span><strong id="p_status_proses">PROSES</strong></div>
       </div>
 
@@ -1937,6 +1946,7 @@ button{width:100%;height:50px;border:0;border-radius:15px;margin-top:15px;backgr
         </div>
         
         <!-- Estimasi di bawah header - bold lebih besar -->
+        <div id="ios_status_bayar_global" style="background:#10b981; color:#fff; padding:10px 14px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; font-weight:800; font-size:13px; margin-bottom:8px; width:100%;"><span style="font-weight:800;">Status Bayar:</span><span id="ios_status_bayar" style="font-size:13px; font-weight:900; color:#fff; background:rgba(255,255,255,0.2); padding:6px 12px; border-radius:8px;">LUNAS</span></div>
         <div id="ios_estimasi_global" style="background:#111; color:#fff; padding:10px 14px; border-radius:12px; display:flex; justify-content:space-between; align-items:center; font-weight:800; font-size:13px; margin-bottom:12px; border:1px solid rgba(0,0,0,0.14); width:100%;"><span style="font-weight:800; flex:1;">Estimasi:</span><span id="ios_estimasi_val" style="font-size:13px; font-weight:900; color:#fff; background:rgba(255,255,255,0.12); padding:6px 12px; border-radius:8px; margin-left:auto;">15-10-26 | 10:00</span></div>
         <!-- Divider iOS style -->
         <div style="height:1px; background: linear-gradient(90deg, transparent, rgba(0,0,0,0.1), transparent); margin:12px 0;"></div>
@@ -2298,9 +2308,7 @@ button{width:100%;height:50px;border:0;border-radius:15px;margin-top:15px;backgr
       </button>
     </div>
     
-
-
-    <div class="customer-list-container" id="karyawanListContainer" style="width: 100%; margin-top: 6px;"></div>
+<div class="customer-list-container" id="karyawanListContainer" style="width: 100%; margin-top: 6px;"></div>
   </div>
 </div>
 
@@ -2430,34 +2438,34 @@ button{width:100%;height:50px;border:0;border-radius:15px;margin-top:15px;backgr
 /* Global State Management - Multi-Outlet & Diskon Parameter */
 let globalDiskonSettings = { val: 5, type: 'persen' };
 
-let outletsData = [
-  { id: "outlet-1", nama: "Laundry Land", alamat: "Jl. Merdeka No. 12", wa: "08123456789", isActive: true },
-  { id: "outlet-2", nama: "ResiQ Laundry", alamat: "Jl. Pemuda No. 45", wa: "08987654321", isActive: false }
-];
+let outletsData = [];
 
-let karyawanData = [
-  { id: "karyawan-1", outletId: "outlet-1", nama: "Kasir Utama", wa: "081234567890", alamat: "Pusat", isActive: true },
-  { id: "karyawan-2", outletId: "outlet-1", nama: "Budi Santoso", wa: "089876543210", alamat: "Cabang 1", isActive: false },
-  { id: "karyawan-3", outletId: "outlet-2", nama: "Siti Rahma", wa: "085566778899", alamat: "Cabang 2", isActive: true }
-];
+let karyawanData = [];
 
-let pelangganData = [
-  { id: "pelanggan-1", outletId: "outlet-1", nama: "Budi Santoso", wa: "081234567890", tanpaWa: false, simpanKontak: true, alamat: "Jl. Mawar No. 10", deposito: 150000 },
-  { id: "pelanggan-2", outletId: "outlet-1", nama: "Siti Aminah", wa: "081299887766", tanpaWa: true, simpanKontak: false, alamat: "Jl. Melati No. 5", deposito: 10000 },
-  { id: "pelanggan-3", outletId: "outlet-2", nama: "Dewi Lestari", wa: "081122334455", tanpaWa: false, simpanKontak: true, alamat: "Jl. Anggrek No. 8", deposito: 100000 }
-];
+let pelangganData = [];
 
-let layananData = [
-  { id: "layanan-1", outletId: "outlet-1", nama: "Cuci Komplit Express", kode: "CKE", harga: 10000, satuan: "Kg", estimasiVal: 3, estimasiUnit: "Jam", minKg: 3 },
-  { id: "layanan-2", outletId: "outlet-1", nama: "Cuci Kering Karpet", kode: "CKK", harga: 30000, satuan: "Pcs", estimasiVal: 2, estimasiUnit: "Hari", minKg: 0 },
-  { id: "layanan-3", outletId: "outlet-2", nama: "Cuci Komplit Hemat", kode: "CKH", harga: 7000, satuan: "Kg", estimasiVal: 2, estimasiUnit: "Hari", minKg: 3 },
-  { id: "layanan-4", outletId: "outlet-2", nama: "Setrika Kilat", kode: "SKL", harga: 10000, satuan: "Kg", estimasiVal: 4, estimasiUnit: "Jam", minKg: 0 }
-];
+let layananData = [];
 
-let antrianData = [
-  { id: "nota-1001", outletId: "outlet-1", nota: "#NT-1001", namaPelanggan: "Budi Santoso", totalNota: 30000, statusProses: "Proses", statusBayar: "Lunas", layanan: "Cuci Komplit Express 2.8Kg (Min 3Kg)", estimasi: "3 Jam", estimasiFormatted: "04-10-26 10:00", estimasiISO: new Date(Date.now()+3*3600000).toISOString(), tanggal: new Date().toISOString(), items:[{nama:"Cuci Komplit Express", qtyInput:"2.8", satuan:"Kg", estimasiVal:3, estimasiUnit:"Jam"}] },
-  { id: "nota-1002", outletId: "outlet-1", nota: "#NT-1002", namaPelanggan: "Siti Aminah", totalNota: 30000, statusProses: "Antrian", statusBayar: "Belum Lunas", layanan: "Cuci Kering Karpet 1 Pcs", estimasi: "2 Hari", estimasiFormatted: "06-10-26 10:00", estimasiISO: new Date(Date.now()+2*86400000).toISOString(), tanggal: new Date(Date.now()-86400000).toISOString(), items:[{nama:"Cuci Kering Karpet", qtyInput:"1", satuan:"Pcs", estimasiVal:2, estimasiUnit:"Hari"}] }
-];
+let antrianData = [];
+
+
+// ===== KELOLA LAUNDRY PERSISTENCE - Aman update 1000x =====
+// Data utama di Supabase, localStorage hanya cache. Dummy sudah dihapus.
+// Jika kosong total, buat outlet default agar tidak error
+if(typeof outletsData!=='undefined' && outletsData.length===0){
+  try{
+    var cachedOutlet = localStorage.getItem('outletsData');
+    if(cachedOutlet){
+      var co = JSON.parse(cachedOutlet);
+      if(Array.isArray(co) && co.length>0) outletsData = co;
+    }
+  }catch(e){}
+  if(outletsData.length===0){
+    // jangan buat dummy permanen, hanya sementara untuk first run
+    // akan di-sync ke Supabase saat user tambah outlet pertama
+    console.log('⚠️ outletsData kosong, menunggu load dari Supabase...');
+  }
+}
 
 let pengeluaranKasData = [];
 let riwayatNotaData = [];
@@ -2507,7 +2515,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* Helper Functions */
 function getActiveOutlet() { return outletsData.find(o => o.isActive) || outletsData[0]; }
-function getActiveKaryawan() { const activeOutlet = getActiveOutlet(); return karyawanData.find(k => k.isActive && (k.outletId === activeOutlet.id || !k.outletId)) || karyawanData[0]; }
+function getActiveKaryawan() { 
+  try{
+    var cu = JSON.parse(localStorage.getItem('currentUser')||'null');
+    if(cu && cu.id){
+      var found = karyawanData.find(k=> k.id===cu.id);
+      if(found) return found;
+      return cu;
+    }
+  }catch(e){}
+  const activeOutlet = getActiveOutlet(); 
+  return karyawanData.find(k => k.isActive && (k.outletId === activeOutlet.id || !k.outletId)) || karyawanData.find(k=> k.outletId===activeOutlet.id) || karyawanData[0]; 
+}
 
 function syncActiveOutletHeader() { const activeOutlet = getActiveOutlet(); const labelHeader = document.getElementById('label-outlet'); if (labelHeader) labelHeader.innerText = activeOutlet.nama; }
 function syncActiveKaryawanHeader() { const activeKaryawan = getActiveKaryawan(); const labelKaryawan = document.getElementById('label-karyawan'); if (labelKaryawan && activeKaryawan) labelKaryawan.innerText = activeKaryawan.nama; }
@@ -2766,7 +2785,23 @@ function openPreviewNotaModal(notaId, mode = 'preview') {
   itemsContainer.innerHTML = rowsHtml;
 
   document.getElementById('p_grand_total').innerText = `Rp ${nota.totalNota.toLocaleString('id-ID')}`;
-  document.getElementById('p_status_bayar').innerText = nota.statusBayar.toUpperCase();
+  var sb = document.getElementById('p_status_bayar');
+  if(sb) sb.innerText = nota.statusBayar.toUpperCase();
+  var sbRow = document.getElementById('p_status_bayar_row');
+  var isLunas = (nota.statusBayar||'').toLowerCase().includes('lunas') && !(nota.statusBayar||'').toLowerCase().includes('belum');
+  if(sbRow){
+    sbRow.style.background = isLunas ? '#10b981' : '#dc2626';
+    sbRow.style.color = '#fff';
+  }
+  if(sb){
+    sb.style.background = 'rgba(255,255,255,0.2)';
+    sb.style.color = '#fff';
+  }
+  var iosSb = document.getElementById('ios_status_bayar');
+  var iosRow = document.getElementById('ios_status_bayar_global');
+  if(iosSb) iosSb.innerText = nota.statusBayar.toUpperCase();
+  if(iosRow) iosRow.style.background = isLunas ? '#10b981' : '#dc2626';
+
   document.getElementById('p_status_proses').innerText = nota.statusProses.toUpperCase();
 
   const titleModal = document.getElementById('previewNotaTitle');
@@ -3583,11 +3618,43 @@ function closeModalOutletOnBackdrop(e) { if (e.target.id === 'modalOutletOverlay
 function resetFormOutlet() { editingOutletId = null; document.getElementById('inputNamaOutlet').value = ''; document.getElementById('inputAlamatOutlet').value = ''; document.getElementById('inputWaOutlet').value = ''; }
 
 function setActiveOutlet(id) {
+  // CEK HAK AKSES Pilih Outlet - kasir ke bawah default false
+  try{
+    var curLevel = localStorage.getItem('currentUserLevel') || 'Operator';
+    var perms = (typeof levelPermissions!=='undefined' && levelPermissions[curLevel]) ? levelPermissions[curLevel] : null;
+    if(perms && perms['Pilih Outlet']===false){
+      if(typeof showNoticeToast==='function') showNoticeToast('⛔ Akses Pilih Outlet ditolak untuk level '+curLevel);
+      var dd=document.getElementById('headerOutletDropdown'); if(dd) dd.classList.remove('active');
+      return;
+    }
+    // Jika user adalah kasir/operator dan dia punya outletId sendiri, jangan boleh pindah ke outlet lain
+    var cu = null; try{ cu = JSON.parse(localStorage.getItem('currentUser')||'null'); }catch(e){}
+    if(cu && cu.outletId && cu.outletId!==id && curLevel!=='Owner' && curLevel!=='Admin'){
+      // Kasir hanya boleh di outletnya sendiri
+      if(typeof showNoticeToast==='function') showNoticeToast('⛔ Kasir '+cu.nama+' hanya boleh di outlet asalnya');
+      var dd2=document.getElementById('headerOutletDropdown'); if(dd2) dd2.classList.remove('active');
+      return;
+    }
+  }catch(e){}
+  
   outletsData.forEach(o => { o.isActive = (o.id === id); });
+  // Simpan outlet aktif ke localStorage biar konsisten antar HP
+  try{ localStorage.setItem('activeOutletId', id); }catch(e){}
+  // Update karyawan isActive berdasarkan outlet - jangan pakai karyawanData[0] sebagai fallback owner lain
+  try{
+    var cu2=null; try{ cu2=JSON.parse(localStorage.getItem('currentUser')||'null'); }catch(e){}
+    if(cu2){
+      karyawanData.forEach(k=> { k.isActive = (k.id===cu2.id); });
+    } else {
+      karyawanData.forEach(k=> { k.isActive = (k.outletId===id && k.id===karyawanData.find(x=>x.outletId===id)?.id); });
+    }
+  }catch(e){}
+  
   syncActiveOutletHeader();
   syncActiveKaryawanHeader();
   renderOutletList();
   renderHeaderOutletDropdown();
+  renderKaryawanList();
   updateSummaryCounters();
   hitungRingkasanKas();
   renderAntrianList(activeAntrianFilter);
@@ -3694,9 +3761,10 @@ function simpanKaryawan() {
     if (k) { k.nama = nama; k.wa = wa; k.alamat = alamat; k.level = level; k.username = username; k.password = password; }
   } else karyawanData.push({ id: 'karyawan-' + Date.now(), outletId: activeOutlet.id, nama: nama, wa: wa, alamat: alamat, level: level, username: username, password: password, isActive: false });
   try{ localStorage.setItem('karyawanData', JSON.stringify(karyawanData)); }catch(e){}
+  try{ if(window.syncKaryawanToSupabase) window.syncKaryawanToSupabase(); }catch(e){ console.warn('sync karyawan fail', e); }
   resetFormKaryawan();
   renderKaryawanList();
-  showNoticeToast(`Data karyawan ${nama} (${level}) disimpan.`);
+  showNoticeToast(`Data karyawan ${nama} (${level}) disimpan & sync ke Supabase.`);
 }
 
 function togglePasswordKaryawan(){
@@ -5969,6 +6037,7 @@ function closePertumbuhanPelangganModal(){
 if(typeof levelPermissions==='undefined') var levelPermissions = JSON.parse(localStorage.getItem('levelPermissions') || 'null') || {
   Owner: { // Owner default: semua menu tampil
     'Data Outlet': true,
+    'Pilih Outlet': true,
     'Data Karyawan': true,
     'Data Pelanggan': true,
     'Data Layanan': true,
@@ -6000,6 +6069,7 @@ if(typeof levelPermissions==='undefined') var levelPermissions = JSON.parse(loca
   },
   Admin: { // Admin default: hampir semua, kecuali Level & Hak Akses (hanya Owner)
     'Data Outlet': true,
+    'Pilih Outlet': true,
     'Data Karyawan': true,
     'Data Pelanggan': true,
     'Data Layanan': true,
@@ -6031,6 +6101,7 @@ if(typeof levelPermissions==='undefined') var levelPermissions = JSON.parse(loca
   },
   Kasir: { // Kasir default: Kas, Antrian, Laporan view, tidak bisa master data outlet/karyawan
     'Data Outlet': false,
+    'Pilih Outlet': false,
     'Data Karyawan': false,
     'Data Pelanggan': true,
     'Data Layanan': false,
@@ -6062,6 +6133,7 @@ if(typeof levelPermissions==='undefined') var levelPermissions = JSON.parse(loca
   },
   Operator: { // Operator default: hanya Antrian dan Kas sederhana, tidak bisa laporan keuangan
     'Data Outlet': false,
+    'Pilih Outlet': false,
     'Data Karyawan': false,
     'Data Pelanggan': true,
     'Data Layanan': false,
@@ -6097,6 +6169,7 @@ if(typeof activeLevelTab==='undefined') var activeLevelTab='Owner';
 
 var allMenus = [
   {id:'Data Outlet', label:'Data Outlet', icon:'🏠', group:'Master Data'},
+  {id:'Pilih Outlet', label:'Pilih Outlet (Header)', icon:'🏪', group:'Master Data'},
   {id:'Data Karyawan', label:'Data Karyawan', icon:'👥', group:'Master Data'},
   {id:'Data Pelanggan', label:'Data Pelanggan', icon:'👤', group:'Master Data'},
   {id:'Data Layanan', label:'Data Layanan', icon:'🏷️', group:'Master Data'},
@@ -6251,6 +6324,7 @@ function applyLevelPermissions(){
     // We map menu ids to selectors
     var selectorMap={
       'Data Outlet': '[onclick="openModalOutlet()"]',
+      'Pilih Outlet': '#btn-pilih-outlet',
       'Data Karyawan': '[onclick="openModalKaryawan()"]',
       'Data Pelanggan': '[onclick="openModalPelanggan()"]',
       'Data Layanan': '[onclick="openModalLayanan()"]',
@@ -6340,33 +6414,89 @@ document.addEventListener('DOMContentLoaded', ()=>{
       const username=inputs[0]?.value.trim()||'';
       const password=inputs[1]?.value.trim()||'';
       if(!username||!password){ alert('Isi username & password'); return; }
-      let list=[]; try{ list=JSON.parse(localStorage.getItem('karyawanData')||'[]'); }catch(e){ list=[]; }
-      if(list.length===0){ try{ list=await db.karyawan.toArray(); }catch(e){} }
-      if(list.length===0 && (username.toLowerCase()==='owner' || username.toLowerCase()==='admin')){
+      
+      let list=[];
+      try{ list=JSON.parse(localStorage.getItem('karyawanData')||'[]'); }catch(e){ list=[]; }
+      
+      if(list.length===0){
+        try{ if(typeof db!=='undefined' && db.karyawan) list=await db.karyawan.toArray(); }catch(e){}
+      }
+      
+      if(list.length===0){
+        try{
+          if(window.supabaseClient){
+            const {data} = await window.supabaseClient.from('karyawan').select('*').limit(200);
+            if(data && data.length>0) list=data;
+          }
+        }catch(e){}
+      }
+      
+      // MASTER LOGIN - hanya owner/owner5758 yang bisa sebagai master, admin/admin dihapus
+      if(username.toLowerCase()==='owner' && password==='owner5758'){
+        localStorage.setItem('currentUserLevel','Owner');
+        localStorage.setItem('currentUser', JSON.stringify({id:'owner-1', nama:'Owner', username:username, level:'Owner', isMaster:true}));
+        localStorage.setItem('lastLoginTime', Date.now().toString());
+        localStorage.setItem('currentUserId', 'owner-1');
+        wrapper.classList.add('hidden');
+        setTimeout(()=>{ wrapper.style.display='none'; if(typeof updateLogoutIcon==='function') updateLogoutIcon(); if(typeof applyLevelPermissions==='function') applyLevelPermissions(); }, 600);
+        return;
+      }
+      
+      // Fallback first install kalau benar-benar kosong, masih pakai owner5758
+      if(list.length===0 && username.toLowerCase()==='owner' && password==='owner5758'){
         localStorage.setItem('currentUserLevel','Owner');
         localStorage.setItem('currentUser', JSON.stringify({id:'owner-1', nama:'Owner', username:username, level:'Owner'}));
         localStorage.setItem('lastLoginTime', Date.now().toString());
+        localStorage.setItem('currentUserId', 'owner-1');
         wrapper.classList.add('hidden');
-        setTimeout(()=>{ wrapper.style.display='none'; updateLogoutIcon(); if(typeof applyLevelPermissions==='function') applyLevelPermissions(); }, 600);
+        setTimeout(()=>{ wrapper.style.display='none'; if(typeof updateLogoutIcon==='function') updateLogoutIcon(); if(typeof applyLevelPermissions==='function') applyLevelPermissions(); }, 600);
         return;
       }
+      
       let user=list.find(k=> k.username && k.username.toLowerCase()===username.toLowerCase());
-      if(!user){ alert('Username tidak ditemukan'); return; }
+      if(!user){ alert('Username tidak ditemukan. Coba owner / owner untuk first login'); return; }
       if(user.password !== password){ alert('Password salah'); return; }
+      
       localStorage.setItem('currentUserLevel', user.level||'Operator');
       localStorage.setItem('currentUser', JSON.stringify(user));
+      localStorage.setItem('currentUserId', user.id||'');
       localStorage.setItem('lastLoginTime', Date.now().toString());
-      try{ if(typeof karyawanData!=='undefined'){ karyawanData.forEach(k=> k.isActive=(k.id===user.id)); localStorage.setItem('karyawanData', JSON.stringify(karyawanData)); } await db.karyawan.put(user); }catch(e){}
+      
+      try{
+        if(typeof karyawanData!=='undefined'){
+          karyawanData.forEach(k=> k.isActive=(k.id===user.id));
+          try{ localStorage.setItem('karyawanData', JSON.stringify(karyawanData)); }catch(e){}
+          if(window.syncKaryawanToSupabase) window.syncKaryawanToSupabase();
+        }
+      }catch(e){}
+      
+      try{ if(typeof db!=='undefined' && db.karyawan) await db.karyawan.put(user); }catch(e){}
+      
       wrapper.classList.add('hidden');
-      setTimeout(()=>{ wrapper.style.display='none'; updateLogoutIcon(); if(typeof showNoticeToast==='function') showNoticeToast(`✅ Halo ${user.nama}`); if(typeof applyLevelPermissions==='function') applyLevelPermissions(); }, 600);
+      setTimeout(()=>{
+        wrapper.style.display='none';
+        if(typeof updateLogoutIcon==='function') updateLogoutIcon();
+        if(typeof syncActiveKaryawanHeader==='function') syncActiveKaryawanHeader();
+        if(typeof applyLevelPermissions==='function') applyLevelPermissions();
+        if(typeof showNoticeToast==='function') showNoticeToast(`✅ Halo ${user.nama||user.username}`);
+      }, 600);
     });
   }
-  const last=localStorage.getItem('lastLoginTime'); const cu=localStorage.getItem('currentUser');
+  
+  const last=localStorage.getItem('lastLoginTime');
+  const cu=localStorage.getItem('currentUser');
   if(cu && last && (Date.now()-parseInt(last) < 86400000)){
-    setTimeout(()=>{ const w=document.getElementById('app-splash-wrapper'); if(w){ w.classList.add('hidden'); setTimeout(()=>{w.style.display='none'; updateLogoutIcon();},700);} }, 3800);
+    setTimeout(()=>{
+      const w=document.getElementById('app-splash-wrapper');
+      if(w){ w.classList.add('hidden'); setTimeout(()=>{w.style.display='none'; if(typeof updateLogoutIcon==='function') updateLogoutIcon(); if(typeof applyLevelPermissions==='function') applyLevelPermissions();},700);}
+    }, 3800);
   }
-  setTimeout(()=>{ updateLogoutIcon(); const cfgUrl=localStorage.getItem('supabase_url'); const cfgKey=localStorage.getItem('supabase_key'); const elUrl=document.getElementById('cfgUrl'); const elKey=document.getElementById('cfgKey'); if(cfgUrl && elUrl) elUrl.value=cfgUrl; if(cfgKey && elKey) elKey.value=cfgKey; }, 1000);
+  
+  setTimeout(()=>{
+    if(typeof updateLogoutIcon==='function') updateLogoutIcon();
+  }, 1000);
 });
+
 </script>
 
 
@@ -8400,7 +8530,7 @@ console.log('☁️ SUPABASE MERAH 5 TABEL ACTIVE');
 async function upsertTable(table, data){
   if(!data || !data.length) return;
   try{
-    const clean = data.map(d=>({...d, updated_at: new Date().toISOString()}));
+    const clean = data.map(d=>{ const {updated_at, ...rest}=d; return {...rest}; }); // hapus updated_at biar tidak error schema
     const {error} = await window.supabaseClient.from(table).upsert(clean, {onConflict:'id'});
     if(error) console.warn('Sync '+table+' error', error.message);
     else console.log('✅ '+table+' synced', clean.length);
@@ -8412,21 +8542,37 @@ window.syncPelangganToSupabase = () => upsertTable('pelanggan', typeof pelanggan
 window.syncLayananToSupabase = () => upsertTable('layanan', typeof layananData!=='undefined'?layananData:[]);
 window.syncAntrianToSupabase = () => upsertTable('antrian', typeof antrianData!=='undefined'?antrianData:[]);
 
-// auto load on start
+// auto load on start - KELOLA LAUNDRY 1000x AMAN + HARDCODE AUTO
 (async()=>{
+  await new Promise(r=>setTimeout(r,800));
+  window.supabaseClient = window.supabaseClient || (function(){ try{ return window.createClient ? window.createClient('https://nniecqbfjmmlrtmolnrt.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaWVjcWJmam1tbHJ0bW9sbnJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMDg0MDcsImV4cCI6MjEwNjc4NDQwN30.aUXMtZN9SVb5Qgj7pA6Ur5hwKDhwDPokFCrQhONSWqE') : null; }catch(e){return null;} })();
   for(let t of ['outlets','pelanggan','layanan','antrian','karyawan']){
     try{
-      const {data,error} = await window.supabaseClient.from(t).select('*').limit(2000);
-      if(!error && data && data.length>0){
+      const {data,error} = await window.supabaseClient.from(t).select('*').order('created_at',{ascending:true}).limit(2000);
+      if(!error && data){
         console.log('📥 Load '+t, data.length);
-        if(t==='outlets'){ outletsData=data; localStorage.setItem('outletsData', JSON.stringify(data)); if(typeof renderOutletList==='function') renderOutletList(); }
-        if(t==='pelanggan'){ pelangganData=data; localStorage.setItem('pelangganData', JSON.stringify(data)); if(typeof renderPelangganList==='function') renderPelangganList(); }
-        if(t==='layanan'){ layananData=data; localStorage.setItem('layananData', JSON.stringify(data)); if(typeof renderLayananList==='function') renderLayananList(); }
-        if(t==='antrian'){ antrianData=data; }
-        if(t==='karyawan'){ karyawanData=data; localStorage.setItem('karyawanData', JSON.stringify(data)); }
+        if(data.length>0){
+          if(t==='outlets'){ outletsData=data; try{ localStorage.setItem('outletsData', JSON.stringify(data)); }catch(e){} if(typeof renderOutletList==='function') renderOutletList(); if(typeof syncActiveOutletHeader==='function') syncActiveOutletHeader(); }
+          if(t==='pelanggan'){ pelangganData=data; try{ localStorage.setItem('pelangganData', JSON.stringify(data)); }catch(e){} if(typeof renderPelangganList==='function') renderPelangganList(); }
+          if(t==='layanan'){ layananData=data; try{ localStorage.setItem('layananData', JSON.stringify(data)); }catch(e){} if(typeof renderLayananList==='function') renderLayananList(); }
+          if(t==='antrian'){ antrianData=data; if(typeof renderAntrianList==='function') renderAntrianList('Semua'); }
+          if(t==='karyawan'){ karyawanData=data; try{ localStorage.setItem('karyawanData', JSON.stringify(data)); }catch(e){} if(typeof renderKaryawanList==='function') renderKaryawanList(); if(typeof syncActiveKaryawanHeader==='function') syncActiveKaryawanHeader(); }
+        }
+      } else { console.warn('Load '+t+' error', error); }
+    }catch(e){ console.warn('Load '+t+' exception', e); }
+  }
+  // realtime auto-refresh karyawan tiap 15 detik (kalau tambah manual di Supabase)
+  setInterval(async()=>{
+    try{
+      const {data} = await window.supabaseClient.from('karyawan').select('*').order('created_at',{ascending:true}).limit(2000);
+      if(data && data.length>0 && data.length!==karyawanData.length){
+        karyawanData=data;
+        try{ localStorage.setItem('karyawanData', JSON.stringify(data)); }catch(e){}
+        if(typeof renderKaryawanList==='function') renderKaryawanList();
+        console.log('🔄 Auto refresh karyawan', data.length);
       }
     }catch(e){}
-  }
+  }, 15000);
 })();
 </script>
 
