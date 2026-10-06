@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'laundryland-v8';
+const CACHE_NAME = 'laundryland-v9';
 const URLS_TO_CACHE = [
   './',
   './index.html',
