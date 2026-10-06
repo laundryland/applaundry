@@ -1,7 +1,23 @@
-const CACHE_NAME = 'laundryland-v18-windows7-rapi';
-self.addEventListener('install', e=>{ self.skipWaiting(); });
+const CACHE_NAME = 'laundryland-v24-fix-outlet-layanan-karyawan-sync';
+self.addEventListener('install', e=>{
+  self.skipWaiting();
+  // Clear all old caches that contain multi-hp sync
+  e.waitUntil(
+    caches.keys().then(keys=>{
+      return Promise.all(keys.map(key=>{
+        if(key!==CACHE_NAME){
+          return caches.delete(key);
+        }
+      }));
+    })
+  );
+});
 self.addEventListener('activate', e=>{
-  e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
+  e.waitUntil(
+    caches.keys().then(keys=>{
+      return Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)));
+    }).then(()=>self.clients.claim())
+  );
 });
 self.addEventListener('fetch', e=>{
   if(e.request.method !== 'GET' || e.request.url.includes('supabase.co')) return;
