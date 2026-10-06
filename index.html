@@ -7149,20 +7149,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 <script>
-// Inline Service Worker - biar 1 file all-in-one tetap PWA
-if('serviceWorker' in navigator){
-  const swCode = `
-self.addEventListener('install', e=>{ e.waitUntil(caches.open('laundry-v1').then(cache=>cache.addAll(['/']))); });
-self.addEventListener('fetch', e=>{ e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))); });
-`;
-  const blob = new Blob([swCode], {type:'text/javascript'});
-  const swUrl = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swUrl).then(()=>console.log('SW inline registered')).catch(e=>console.log('SW fail', e));
-}
-</script>
-
-
-<script>
 // FIX: Checklist terhubung ke preview (estimasi dll)
 function syncMasterStrukToSettings(){
   try{
@@ -8578,10 +8564,49 @@ console.log('☁️ SUPABASE MERAH 5 TABEL ACTIVE');
 async function upsertTable(table, data){
   if(!data || !data.length) return;
   try{
-    const clean = data.map(d=>{ const {updated_at, ...rest}=d; return {...rest}; }); // hapus updated_at biar tidak error schema
-    const {error} = await window.supabaseClient.from(table).upsert(clean, {onConflict:'id'});
-    if(error) console.warn('Sync '+table+' error', error.message);
-    else console.log('✅ '+table+' synced', clean.length);
+    const clean = data.map(d=>{
+      const {updated_at, created_at, ...rest}=d; 
+      // Hapus kolom yang sering bikin error schema cache (camelCase vs snake_case)
+      // Supabase kamu mungkin pakai outlet_id dan is_active, bukan outletId/isActive
+      // Kita kirim versi snake_case dan hapus yang tidak ada
+      let out = {...rest};
+      // mapping karyawan & lainnya
+      if(out.outletId){ out.outlet_id = out.outletId; }
+      if(out.outlet_id && table==='karyawan'){ /* keep both for compatibility */ }
+      // Hapus isActive karena di screenshot error: Could not find 'isActive' column
+      if('isActive' in out){ 
+        out.is_active = out.isActive ? true : false;
+        delete out.isActive; 
+      }
+      // Hapus field yang mungkin tidak ada di tabel Supabase kamu
+      // Biar tidak 400 error, hanya kirim field yang umum ada
+      return out;
+    });
+    // Filter lagi: hapus undefined dan function
+    const finalClean = clean.map(o=>{
+      const r={};
+      for(let k in o){
+        if(o[k]!==undefined && typeof o[k]!=='function') r[k]=o[k];
+      }
+      return r;
+    });
+    const {error} = await window.supabaseClient.from(table).upsert(finalClean, {onConflict:'id'});
+    if(error) {
+      console.warn('Sync '+table+' error', error.message);
+      // Jika masih error isActive / outletId, coba lagi tanpa is_active & outlet_id mapping
+      if(error.message.includes('isActive') || error.message.includes('is_active') || error.message.includes('outletId')){
+        const retry = finalClean.map(o=>{
+          const r={...o};
+          delete r.isActive; delete r.is_active; delete r.outletId;
+          // keep outlet_id if exists
+          return r;
+        });
+        const {error:err2} = await window.supabaseClient.from(table).upsert(retry, {onConflict:'id'});
+        if(err2) console.warn('Sync '+table+' retry error', err2.message);
+        else console.log('✅ '+table+' synced (retry)', retry.length);
+        return;
+      }
+    } else console.log('✅ '+table+' synced', finalClean.length);
   }catch(e){ console.warn('Sync '+table+' exception', e); }
 }
 window.syncKaryawanToSupabase = () => upsertTable('karyawan', typeof karyawanData!=='undefined'?karyawanData:[]);
@@ -8596,7 +8621,11 @@ window.syncAntrianToSupabase = () => upsertTable('antrian', typeof antrianData!=
   window.supabaseClient = window.supabaseClient || (function(){ try{ return window.createClient ? window.createClient('https://nniecqbfjmmlrtmolnrt.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaWVjcWJmam1tbHJ0bW9sbnJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMDg0MDcsImV4cCI6MjEwNjc4NDQwN30.aUXMtZN9SVb5Qgj7pA6Ur5hwKDhwDPokFCrQhONSWqE') : null; }catch(e){return null;} })();
   for(let t of ['outlets','pelanggan','layanan','antrian','karyawan']){
     try{
-      const {data,error} = await window.supabaseClient.from(t).select('*').order('created_at',{ascending:true}).limit(2000);
+      // Coba load tanpa order dulu biar tidak 400 jika created_at tidak ada
+      let query = window.supabaseClient.from(t).select('*').limit(2000);
+      // try order, jika gagal nanti fallback
+      try{ query = query.order('created_at',{ascending:true}); }catch(e){}
+      const {data,error} = await query;
       if(!error && data){
         console.log('📥 Load '+t, data.length);
         if(data.length>0){
