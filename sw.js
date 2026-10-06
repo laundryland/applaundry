@@ -1,4 +1,4 @@
-const CACHE_NAME = 'laundryland-v24-fix-outlet-layanan-karyawan-sync';
+const CACHE_NAME = 'laundryland-v25-fix-outlet-layanan-karyawan-sync';
 self.addEventListener('install', e=>{
   self.skipWaiting();
   // Clear all old caches that contain multi-hp sync
