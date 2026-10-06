@@ -47,6 +47,7 @@
 
 
 
+<!-- v12-deposito-aman: outlet+pelanggan+merge+karyawan+logo-header -->
 <meta charset="UTF-8">
 <!-- ============================================================ -->
 <!-- EMBEDDED SYSTEM CONTROL & ROADMAP METADATA                   -->
@@ -900,6 +901,26 @@ body {
 let supabaseClient = null;
 const db = new Dexie('LaundryPWA_Locked_v3');
 
+db.version(4).stores({ 
+  karyawan: 'id, outlet_id, outletId, username, level',
+  outlets: 'id, nama, isActive, is_active',
+  pelanggan: 'id, outlet_id, outletId, nama, wa, deposito',
+  layanan: 'id, outlet_id, outletId, nama, kode',
+  antrian: 'id, outlet_id, outletId, nota',
+  deposito_logs: 'id, pelangganId, outletId, tanggal',
+  sync_queue: '++qid, table_name, created_at',
+  struk_settings: 'id, outletId, key'
+});
+db.version(3).stores({ 
+  karyawan: 'id, outlet_id, outletId, username, level',
+  outlets: 'id, nama, isActive, is_active',
+  pelanggan: 'id, outlet_id, outletId, nama, wa',
+  layanan: 'id, outlet_id, outletId, nama, kode',
+  antrian: 'id, outlet_id, outletId, nota',
+  sync_queue: '++qid, table_name, created_at',
+  struk_settings: 'id, outletId, key'
+});
+// Backward compat for v2
 db.version(2).stores({ 
   karyawan: 'id, outlet_id, username, level', 
   sync_queue: '++qid, table_name, created_at',
@@ -2445,6 +2466,15 @@ let outletsData = [];
 let karyawanData = [];
 
 let pelangganData = [];
+try{
+  const cachedPel = localStorage.getItem('pelangganData');
+  if(cachedPel){ const cp=JSON.parse(cachedPel); if(Array.isArray(cp) && cp.length>0) pelangganData=cp; }
+}catch(e){}
+let depositoLogData = [];
+try{
+  const cachedDep = localStorage.getItem('depositoLogData');
+  if(cachedDep){ const cd=JSON.parse(cachedDep); if(Array.isArray(cd)) depositoLogData=cd; }
+}catch(e){}
 
 let layananData = [];
 
@@ -2543,8 +2573,74 @@ function getActiveKaryawan() {
   return karyawanData.find(k => k.isActive && (k.outletId === activeOutlet.id || !k.outletId)) || karyawanData.find(k=> k.outletId===activeOutlet.id) || karyawanData[0]; 
 }
 
-function syncActiveOutletHeader() { const activeOutlet = getActiveOutlet(); const labelHeader = document.getElementById('label-outlet'); if (labelHeader) labelHeader.innerText = activeOutlet.nama; }
+function syncActiveOutletHeader() { 
+  const activeOutlet = getActiveOutlet(); 
+  const labelHeader = document.getElementById('label-outlet'); 
+  if (labelHeader) labelHeader.innerText = activeOutlet.nama;
+  // Update header logo if exists
+  try{ renderHeaderLogo(); }catch(e){}
+}
 function syncActiveKaryawanHeader() { const activeKaryawan = getActiveKaryawan(); const labelKaryawan = document.getElementById('label-karyawan'); if (labelKaryawan && activeKaryawan) labelKaryawan.innerText = activeKaryawan.nama; }
+
+function renderHeaderLogo(){
+  const box = document.getElementById('btn-upload-logo');
+  if(!box) return;
+  const logo = (typeof strukLogoBase64!=='undefined' && strukLogoBase64) ? strukLogoBase64 : (localStorage.getItem('strukLogoBase64')||'');
+  if(logo){
+    box.innerHTML = '<img src="'+logo+'" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">';
+    box.style.padding='2px';
+    box.style.background='white';
+  } else {
+    // Default icon jika belum ada logo
+    box.innerHTML = '<svg class="icon-svg" viewBox="0 0 24 24" style="width: 22px; height: 22px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>';
+  }
+}
+
+// Unified logo upload: header + nota jadi 1
+function initHeaderLogoUpload(){
+  const box = document.getElementById('btn-upload-logo');
+  if(!box) return;
+  box.addEventListener('click', function(){
+    // Jika ada input file di modal struk, trigger itu, jika tidak buat input baru
+    const existingInput = document.getElementById('strukLogoUpload');
+    if(existingInput){
+      // Buka modal master struk biar sekalian bisa setting nota
+      if(typeof openMasterStrukModal==='function'){
+        openMasterStrukModal();
+        setTimeout(()=>{ const inp=document.getElementById('strukLogoUpload'); if(inp) inp.click(); }, 400);
+      } else {
+        existingInput.click();
+      }
+    } else {
+      // Fallback: buat input file sementara
+      const tempInput = document.createElement('input');
+      tempInput.type='file';
+      tempInput.accept='image/*';
+      tempInput.onchange = function(e){
+        if(typeof handleLogoUpload==='function') handleLogoUpload(e);
+      };
+      tempInput.click();
+    }
+  });
+  
+  // Render logo awal
+  setTimeout(()=>{ renderHeaderLogo(); }, 800);
+}
+
+// Override handleLogoUpload untuk juga update header
+var _origHandleLogoForHeader = window.handleLogoUpload;
+window.handleLogoUpload = async function(event){
+  if(typeof _origHandleLogoForHeader==='function'){
+    await _origHandleLogoForHeader(event);
+  }
+  // Setelah upload, update header juga
+  setTimeout(()=>{ try{ renderHeaderLogo(); }catch(e){} }, 300);
+};
+
+document.addEventListener('DOMContentLoaded', function(){
+  setTimeout(()=>{ initHeaderLogoUpload(); renderHeaderLogo(); }, 1500);
+});
+
 
 function showNoticeToast(msg) {
   let toast = document.getElementById('noticeToast');
@@ -3550,18 +3646,28 @@ function simpanPelanggan() {
 
   if (!nama) { showNoticeToast('Nama pelanggan tidak boleh kosong'); return; }
 
+  let pelangganObj;
   if (editingPelangganId) {
     const p = pelangganData.find(item => item.id === editingPelangganId);
-    if (p) { p.nama = nama; p.wa = wa; p.tanpaWa = tanpaWa; p.simpanKontak = simpanKontak; p.alamat = alamat; }
+    if (p) { p.nama = nama; p.wa = wa; p.tanpaWa = tanpaWa; p.simpanKontak = simpanKontak; p.alamat = alamat; pelangganObj = p; }
   } else {
-    const newP = { id: 'pelanggan-' + Date.now(), outletId: activeOutlet.id, nama: nama, wa: wa, tanpaWa: tanpaWa, simpanKontak: simpanKontak, alamat: alamat, deposito: 0 };
-    pelangganData.push(newP);
-    if (isPelangganPickerForNota) { selectPelangganTargetNota(newP.id); }
+    pelangganObj = { id: 'pelanggan-' + Date.now(), outletId: activeOutlet.id, outlet_id: activeOutlet.id, nama: nama, wa: wa, tanpaWa: tanpaWa, simpanKontak: simpanKontak, alamat: alamat, deposito: 0, created_at: new Date().toISOString() };
+    pelangganData.push(pelangganObj);
+    if (isPelangganPickerForNota) { selectPelangganTargetNota(pelangganObj.id); }
   }
+
+  // Persist ke localStorage + IndexedDB + Supabase (FIX: sebelumnya hilang setelah reload)
+  try{ localStorage.setItem('pelangganData', JSON.stringify(pelangganData)); }catch(e){}
+  try{ 
+    if(typeof db!=='undefined' && db.pelanggan) {
+      db.pelanggan.put({...pelangganObj}).catch(()=>{});
+    }
+  }catch(e){}
+  try{ if(typeof window.syncPelangganToSupabase==='function') window.syncPelangganToSupabase(); }catch(e){}
 
   closeSubModalPelanggan();
   renderPelangganList();
-  showNoticeToast('Data pelanggan berhasil disimpan.');
+  showNoticeToast('✅ Pelanggan disimpan & sync ke Supabase');
 }
 
 function openSubModalIsiDeposito(pelangganId, mode = 'tambah') {
@@ -3609,16 +3715,67 @@ function simpanDeposito() {
   if (!p) return;
 
   const nominal = parseFloat(document.getElementById('inputNominalDeposito').value) || 0;
+  const activeOutlet = (typeof getActiveOutlet==='function') ? getActiveOutlet() : {id:'default'};
+  let bonus = 0;
+  let totalDiterima = nominal;
+  let tipe = 'edit';
 
   if (modeDeposito === 'edit') {
     p.deposito = nominal;
+    tipe = 'edit';
     showNoticeToast(`Saldo deposito ${p.nama} diubah menjadi Rp ${nominal.toLocaleString('id-ID')}`);
   } else {
-    let bonus = globalDiskonSettings.type === 'persen' ? nominal * (globalDiskonSettings.val / 100) : globalDiskonSettings.val;
-    const totalDiterima = nominal + bonus;
-    p.deposito += totalDiterima;
+    bonus = globalDiskonSettings.type === 'persen' ? nominal * (globalDiskonSettings.val / 100) : globalDiskonSettings.val;
+    totalDiterima = nominal + bonus;
+    p.deposito = (p.deposito||0) + totalDiterima;
+    tipe = 'tambah';
     showNoticeToast(`Tambah deposito Rp ${nominal.toLocaleString('id-ID')} (+ Bonus ${bonus.toLocaleString('id-ID')}) ke ${p.nama} berhasil.`);
   }
+
+  // === AMANKAN DEPOSITO: localStorage + IndexedDB + Supabase (biar gak ilang dipisuhi pelanggan) ===
+  try{ localStorage.setItem('pelangganData', JSON.stringify(pelangganData)); }catch(e){}
+  try{ if(typeof db!=='undefined' && db.pelanggan){ db.pelanggan.put({...p}).catch(()=>{}); } }catch(e){}
+  try{ if(typeof window.syncPelangganToSupabase==='function') window.syncPelangganToSupabase(); }catch(e){}
+
+  // Simpan log deposito
+  try{
+    const logEntry = {
+      id: 'deposito-' + Date.now(),
+      pelangganId: p.id,
+      pelangganNama: p.nama,
+      outletId: activeOutlet.id,
+      outlet_id: activeOutlet.id,
+      tipe: tipe, // tambah / edit / hapus
+      nominal: nominal,
+      bonus: bonus,
+      total: totalDiterima,
+      saldoAkhir: p.deposito,
+      tanggal: new Date().toISOString(),
+      created_at: new Date().toISOString()
+    };
+    if(typeof depositoLogData==='undefined') window.depositoLogData = [];
+    depositoLogData.push(logEntry);
+    try{ localStorage.setItem('depositoLogData', JSON.stringify(depositoLogData)); }catch(e){}
+    try{ if(typeof db!=='undefined' && db.deposito_logs){ db.deposito_logs.put(logEntry).catch(()=>{}); } }catch(e){}
+    // Sync log ke Supabase tabel deposito_logs (jika ada)
+    try{ 
+      if(window.supabaseClient){
+        window.supabaseClient.from('deposito_logs').upsert([{
+          id: logEntry.id,
+          pelanggan_id: p.id,
+          pelangganId: p.id,
+          outlet_id: activeOutlet.id,
+          outletId: activeOutlet.id,
+          tipe: tipe,
+          nominal: nominal,
+          bonus: bonus,
+          total: totalDiterima,
+          saldo_akhir: p.deposito,
+          tanggal: logEntry.tanggal
+        }], {onConflict:'id'}).then(({error})=>{ if(error) console.warn('Sync deposito_logs error', error.message); else console.log('✅ deposito_logs synced'); });
+      }
+    }catch(e){}
+  }catch(e){ console.warn('Log deposito error', e); }
 
   hitungRingkasanKas();
   closeSubModalIsiDeposito();
@@ -3682,15 +3839,28 @@ function simpanOutlet() {
   const wa = document.getElementById('inputWaOutlet').value.trim();
   if (!nama) { showNoticeToast('Nama outlet tidak boleh kosong'); return; }
 
+  let outletObj;
   if (editingOutletId) {
     const o = outletsData.find(item => item.id === editingOutletId);
-    if (o) { o.nama = nama; o.alamat = alamat; o.wa = wa; }
-  } else outletsData.push({ id: 'outlet-' + Date.now(), nama: nama, alamat: alamat, wa: wa, isActive: false });
+    if (o) { o.nama = nama; o.alamat = alamat; o.wa = wa; outletObj = o; }
+  } else {
+    outletObj = { id: 'outlet-' + Date.now(), nama: nama, alamat: alamat, wa: wa, isActive: false, is_active: false, created_at: new Date().toISOString() };
+    outletsData.push(outletObj);
+  }
+
+  // Persist ke localStorage + IndexedDB + Supabase
+  try{ localStorage.setItem('outletsData', JSON.stringify(outletsData)); }catch(e){}
+  try{ 
+    if(typeof db!=='undefined' && db.outlets) {
+      db.outlets.put({...outletObj, outlet_id: outletObj.id, outletId: outletObj.id}).catch(()=>{});
+    }
+  }catch(e){}
+  try{ if(typeof window.syncOutletsToSupabase==='function') window.syncOutletsToSupabase(); }catch(e){}
 
   resetFormOutlet();
   renderOutletList();
   renderHeaderOutletDropdown();
-  showNoticeToast('Data outlet berhasil disimpan.');
+  showNoticeToast('✅ Outlet disimpan & sync ke Supabase');
 }
 
 function editOutlet(id) {
@@ -8632,12 +8802,67 @@ window.syncAntrianToSupabase = () => upsertTable('antrian', typeof antrianData!=
       const {data,error} = await query;
       if(!error && data){
         console.log('📥 Load '+t, data.length);
-        if(data.length>0){
-          if(t==='outlets'){ outletsData=data; try{ localStorage.setItem('outletsData', JSON.stringify(data)); }catch(e){} if(typeof renderOutletList==='function') renderOutletList(); if(typeof syncActiveOutletHeader==='function') syncActiveOutletHeader(); }
-          if(t==='pelanggan'){ pelangganData=data; try{ localStorage.setItem('pelangganData', JSON.stringify(data)); }catch(e){} if(typeof renderPelangganList==='function') renderPelangganList(); }
-          if(t==='layanan'){ layananData=data; try{ localStorage.setItem('layananData', JSON.stringify(data)); }catch(e){} if(typeof renderLayananList==='function') renderLayananList(); }
-          if(t==='antrian'){ antrianData=data; if(typeof renderAntrianList==='function') renderAntrianList('Semua'); }
-          if(t==='karyawan'){ karyawanData=data; try{ localStorage.setItem('karyawanData', JSON.stringify(data)); }catch(e){} if(typeof renderKaryawanList==='function') renderKaryawanList(); if(typeof syncActiveKaryawanHeader==='function') syncActiveKaryawanHeader(); }
+        // MERGE logic: jangan overwrite jika local lebih banyak (fix 5 jadi 2)
+        if(t==='outlets'){
+          if(data.length>0){
+            // Merge: gabung remote + local yang belum ada di remote
+            const local = (()=>{ try{ return JSON.parse(localStorage.getItem('outletsData')||'[]'); }catch(e){ return outletsData; } })();
+            const merged = [...data];
+            local.forEach(l=>{
+              if(!merged.find(m=>m.id===l.id)) merged.push(l);
+            });
+            outletsData=merged;
+          } else {
+            // Jika remote kosong, pakai local cache jangan dihapus
+            try{ const cached=JSON.parse(localStorage.getItem('outletsData')||'[]'); if(cached.length>0) outletsData=cached; }catch(e){}
+          }
+          try{ localStorage.setItem('outletsData', JSON.stringify(outletsData)); }catch(e){}
+          try{ if(typeof db!=='undefined' && db.outlets){ outletsData.forEach(o=>db.outlets.put(o).catch(()=>{})); } }catch(e){}
+          if(typeof renderOutletList==='function') renderOutletList(); 
+          if(typeof syncActiveOutletHeader==='function') syncActiveOutletHeader();
+          // Jika local lebih banyak dari remote, sync balik ke Supabase
+          if(outletsData.length>data.length){ try{ if(typeof window.syncOutletsToSupabase==='function') window.syncOutletsToSupabase(); }catch(e){} }
+        }
+        if(t==='pelanggan'){
+          if(data.length>0){
+            const local = (()=>{ try{ return JSON.parse(localStorage.getItem('pelangganData')||'[]'); }catch(e){ return pelangganData; } })();
+            const merged = [...data];
+            local.forEach(l=>{ if(!merged.find(m=>m.id===l.id)) merged.push(l); });
+            pelangganData=merged;
+          } else {
+            try{ const cached=JSON.parse(localStorage.getItem('pelangganData')||'[]'); if(cached.length>0) pelangganData=cached; }catch(e){}
+          }
+          try{ localStorage.setItem('pelangganData', JSON.stringify(pelangganData)); }catch(e){}
+          try{ if(typeof db!=='undefined' && db.pelanggan){ pelangganData.forEach(p=>db.pelanggan.put(p).catch(()=>{})); } }catch(e){}
+          if(typeof renderPelangganList==='function') renderPelangganList();
+          if(pelangganData.length>data.length){ try{ if(typeof window.syncPelangganToSupabase==='function') window.syncPelangganToSupabase(); }catch(e){} }
+        }
+        if(t==='layanan'){
+          if(data.length>0){ layananData=data; } else { try{ const c=JSON.parse(localStorage.getItem('layananData')||'[]'); if(c.length>0) layananData=c; }catch(e){} }
+          try{ localStorage.setItem('layananData', JSON.stringify(layananData)); }catch(e){}
+          if(typeof renderLayananList==='function') renderLayananList();
+        }
+        if(t==='antrian'){
+          if(data.length>0){ antrianData=data; } else { try{ const c=JSON.parse(localStorage.getItem('antrianData')||'[]'); if(c && c.length>0) antrianData=c; }catch(e){} }
+          try{ localStorage.setItem('antrianData', JSON.stringify(antrianData)); }catch(e){}
+          if(typeof renderAntrianList==='function') renderAntrianList('Semua');
+        }
+        if(t==='karyawan'){
+          if(data.length>0){
+            // Merge karyawan: remote 5 tapi reload tinggal 2 -> jangan hilangkan 3
+            const local = (()=>{ try{ return JSON.parse(localStorage.getItem('karyawanData')||'[]'); }catch(e){ return karyawanData; } })();
+            const merged = [...data];
+            local.forEach(l=>{ if(!merged.find(m=>m.id===l.id)) merged.push(l); });
+            // Juga cek Dexie
+            karyawanData=merged;
+          } else {
+            try{ const cached=JSON.parse(localStorage.getItem('karyawanData')||'[]'); if(cached.length>0) karyawanData=cached; }catch(e){}
+          }
+          try{ localStorage.setItem('karyawanData', JSON.stringify(karyawanData)); }catch(e){}
+          try{ if(typeof db!=='undefined' && db.karyawan){ karyawanData.forEach(k=>db.karyawan.put(k).catch(()=>{})); } }catch(e){}
+          if(typeof renderKaryawanList==='function') renderKaryawanList(); 
+          if(typeof syncActiveKaryawanHeader==='function') syncActiveKaryawanHeader();
+          if(karyawanData.length>data.length){ try{ if(typeof window.syncKaryawanToSupabase==='function') window.syncKaryawanToSupabase(); }catch(e){} }
         }
       } else { console.warn('Load '+t+' error', error); }
     }catch(e){ console.warn('Load '+t+' exception', e); }
