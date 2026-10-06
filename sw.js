@@ -1,4 +1,4 @@
-const CACHE_NAME = 'laundryland-v17-final-clean';
+const CACHE_NAME = 'laundryland-v18-windows7-rapi';
 self.addEventListener('install', e=>{ self.skipWaiting(); });
 self.addEventListener('activate', e=>{
   e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
