@@ -1,4 +1,4 @@
-const CACHE_NAME = 'laundryland-v10';
+const CACHE_NAME = 'laundryland-v11';
 self.addEventListener('install', e=>{
   self.skipWaiting();
 });
