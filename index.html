@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#f618a9">
+<title>Laundry Land - Modular v11 Supabase First</title>
+<link rel="stylesheet" href="./css/app.css">
+<script src="https://unpkg.com/dexie@4/dist/dexie.min.js"></script>
+</head>
+<body>
+<div id="supabase-loading">
+  <div style="width:44px;height:44px;border:4px solid #f618a9;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite"></div>
+  <div style="margin-top:14px;font-weight:800;color:#f618a9">☁️ Supabase First Sync</div>
+  <div style="font-size:11px;color:#666;margin-top:4px">Mengambil data terbaru dari cloud...</div>
+</div>
+
+<div id="app-root">Loading modular app...<br>Jika stuck, cek console dan pastikan original_body.html ada di folder yang sama.</div>
+
+<script type="module" src="./js/app.js"></script>
+
+<!-- Legacy inline onclick compatibility - will be removed after full migration -->
+<script>
+// Temporary shims for old onclick="closeModal..." etc
+window.closeModalMasterStrukModal = ()=>{ if(window.closeModal) closeModal('modalMasterStrukOverlay'); };
+window.openMasterStrukModal = ()=>{ if(window.openModal) openModal('modalMasterStrukOverlay'); };
+window.closeModalOutlet = ()=>{ if(window.closeModal) closeModal('modalOutletOverlay'); };
+window.openModalOutlet = ()=>{ if(window.openModal) openModal('modalOutletOverlay'); };
+window.closeModalKaryawan = ()=>{ if(window.closeModal) closeModal('modalKaryawanOverlay'); };
+window.openModalKaryawan = ()=>{ if(window.openModal) openModal('modalKaryawanOverlay'); };
+window.closeModalPelanggan = ()=>{ if(window.closeModal) closeModal('modalPelangganOverlay'); };
+window.openModalPelanggan = ()=>{ if(window.openModal) openModal('modalPelangganOverlay'); };
+window.closeModalLayanan = ()=>{ if(window.closeModal) closeModal('modalLayananOverlay'); };
+window.openModalLayanan = ()=>{ if(window.openModal) openModal('modalLayananOverlay'); };
+window.closeModalNota = ()=>{ if(window.closeModal) closeModal('modalNotaOverlay'); };
+window.openModalNota = ()=>{ if(window.openModal) openModal('modalNotaOverlay'); };
+window.closeModalDetailNota = ()=>{ if(window.closeModal) closeModal('modalDetailNotaOverlay'); };
+window.closeModalBayarNota = ()=>{ if(window.closeModal) closeModal('modalBayarNotaOverlay'); };
+window.closeModalExportImport = ()=>{ if(window.closeModal) closeModal('modalExportImportOverlay'); };
+window.openModalExportImport = ()=>{ if(window.openModal) openModal('modalExportImportOverlay'); };
+</script>
+</body>
+</html>
