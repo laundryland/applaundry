@@ -1,4 +1,4 @@
-const CACHE_NAME = 'laundryland-v15-final-fix';
+const CACHE_NAME = 'laundryland-v17-final-clean';
 self.addEventListener('install', e=>{ self.skipWaiting(); });
 self.addEventListener('activate', e=>{
   e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
