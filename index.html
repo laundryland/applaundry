@@ -47,7 +47,7 @@
 
 
 
-<!-- v12-deposito-aman: outlet+pelanggan+merge+karyawan+logo-header -->
+<!-- v13-hardreset-restore: outlet+pelanggan+merge+karyawan+logo-header -->
 <meta charset="UTF-8">
 <!-- ============================================================ -->
 <!-- EMBEDDED SYSTEM CONTROL & ROADMAP METADATA                   -->
@@ -8793,42 +8793,65 @@ window.syncAntrianToSupabase = () => upsertTable('antrian', typeof antrianData!=
 (async()=>{
   await new Promise(r=>setTimeout(r,800));
   window.supabaseClient = window.supabaseClient || (function(){ try{ return window.createClient ? window.createClient('https://nniecqbfjmmlrtmolnrt.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uaWVjcWJmam1tbHJ0bW9sbnJ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyMDg0MDcsImV4cCI6MjEwNjc4NDQwN30.aUXMtZN9SVb5Qgj7pA6Ur5hwKDhwDPokFCrQhONSWqE') : null; }catch(e){return null;} })();
-  for(let t of ['outlets','pelanggan','layanan','antrian','karyawan']){
+  for(let t of ['outlets','pelanggan','layanan','antrian','karyawan','deposito_logs']){
     try{
-      // Coba load tanpa order dulu biar tidak 400 jika created_at tidak ada
-      let query = window.supabaseClient.from(t).select('*').limit(2000);
-      // try order, jika gagal nanti fallback
-      try{ query = query.order('created_at',{ascending:true}); }catch(e){}
-      const {data,error} = await query;
+      let data, error;
+      try{
+        let q = window.supabaseClient.from(t).select('*').limit(5000).order('created_at',{ascending:true});
+        const res = await q;
+        data=res.data; error=res.error;
+        if(error && (error.message?.includes('created_at') || error.code==='42703' || error.message?.includes('does not exist') || error.message?.includes('column'))){
+          console.warn('Retry load '+t+' tanpa order karena', error.message);
+          const res2 = await window.supabaseClient.from(t).select('*').limit(5000);
+          data=res2.data; error=res2.error;
+        }
+      }catch(e){
+        const res = await window.supabaseClient.from(t).select('*').limit(5000);
+        data=res.data; error=res.error;
+      }
+
       if(!error && data){
-        console.log('📥 Load '+t, data.length);
-        // MERGE logic: jangan overwrite jika local lebih banyak (fix 5 jadi 2)
+        console.log('📥 Load '+t+' '+data.length+' (Supa tetap ada, Ctrl+F5 restore)');
+        const isLocalEmpty = (key)=>{
+          try{
+            const c=localStorage.getItem(key);
+            if(!c) return true;
+            const arr=JSON.parse(c);
+            return !Array.isArray(arr) || arr.length===0;
+          }catch(e){ return true; }
+        };
+
         if(t==='outlets'){
           if(data.length>0){
-            // Merge: gabung remote + local yang belum ada di remote
-            const local = (()=>{ try{ return JSON.parse(localStorage.getItem('outletsData')||'[]'); }catch(e){ return outletsData; } })();
-            const merged = [...data];
-            local.forEach(l=>{
-              if(!merged.find(m=>m.id===l.id)) merged.push(l);
-            });
-            outletsData=merged;
+            const local = (()=>{ try{ return JSON.parse(localStorage.getItem('outletsData')||'[]'); }catch(e){ return []; } })();
+            if(local.length===0 || isLocalEmpty('outletsData')){
+              outletsData=data;
+              console.log('🔄 Hard reset detected, restore outlets dari Supa '+data.length);
+            } else {
+              const merged=[...data];
+              local.forEach(l=>{ if(!merged.find(m=>m.id===l.id)) merged.push(l); });
+              outletsData=merged;
+            }
           } else {
-            // Jika remote kosong, pakai local cache jangan dihapus
             try{ const cached=JSON.parse(localStorage.getItem('outletsData')||'[]'); if(cached.length>0) outletsData=cached; }catch(e){}
           }
           try{ localStorage.setItem('outletsData', JSON.stringify(outletsData)); }catch(e){}
           try{ if(typeof db!=='undefined' && db.outlets){ outletsData.forEach(o=>db.outlets.put(o).catch(()=>{})); } }catch(e){}
           if(typeof renderOutletList==='function') renderOutletList(); 
           if(typeof syncActiveOutletHeader==='function') syncActiveOutletHeader();
-          // Jika local lebih banyak dari remote, sync balik ke Supabase
           if(outletsData.length>data.length){ try{ if(typeof window.syncOutletsToSupabase==='function') window.syncOutletsToSupabase(); }catch(e){} }
         }
         if(t==='pelanggan'){
           if(data.length>0){
-            const local = (()=>{ try{ return JSON.parse(localStorage.getItem('pelangganData')||'[]'); }catch(e){ return pelangganData; } })();
-            const merged = [...data];
-            local.forEach(l=>{ if(!merged.find(m=>m.id===l.id)) merged.push(l); });
-            pelangganData=merged;
+            const local = (()=>{ try{ return JSON.parse(localStorage.getItem('pelangganData')||'[]'); }catch(e){ return []; } })();
+            if(local.length===0 || isLocalEmpty('pelangganData')){
+              pelangganData=data;
+              console.log('🔄 Hard reset detected, restore pelanggan dari Supa '+data.length);
+            } else {
+              const merged=[...data];
+              local.forEach(l=>{ if(!merged.find(m=>m.id===l.id)) merged.push(l); });
+              pelangganData=merged;
+            }
           } else {
             try{ const cached=JSON.parse(localStorage.getItem('pelangganData')||'[]'); if(cached.length>0) pelangganData=cached; }catch(e){}
           }
@@ -8849,12 +8872,15 @@ window.syncAntrianToSupabase = () => upsertTable('antrian', typeof antrianData!=
         }
         if(t==='karyawan'){
           if(data.length>0){
-            // Merge karyawan: remote 5 tapi reload tinggal 2 -> jangan hilangkan 3
-            const local = (()=>{ try{ return JSON.parse(localStorage.getItem('karyawanData')||'[]'); }catch(e){ return karyawanData; } })();
-            const merged = [...data];
-            local.forEach(l=>{ if(!merged.find(m=>m.id===l.id)) merged.push(l); });
-            // Juga cek Dexie
-            karyawanData=merged;
+            const local = (()=>{ try{ return JSON.parse(localStorage.getItem('karyawanData')||'[]'); }catch(e){ return []; } })();
+            if(local.length===0 || isLocalEmpty('karyawanData')){
+              karyawanData=data;
+              console.log('🔄 Hard reset detected, restore karyawan dari Supa '+data.length);
+            } else {
+              const merged=[...data];
+              local.forEach(l=>{ if(!merged.find(m=>m.id===l.id)) merged.push(l); });
+              karyawanData=merged;
+            }
           } else {
             try{ const cached=JSON.parse(localStorage.getItem('karyawanData')||'[]'); if(cached.length>0) karyawanData=cached; }catch(e){}
           }
@@ -8864,9 +8890,52 @@ window.syncAntrianToSupabase = () => upsertTable('antrian', typeof antrianData!=
           if(typeof syncActiveKaryawanHeader==='function') syncActiveKaryawanHeader();
           if(karyawanData.length>data.length){ try{ if(typeof window.syncKaryawanToSupabase==='function') window.syncKaryawanToSupabase(); }catch(e){} }
         }
-      } else { console.warn('Load '+t+' error', error); }
+        if(t==='deposito_logs'){
+          if(data.length>0){
+            depositoLogData=data.map(d=>({
+              id: d.id,
+              pelangganId: d.pelanggan_id||d.pelangganId,
+              pelangganNama: d.pelanggan_nama||'',
+              outletId: d.outlet_id||d.outletId,
+              tipe: d.tipe,
+              nominal: d.nominal,
+              bonus: d.bonus,
+              total: d.total,
+              saldoAkhir: d.saldo_akhir,
+              tanggal: d.tanggal
+            }));
+            try{ localStorage.setItem('depositoLogData', JSON.stringify(depositoLogData)); }catch(e){}
+          }
+        }
+      } else { 
+        console.warn('Load '+t+' error', error); 
+        if(t==='outlets'){ try{ const c=JSON.parse(localStorage.getItem('outletsData')||'[]'); if(c.length>0){ outletsData=c; if(typeof renderOutletList==='function') renderOutletList(); } }catch(e){} }
+        if(t==='pelanggan'){ try{ const c=JSON.parse(localStorage.getItem('pelangganData')||'[]'); if(c.length>0){ pelangganData=c; if(typeof renderPelangganList==='function') renderPelangganList(); } }catch(e){} }
+        if(t==='karyawan'){ try{ const c=JSON.parse(localStorage.getItem('karyawanData')||'[]'); if(c.length>0){ karyawanData=c; if(typeof renderKaryawanList==='function') renderKaryawanList(); } }catch(e){} }
+      }
     }catch(e){ console.warn('Load '+t+' exception', e); }
   }
+
+  // === GLOBAL RESTORE FUNCTION: seperti KelolaLaundry APK - hardreset restore ===
+  window.forceRestoreFromSupabase = async function(){
+    if(!confirm('Restore semua data dari Supabase? Data lokal akan diganti dengan data dari Supa (seperti backup restore). Lanjutkan?')) return;
+    try{
+      if(typeof showNoticeToast==='function') showNoticeToast('🔄 Restore dari Supa...');
+      for(let t of ['outlets','pelanggan','layanan','antrian','karyawan']){
+        const {data,error} = await window.supabaseClient.from(t).select('*').limit(5000);
+        if(!error && data){
+          if(t==='outlets'){ outletsData=data; localStorage.setItem('outletsData', JSON.stringify(data)); if(typeof renderOutletList==='function') renderOutletList(); }
+          if(t==='pelanggan'){ pelangganData=data; localStorage.setItem('pelangganData', JSON.stringify(data)); if(typeof renderPelangganList==='function') renderPelangganList(); }
+          if(t==='layanan'){ layananData=data; localStorage.setItem('layananData', JSON.stringify(data)); if(typeof renderLayananList==='function') renderLayananList(); }
+          if(t==='antrian'){ antrianData=data; localStorage.setItem('antrianData', JSON.stringify(data)); if(typeof renderAntrianList==='function') renderAntrianList('Semua'); }
+          if(t==='karyawan'){ karyawanData=data; localStorage.setItem('karyawanData', JSON.stringify(data)); if(typeof renderKaryawanList==='function') renderKaryawanList(); }
+        }
+      }
+      if(typeof showNoticeToast==='function') showNoticeToast('✅ Restore dari Supa berhasil! Reload...');
+      setTimeout(()=>location.reload(), 800);
+    }catch(e){ if(typeof showNoticeToast==='function') showNoticeToast('❌ Restore gagal: '+e.message); }
+  };
+
   // realtime auto-refresh karyawan tiap 15 detik (kalau tambah manual di Supabase)
   setInterval(async()=>{
     try{
