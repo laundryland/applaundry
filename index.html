@@ -6,8 +6,6 @@
 <meta name="theme-color" content="#f618a9">
 <title>Laundry Land - Modular v2.5.28 Clean</title>
 <link rel="stylesheet" href="./css/app.css">
-<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
-<link rel="apple-touch-icon" href="./icons/icon-192.png">
 <link rel="manifest" href="./manifest.json">
 <script src="https://unpkg.com/dexie@4/dist/dexie.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -121,7 +119,7 @@ init().catch(e => {
   const s1 = document.getElementById('supabase-loading'); if(s1) s1.remove();
 });
 
-if ('serviceWorker' in navigator) {
+if (false && 'serviceWorker' in navigator) { // disabled temp to fix X merah
   navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
 }
 </script>
