@@ -1,4 +1,3 @@
-
 export function initHeaderHome() {
   // Logo upload
   document.getElementById('btn-upload-logo')?.addEventListener('click', (e) => {
