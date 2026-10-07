@@ -1,21 +1,9 @@
 {
   "name": "Laundry Land - Modular v2.5.28",
   "short_name": "Laundry Land",
-  "description": "Laundry Land POS - Modular Clean v2.5.28 with 2ROW ICONS",
+  "description": "Laundry Land POS - Modular Clean v2.5.28",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#f618a9",
-  "icons": [
-    {
-      "src": "./icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "./icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
-    }
-  ]
+  "theme_color": "#f618a9"
 }

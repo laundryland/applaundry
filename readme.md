@@ -1,13 +1,19 @@
-Laundry Land - Modular Clean
-Apa fungsi README.md?
+# Laundry Land - Modular Clean
+
+## Apa fungsi README.md?
+
 `readme.md` adalah file dokumentasi yang otomatis jadi halaman depan repo GitHub lu.
+
 Fungsinya:
-Jelaskan aplikasi - Orang buka repo langsung tau ini POS Laundry Land v2.5.28 modular
-Panduan upload - File mana yang wajib upload, mana yang jangan (hindari ganda kayak kemarin 6x SUPABASE_URL)
-Cara install - Enable GitHub Pages biar bisa diakses online
-Urutan penyimpanan - Catat Supabase order 1, LS order 2, IDB order 3
+1. **Jelaskan aplikasi** - Orang buka repo langsung tau ini POS Laundry Land v2.5.28 modular
+2. **Panduan upload** - File mana yang wajib upload, mana yang jangan (hindari ganda kayak kemarin 6x SUPABASE_URL)
+3. **Cara install** - Enable GitHub Pages biar bisa diakses online
+4. **Urutan penyimpanan** - Catat Supabase order 1, LS order 2, IDB order 3
+
 Tanpa readme.md, repo lu di GitHub keliatan kosong, cuma list file doang.
-Struktur Lengkap (kecil semua huruf)
+
+## Struktur Lengkap (kecil semua huruf)
+
 ```
 laundry-land/
 ├── index.html
@@ -29,13 +35,21 @@ laundry-land/
         ├── master-struk.js
         └── modal-manager.js
 ```
-File readme.md harus ada di root
+
+## File readme.md harus ada di root
+
 Nama file harus persis `readme.md` (kecil semua huruf), bukan `readmi.md` atau `README.md` kapital.
+
 Letaknya di root sejajar dengan `index.html`, bukan di dalam folder `js/` atau `css/`.
-Cara cek di GitHub
+
+## Cara cek di GitHub
+
 Setelah upload, buka repo lu di GitHub, di bawah list file harusnya muncul isi file readme.md ini otomatis.
+
 Kalo belum ada, berarti file belum ke-upload atau namanya salah ketik jadi `readmi.md`.
-Urutan Penyimpanan
-Order 1 - Supabase (js/supabase.js) - cloud primary
-Order 2 - localStorage - fast cache
-Order 3 - IndexedDB/Dexie - backup large
+
+## Urutan Penyimpanan
+
+1. Order 1 - Supabase (js/supabase.js) - cloud primary
+2. Order 2 - localStorage - fast cache
+3. Order 3 - IndexedDB/Dexie - backup large
