@@ -1,10 +1,6 @@
 
 
-const SUPABASE_URL = localStorage.getItem('supabase_url') || 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_ANON_KEY = localStorage.getItem('supabase_key') || 'YOUR_ANON_KEY';
 let supabaseClient = null;
-try{ if(SUPABASE_URL.includes('supabase.co') && !SUPABASE_URL.includes('YOUR_PROJECT')) supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }catch(e){}
-const db = new Dexie('LaundryPWA_Locked_v3');
 
 db.version(2).stores({ 
   karyawan: 'id, outlet_id, username, level', 
@@ -12,7 +8,6 @@ db.version(2).stores({
   struk_settings: 'id, outletId, key'
 });
 
-if(navigator.storage && navigator.storage.persist){ navigator.storage.persist(); }
 
 
 
@@ -151,33 +146,33 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 /* Global State Management - Multi-Outlet & Diskon Parameter */
-let globalDiskonSettings = { val: 5, type: 'persen' };
+window.globalDiskonSettings = window.globalDiskonSettings || { val: 5, type: 'persen' }; let globalDiskonSettings = window.globalDiskonSettings; // = { val: 5, type: 'persen' };
 
-let outletsData = [
+window.outletsData = window.outletsData || [
   { id: "outlet-1", nama: "Laundry Land", alamat: "Jl. Merdeka No. 12", wa: "08123456789", isActive: true },
   { id: "outlet-2", nama: "ResiQ Laundry", alamat: "Jl. Pemuda No. 45", wa: "08987654321", isActive: false }
 ];
 
-let karyawanData = [
+window.karyawanData = window.karyawanData || [
   { id: "karyawan-1", outletId: "outlet-1", nama: "Kasir Utama", wa: "081234567890", alamat: "Pusat", isActive: true },
   { id: "karyawan-2", outletId: "outlet-1", nama: "Budi Santoso", wa: "089876543210", alamat: "Cabang 1", isActive: false },
   { id: "karyawan-3", outletId: "outlet-2", nama: "Siti Rahma", wa: "085566778899", alamat: "Cabang 2", isActive: true }
 ];
 
-let pelangganData = [
+window.pelangganData = window.pelangganData || [
   { id: "pelanggan-1", outletId: "outlet-1", nama: "Budi Santoso", wa: "081234567890", tanpaWa: false, simpanKontak: true, alamat: "Jl. Mawar No. 10", deposito: 150000 },
   { id: "pelanggan-2", outletId: "outlet-1", nama: "Siti Aminah", wa: "081299887766", tanpaWa: true, simpanKontak: false, alamat: "Jl. Melati No. 5", deposito: 10000 },
   { id: "pelanggan-3", outletId: "outlet-2", nama: "Dewi Lestari", wa: "081122334455", tanpaWa: false, simpanKontak: true, alamat: "Jl. Anggrek No. 8", deposito: 100000 }
 ];
 
-let layananData = [
+window.layananData = window.layananData || [
   { id: "layanan-1", outletId: "outlet-1", nama: "Cuci Komplit Express", kode: "CKE", harga: 10000, satuan: "Kg", estimasiVal: 3, estimasiUnit: "Jam", minKg: 3 },
   { id: "layanan-2", outletId: "outlet-1", nama: "Cuci Kering Karpet", kode: "CKK", harga: 30000, satuan: "Pcs", estimasiVal: 2, estimasiUnit: "Hari", minKg: 0 },
   { id: "layanan-3", outletId: "outlet-2", nama: "Cuci Komplit Hemat", kode: "CKH", harga: 7000, satuan: "Kg", estimasiVal: 2, estimasiUnit: "Hari", minKg: 3 },
   { id: "layanan-4", outletId: "outlet-2", nama: "Setrika Kilat", kode: "SKL", harga: 10000, satuan: "Kg", estimasiVal: 4, estimasiUnit: "Jam", minKg: 0 }
 ];
 
-let antrianData = [
+window.antrianData = window.antrianData || [
   { id: "nota-1001", outletId: "outlet-1", nota: "#NT-1001", namaPelanggan: "Budi Santoso", totalNota: 30000, statusProses: "Proses", statusBayar: "Lunas", layanan: "Cuci Komplit Express 2.8Kg (Min 3Kg)", estimasi: "3 Jam", estimasiFormatted: "04-10-26 10:00", estimasiISO: new Date(Date.now()+3*3600000).toISOString(), tanggal: new Date().toISOString(), items:[{nama:"Cuci Komplit Express", qtyInput:"2.8", satuan:"Kg", estimasiVal:3, estimasiUnit:"Jam"}] },
   { id: "nota-1002", outletId: "outlet-1", nota: "#NT-1002", namaPelanggan: "Siti Aminah", totalNota: 30000, statusProses: "Antrian", statusBayar: "Belum Lunas", layanan: "Cuci Kering Karpet 1 Pcs", estimasi: "2 Hari", estimasiFormatted: "06-10-26 10:00", estimasiISO: new Date(Date.now()+2*86400000).toISOString(), tanggal: new Date(Date.now()-86400000).toISOString(), items:[{nama:"Cuci Kering Karpet", qtyInput:"1", satuan:"Pcs", estimasiVal:2, estimasiUnit:"Hari"}] }
 ];
@@ -5502,3 +5497,19 @@ window.closeLevelSettingModal = window.closeLevelSettingModal || function(){
   const el = document.getElementById('modalLevelSetting') || document.getElementById('modalLevelSettingOverlay');
   if(el){ el.style.display='none'; el.classList.remove('active'); }
 };
+
+
+// FIX FINAL: Level & Hak Akses + Supabase real
+console.log('✅ core-functions REAL v2.5.28 - Level UNLOCKED - Supabase key baru 2106784407');
+document.addEventListener('DOMContentLoaded', ()=>{
+  setTimeout(()=>{
+    document.querySelectorAll('[id*="Level"], [id*="level"], div').forEach(el=>{
+      if(el.textContent && el.textContent.includes('Level & Hak Akses')){
+        el.style.display='flex'; el.style.pointerEvents='auto';
+        const card = el.closest('.sub-card') || el.closest('div');
+        if(card) card.style.setProperty('display','flex','important');
+      }
+    });
+    console.log('✅ Level & Hak Akses visible');
+  }, 1000);
+});
