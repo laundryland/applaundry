@@ -12,7 +12,7 @@
 <script src="https://unpkg.com/dexie@4/dist/dexie.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-#supabase-loading{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999}
+#supabase-loading{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -31,37 +31,75 @@ import { renderPelangganList } from './js/modules/master-pelanggan.js';
 import './js/modules/print-thermal.js';
 import './js/modules/wa-share.js';
 window.safeLS = safeLS; window.StorageManager = StorageManager; window.supa = supa;
+
 async function init(){
   await purgeLegacyCache();
   const tables = ['outlets','karyawan','pelanggan','layanan','antrian'];
   for(let t of tables){
     try{
       const dataPromise = StorageManager.getData(t);
-      const timeoutPromise = new Promise(res => setTimeout(() => res([]), 5000));
+      const timeoutPromise = new Promise(res => setTimeout(() => res([]), 3000));
       const data = await Promise.race([dataPromise, timeoutPromise]);
       window[t+'Data'] = data || [];
+      console.log(`✅ ${t}: ${data.length}`);
     }catch(e){ window[t+'Data'] = []; }
   }
+  
+  console.log('📥 Fetch original-body.html...');
   const resp = await fetch('./original-body.html');
-  if(!resp.ok) throw new Error(`original-body.html ${resp.status}`);
+  if(!resp.ok) throw new Error(`original-body.html ${resp.status} - cek file 914KB ada di root?`);
   const bodyHtml = await resp.text();
   document.getElementById('app-root').innerHTML = bodyHtml;
+  console.log(`✅ Body ${bodyHtml.length} chars loaded`);
+  
   setTimeout(()=>{
-    initHeaderHome();
-    if(document.getElementById('customerListContainer')) renderPelangganList('');
+    try{ initHeaderHome(); console.log('✅ header-home'); }catch(e){ console.error(e); }
+    try{
+      if(document.getElementById('customerListContainer')){
+        renderPelangganList('');
+        console.log('✅ pelanggan list');
+      }
+    }catch(e){ console.error(e); }
+    
     document.querySelectorAll('.tap-model').forEach(el=>{
       el.style.pointerEvents='auto'; el.style.cursor='pointer'; el.style.touchAction='manipulation';
     });
-    document.getElementById('supabase-loading').remove();
-  }, 300);
+    
+    // FIX: Hapus 2 splash - yang modular + yang original-body
+    const splash1 = document.getElementById('supabase-loading');
+    if(splash1) splash1.remove();
+    
+    // Original-body punya splash sendiri #app-splash-wrapper dan #laundry-splash
+    const splash2 = document.getElementById('app-splash-wrapper');
+    if(splash2){ splash2.style.display='none'; splash2.remove(); console.log('✅ splash original-body removed'); }
+    
+    const splash3 = document.getElementById('laundry-splash');
+    if(splash3){ splash3.style.display='none'; splash3.remove(); }
+    
+    console.log('✅ DONE - Modular v2.5.28 Clean loaded - dibawah bersih');
+  }, 500);
 }
+
 init().catch(e => {
-  document.getElementById('app-root').innerHTML = `<div style="padding:20px;text-align:center"><h2>❌ ${e.message}</h2><p>Pastikan original-body.html 914KB ada di root</p><button onclick="location.reload()" style="padding:10px 20px;background:#f618a9;color:#fff;border:none;border-radius:8px">Reload</button></div>`;
-  document.getElementById('supabase-loading').remove();
+  console.error('INIT FAIL', e);
+  const appRoot = document.getElementById('app-root');
+  if(appRoot) appRoot.innerHTML = `<div style="padding:20px;text-align:center"><h2>❌ ${e.message}</h2><p>Pastikan original-body.html 914KB ada di root</p><p>${e.stack || ''}</p><button onclick="location.reload()" style="padding:10px 20px;background:#f618a9;color:#fff;border:none;border-radius:8px">Reload</button></div>`;
+  const s1 = document.getElementById('supabase-loading');
+  if(s1) s1.remove();
+  const s2 = document.getElementById('app-splash-wrapper');
+  if(s2) s2.remove();
+  const s3 = document.getElementById('laundry-splash');
+  if(s3) s3.remove();
 });
+
+// Unregister old SW that caches splash loop
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      regs.forEach(r => r.unregister());
+    });
+    // Don't register new SW for now to avoid cache loop, or register clean one
+    // navigator.serviceWorker.register('./sw.js').catch(()=>{});
   });
 }
 </script>
