@@ -1,15 +1,5 @@
 
 
-let supabaseClient = null;
-
-db.version(2).stores({ 
-  karyawan: 'id, outlet_id, username, level', 
-  sync_queue: '++qid, table_name, created_at',
-  struk_settings: 'id, outletId, key'
-});
-
-
-
 
 // HYBRID STORAGE: localStorage + IndexedDB + Supabase sync untuk Master Struk
 var STRUK_DB_KEY = 'struk_settings_cache';
