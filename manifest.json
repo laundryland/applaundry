@@ -1,19 +1,19 @@
 {
-  "name": "Laundry Land - SH4NDY",
+  "name": "Laundry Land - Modular v2.5.28",
   "short_name": "Laundry Land",
-  "description": "Kelola Laundry Multi-HP Sync Supabase",
-  "start_url": "./",
+  "description": "Laundry Land POS - Modular Clean v2.5.28 with 2ROW ICONS",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#06111f",
+  "background_color": "#ffffff",
   "theme_color": "#f618a9",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "icon-512.png",
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
