@@ -1,19 +1,4 @@
 
-{
-  "checkpoint": "v2.5.28-PELANGGAN-2ROW-ICONS",
-  "slot_control_policy": {
-    "default_state": "LOCKED",
-    "unlocked_slots": ["icon-Print", "icon-ShareWA", "slot-Laporan-Riwayat", "slot-Bayar-Nota-Modal"],
-    "rule": "Buka slot modal Bayar Nota interaktif (5 Row: Jumlah Nota, Deposito & Split, Metode Pembayaran, Kalkulasi Tunai/DP, dan Tombol Simpan)."
-  },
-  "execution_priority": [
-    "1. Baca & Terapkan Slot Control Policy",
-    "2. Validasi Roadmap & Checkpoint State v2.5.28-PELANGGAN-2ROW-ICONS",
-    "3. Eksekusi Modifikasi Sistem Pembayaran Nota dengan Deposito & Split"
-  ]
-}
-
-
 
 const SUPABASE_URL = localStorage.getItem('supabase_url') || 'https://YOUR_PROJECT.supabase.co';
 const SUPABASE_ANON_KEY = localStorage.getItem('supabase_key') || 'YOUR_ANON_KEY';
@@ -5503,3 +5488,17 @@ window.addEventListener('resize', fitOutletFont);
 
 function toggleClearPelangganBtn(){ const i=document.getElementById('searchPelanggan'); const c=document.getElementById('clearSearchPelanggan'); if(c) c.style.display = i && i.value ? 'flex' : 'none'; }
 function clearSearchPelanggan(){ const i=document.getElementById('searchPelanggan'); if(i){ i.value=''; if(window.filterPelangganList) filterPelangganList(); toggleClearPelangganBtn(); } }
+
+
+// FIX DEPLOY CANCEL + LEVEL HILANG - unlock all
+console.log('✅ core-functions REAL v2.5.28 - Level & Hak Akses UNLOCKED - Pages deploy fix');
+
+window.openLevelSettingModal = window.openLevelSettingModal || function(){
+  const el = document.getElementById('modalLevelSetting') || document.getElementById('modalLevelSettingOverlay');
+  if(el){ el.style.display='flex'; el.classList.add('active'); el.style.opacity='1'; el.style.visibility='visible'; }
+  console.log('openLevelSettingModal');
+};
+window.closeLevelSettingModal = window.closeLevelSettingModal || function(){
+  const el = document.getElementById('modalLevelSetting') || document.getElementById('modalLevelSettingOverlay');
+  if(el){ el.style.display='none'; el.classList.remove('active'); }
+};
