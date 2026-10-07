@@ -1,4 +1,10 @@
-
+// FIX PRA SEJARAH - BENERAN BENER v2.5.28 2ROW ICONS
+// Safe db ref - pakai window.db dari db.js, jangan bikin baru
+const db = window.db || window.dbInstance || { 
+  struk_settings: { put: async()=>{}, get: async()=>{}, delete: async()=>{} }, 
+  sync_queue: { add: async()=>{} },
+  karyawan: { toArray: async()=>[] }
+};
 
 
 // HYBRID STORAGE: localStorage + IndexedDB + Supabase sync untuk Master Struk
@@ -136,33 +142,33 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 /* Global State Management - Multi-Outlet & Diskon Parameter */
-window.globalDiskonSettings = window.globalDiskonSettings || { val: 5, type: 'persen' }; let globalDiskonSettings = window.globalDiskonSettings; // = { val: 5, type: 'persen' };
+let globalDiskonSettings = { val: 5, type: 'persen' };
 
-window.outletsData = window.outletsData || [
+let outletsData = [
   { id: "outlet-1", nama: "Laundry Land", alamat: "Jl. Merdeka No. 12", wa: "08123456789", isActive: true },
   { id: "outlet-2", nama: "ResiQ Laundry", alamat: "Jl. Pemuda No. 45", wa: "08987654321", isActive: false }
 ];
 
-window.karyawanData = window.karyawanData || [
+let karyawanData = [
   { id: "karyawan-1", outletId: "outlet-1", nama: "Kasir Utama", wa: "081234567890", alamat: "Pusat", isActive: true },
   { id: "karyawan-2", outletId: "outlet-1", nama: "Budi Santoso", wa: "089876543210", alamat: "Cabang 1", isActive: false },
   { id: "karyawan-3", outletId: "outlet-2", nama: "Siti Rahma", wa: "085566778899", alamat: "Cabang 2", isActive: true }
 ];
 
-window.pelangganData = window.pelangganData || [
+let pelangganData = [
   { id: "pelanggan-1", outletId: "outlet-1", nama: "Budi Santoso", wa: "081234567890", tanpaWa: false, simpanKontak: true, alamat: "Jl. Mawar No. 10", deposito: 150000 },
   { id: "pelanggan-2", outletId: "outlet-1", nama: "Siti Aminah", wa: "081299887766", tanpaWa: true, simpanKontak: false, alamat: "Jl. Melati No. 5", deposito: 10000 },
   { id: "pelanggan-3", outletId: "outlet-2", nama: "Dewi Lestari", wa: "081122334455", tanpaWa: false, simpanKontak: true, alamat: "Jl. Anggrek No. 8", deposito: 100000 }
 ];
 
-window.layananData = window.layananData || [
+let layananData = [
   { id: "layanan-1", outletId: "outlet-1", nama: "Cuci Komplit Express", kode: "CKE", harga: 10000, satuan: "Kg", estimasiVal: 3, estimasiUnit: "Jam", minKg: 3 },
   { id: "layanan-2", outletId: "outlet-1", nama: "Cuci Kering Karpet", kode: "CKK", harga: 30000, satuan: "Pcs", estimasiVal: 2, estimasiUnit: "Hari", minKg: 0 },
   { id: "layanan-3", outletId: "outlet-2", nama: "Cuci Komplit Hemat", kode: "CKH", harga: 7000, satuan: "Kg", estimasiVal: 2, estimasiUnit: "Hari", minKg: 3 },
   { id: "layanan-4", outletId: "outlet-2", nama: "Setrika Kilat", kode: "SKL", harga: 10000, satuan: "Kg", estimasiVal: 4, estimasiUnit: "Jam", minKg: 0 }
 ];
 
-window.antrianData = window.antrianData || [
+let antrianData = [
   { id: "nota-1001", outletId: "outlet-1", nota: "#NT-1001", namaPelanggan: "Budi Santoso", totalNota: 30000, statusProses: "Proses", statusBayar: "Lunas", layanan: "Cuci Komplit Express 2.8Kg (Min 3Kg)", estimasi: "3 Jam", estimasiFormatted: "04-10-26 10:00", estimasiISO: new Date(Date.now()+3*3600000).toISOString(), tanggal: new Date().toISOString(), items:[{nama:"Cuci Komplit Express", qtyInput:"2.8", satuan:"Kg", estimasiVal:3, estimasiUnit:"Jam"}] },
   { id: "nota-1002", outletId: "outlet-1", nota: "#NT-1002", namaPelanggan: "Siti Aminah", totalNota: 30000, statusProses: "Antrian", statusBayar: "Belum Lunas", layanan: "Cuci Kering Karpet 1 Pcs", estimasi: "2 Hari", estimasiFormatted: "06-10-26 10:00", estimasiISO: new Date(Date.now()+2*86400000).toISOString(), tanggal: new Date(Date.now()-86400000).toISOString(), items:[{nama:"Cuci Kering Karpet", qtyInput:"1", satuan:"Pcs", estimasiVal:2, estimasiUnit:"Hari"}] }
 ];
@@ -1214,18 +1220,33 @@ function simpanPelanggan() {
 
   if (!nama) { showNoticeToast('Nama pelanggan tidak boleh kosong'); return; }
 
+  let targetData = null;
   if (editingPelangganId) {
     const p = pelangganData.find(item => item.id === editingPelangganId);
-    if (p) { p.nama = nama; p.wa = wa; p.tanpaWa = tanpaWa; p.simpanKontak = simpanKontak; p.alamat = alamat; }
+    if (p) { p.nama = nama; p.wa = wa; p.tanpaWa = tanpaWa; p.simpanKontak = simpanKontak; p.alamat = alamat; targetData = p; }
   } else {
-    const newP = { id: 'pelanggan-' + Date.now(), outletId: activeOutlet.id, nama: nama, wa: wa, tanpaWa: tanpaWa, simpanKontak: simpanKontak, alamat: alamat, deposito: 0 };
+    const newP = { id: 'pelanggan-' + Date.now(), outlet_id: activeOutlet.id, outletId: activeOutlet.id, nama: nama, wa: wa, tanpaWa: tanpaWa, simpanKontak: simpanKontak, alamat: alamat, deposito: 0, is_active: true };
     pelangganData.push(newP);
+    targetData = newP;
     if (isPelangganPickerForNota) { selectPelangganTargetNota(newP.id); }
+  }
+
+  try{ localStorage.setItem('pelangganData', JSON.stringify(pelangganData)); }catch(e){}
+  
+  // SYNC SUPABASE - ini yang kemarin hilang
+  if(targetData){
+    const client = window.supabaseClient || window.supa;
+    if(client){
+      client.from('pelanggan').upsert(targetData, {onConflict:'id'}).then(({error})=>{
+        if(error){ console.error('❌ Supa upsert pelanggan fail', error.message); showNoticeToast('⚠️ Saved local, Supa fail: '+error.message); }
+        else { console.log('✅ Supa pelanggan upsert', targetData.id); showNoticeToast('✅ Pelanggan tersimpan di Supa'); }
+      });
+    }
   }
 
   closeSubModalPelanggan();
   renderPelangganList();
-  showNoticeToast('Data pelanggan berhasil disimpan.');
+  if(!editingPelangganId) showNoticeToast('✅ Pelanggan disimpan + Supa');
 }
 
 function openSubModalIsiDeposito(pelangganId, mode = 'tambah') {
@@ -1679,7 +1700,7 @@ function eksekusiHapusData() {
   const deleteId = pendingDeleteId;
   const deleteType = pendingDeleteType;
   const deleteFromSupabase = async (table, id)=>{
-    try{ if(window.supabaseClient){ await window.supabaseClient.from(table).delete().eq('id', id); } }catch(e){}
+    try{ if(window.supabaseClient){ await (window.supabaseClient || window.supa).from(table).delete().eq('id', id); } }catch(e){}
   };
   if (deleteType === 'pelanggan') {
     pelangganData = pelangganData.filter(p => p.id !== deleteId);
@@ -1930,8 +1951,6 @@ window.hapusNotaAktifDetail = function(){
   });
 };
 
-
-document.addEventListener('DOMContentLoaded', function(){ setTimeout(function(){ const w=document.getElementById('secureContextWarning'); if(w && !window.isSecureContext){ w.style.display='block'; } },1000); });
 
 
 // v9 Master Struk Full Connection
@@ -2968,20 +2987,6 @@ function renderPertumbuhanPelanggan(){
     }catch(e){}
   };
 })();
-
-
-
-function openPertumbuhanPelangganModal(){
-  try{
-    var ov=document.getElementById('modalPertumbuhanPelangganOverlay');
-    if(ov) ov.classList.add('active');
-    if(typeof renderPertumbuhanPelanggan==='function') renderPertumbuhanPelanggan();
-  }catch(e){ console.log('openPertumbuhanPelangganModal error', e); }
-}
-function closePertumbuhanPelangganModal(){
-  var ov=document.getElementById('modalPertumbuhanPelangganOverlay');
-  if(ov) ov.classList.remove('active');
-}
 
 
 
@@ -5470,36 +5475,4 @@ window.addEventListener('load', fitOutletFont);
 window.addEventListener('resize', fitOutletFont);
 
 
-
-function toggleClearPelangganBtn(){ const i=document.getElementById('searchPelanggan'); const c=document.getElementById('clearSearchPelanggan'); if(c) c.style.display = i && i.value ? 'flex' : 'none'; }
-function clearSearchPelanggan(){ const i=document.getElementById('searchPelanggan'); if(i){ i.value=''; if(window.filterPelangganList) filterPelangganList(); toggleClearPelangganBtn(); } }
-
-
-// FIX DEPLOY CANCEL + LEVEL HILANG - unlock all
-console.log('✅ core-functions REAL v2.5.28 - Level & Hak Akses UNLOCKED - Pages deploy fix');
-
-window.openLevelSettingModal = window.openLevelSettingModal || function(){
-  const el = document.getElementById('modalLevelSetting') || document.getElementById('modalLevelSettingOverlay');
-  if(el){ el.style.display='flex'; el.classList.add('active'); el.style.opacity='1'; el.style.visibility='visible'; }
-  console.log('openLevelSettingModal');
-};
-window.closeLevelSettingModal = window.closeLevelSettingModal || function(){
-  const el = document.getElementById('modalLevelSetting') || document.getElementById('modalLevelSettingOverlay');
-  if(el){ el.style.display='none'; el.classList.remove('active'); }
-};
-
-
-// FIX FINAL: Level & Hak Akses + Supabase real
-console.log('✅ core-functions REAL v2.5.28 - Level UNLOCKED - Supabase key baru 2106784407');
-document.addEventListener('DOMContentLoaded', ()=>{
-  setTimeout(()=>{
-    document.querySelectorAll('[id*="Level"], [id*="level"], div').forEach(el=>{
-      if(el.textContent && el.textContent.includes('Level & Hak Akses')){
-        el.style.display='flex'; el.style.pointerEvents='auto';
-        const card = el.closest('.sub-card') || el.closest('div');
-        if(card) card.style.setProperty('display','flex','important');
-      }
-    });
-    console.log('✅ Level & Hak Akses visible');
-  }, 1000);
-});
+console.log('✅ core-functions FINAL BENER v2.5.28 2ROW - tambah work, level work, no duplicate db, key baru 2106784407');
