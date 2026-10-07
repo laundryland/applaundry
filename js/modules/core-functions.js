@@ -1,10 +1,5 @@
-// FIX PRA SEJARAH - BENERAN BENER v2.5.28 2ROW ICONS
-// Safe db ref - pakai window.db dari db.js, jangan bikin baru
-const db = window.db || window.dbInstance || { 
-  struk_settings: { put: async()=>{}, get: async()=>{}, delete: async()=>{} }, 
-  sync_queue: { add: async()=>{} },
-  karyawan: { toArray: async()=>[] }
-};
+// FINAL PROFESIONAL FIX - v2.5.28 2ROW ICONS - ANTI HILANG + SUPA SYNC
+const db = window.db || { struk_settings: { put: async()=>{}, get: async()=>{}, delete: async()=>{} }, sync_queue: { add: async()=>{} } };
 
 
 // HYBRID STORAGE: localStorage + IndexedDB + Supabase sync untuk Master Struk
@@ -1211,42 +1206,31 @@ function toggleTanpaWa(checkbox) {
 }
 
 function simpanPelanggan() {
-  const activeOutlet = getActiveOutlet();
-  const nama = document.getElementById('inputNamaPelanggan').value.trim();
-  const wa = document.getElementById('inputWaPelanggan').value.trim();
-  const tanpaWa = document.getElementById('checkTanpaWa').checked;
-  const simpanKontak = document.getElementById('checkSimpanKontak').checked;
-  const alamat = document.getElementById('inputAlamatPelanggan').value.trim();
-
-  if (!nama) { showNoticeToast('Nama pelanggan tidak boleh kosong'); return; }
-
-  let targetData = null;
-  if (editingPelangganId) {
-    const p = pelangganData.find(item => item.id === editingPelangganId);
-    if (p) { p.nama = nama; p.wa = wa; p.tanpaWa = tanpaWa; p.simpanKontak = simpanKontak; p.alamat = alamat; targetData = p; }
+  const activeOutlet = (typeof getActiveOutlet === 'function') ? getActiveOutlet() : {id:'outlet-1'};
+  const nama = document.getElementById('inputNamaPelanggan')?.value.trim() || '';
+  const wa = document.getElementById('inputWaPelanggan')?.value.trim() || '';
+  const tanpaWa = document.getElementById('checkTanpaWa')?.checked || false;
+  const simpanKontak = document.getElementById('checkSimpanKontak')?.checked || false;
+  const alamat = document.getElementById('inputAlamatPelanggan')?.value.trim() || '';
+  if (!nama) { if(window.showNoticeToast) showNoticeToast('Nama tidak boleh kosong'); return; }
+  let target = null;
+  if (window.editingPelangganId) {
+    const p = window.pelangganData.find(x=>x.id===window.editingPelangganId);
+    if(p){ p.nama=nama; p.wa=wa; p.alamat=alamat; p.tanpaWa=tanpaWa; p.simpanKontak=simpanKontak; p.outlet_id=activeOutlet.id; target=p; }
   } else {
-    const newP = { id: 'pelanggan-' + Date.now(), outlet_id: activeOutlet.id, outletId: activeOutlet.id, nama: nama, wa: wa, tanpaWa: tanpaWa, simpanKontak: simpanKontak, alamat: alamat, deposito: 0, is_active: true };
-    pelangganData.push(newP);
-    targetData = newP;
-    if (isPelangganPickerForNota) { selectPelangganTargetNota(newP.id); }
+    target = { id:'pelanggan-'+Date.now(), outlet_id:activeOutlet.id, outletId:activeOutlet.id, nama:nama, wa:wa, alamat:alamat, deposito:0, is_active:true, tanpaWa:tanpaWa, simpanKontak:simpanKontak };
+    window.pelangganData.push(target);
+    if(window.isPelangganPickerForNota) window.selectPelangganTargetNota(target.id);
   }
-
-  try{ localStorage.setItem('pelangganData', JSON.stringify(pelangganData)); }catch(e){}
-  
-  // SYNC SUPABASE - ini yang kemarin hilang
-  if(targetData){
+  try{ localStorage.setItem('pelangganData', JSON.stringify(window.pelangganData)); }catch(e){}
+  if(window.StorageManager && window.StorageManager.saveToSupaAndLS){
+    window.StorageManager.saveToSupaAndLS('pelanggan', target).then(r=>{ if(r.ok) showNoticeToast('✅ Supa+HP tersimpan'); else showNoticeToast('💾 HP aman, Supa RLS cek'); });
+  } else {
     const client = window.supabaseClient || window.supa;
-    if(client){
-      client.from('pelanggan').upsert(targetData, {onConflict:'id'}).then(({error})=>{
-        if(error){ console.error('❌ Supa upsert pelanggan fail', error.message); showNoticeToast('⚠️ Saved local, Supa fail: '+error.message); }
-        else { console.log('✅ Supa pelanggan upsert', targetData.id); showNoticeToast('✅ Pelanggan tersimpan di Supa'); }
-      });
-    }
+    if(client) client.from('pelanggan').upsert({id:target.id, outlet_id:target.outlet_id, nama:target.nama, wa:target.wa, alamat:target.alamat, deposito:0}).then(({error})=>{ if(error) console.error(error.message); });
   }
-
-  closeSubModalPelanggan();
-  renderPelangganList();
-  if(!editingPelangganId) showNoticeToast('✅ Pelanggan disimpan + Supa');
+  if(window.closeSubModalPelanggan) closeSubModalPelanggan(); else if(window.closeModalPelanggan) closeModalPelanggan();
+  if(window.renderPelangganList) renderPelangganList('');
 }
 
 function openSubModalIsiDeposito(pelangganId, mode = 'tambah') {
@@ -1700,14 +1684,13 @@ function eksekusiHapusData() {
   const deleteId = pendingDeleteId;
   const deleteType = pendingDeleteType;
   const deleteFromSupabase = async (table, id)=>{
-    try{ if(window.supabaseClient){ await (window.supabaseClient || window.supa).from(table).delete().eq('id', id); } }catch(e){}
+    try{ if(window.supabaseClient){ await window.supabaseClient.from(table).delete().eq('id', id); } }catch(e){}
   };
   if (deleteType === 'pelanggan') {
     pelangganData = pelangganData.filter(p => p.id !== deleteId);
     try{ localStorage.setItem('pelangganData', JSON.stringify(pelangganData)); }catch(e){}
-    if(window.StorageManager) window.StorageManager.deleteFromSupaAndLS('pelanggan', deleteId);
-    else deleteFromSupabase('pelanggan', deleteId);
-    renderPelangganList(); showNoticeToast('✅ Pelanggan dihapus (LS+Supa)');
+    if(window.StorageManager && window.StorageManager.deleteFromSupaAndLS) window.StorageManager.deleteFromSupaAndLS('pelanggan', deleteId); else if(window.deleteFromSupabase) deleteFromSupabase('pelanggan', deleteId);
+    renderPelangganList(); showNoticeToast('✅ Pelanggan dihapus');
   } else if (deleteType === 'karyawan') {
     if (karyawanData.length <= 1) { showNoticeToast('Minimal 1 karyawan'); closeModalKonfirmasiHapus(); return; }
     const isActive = karyawanData.find(k => k.id === deleteId)?.isActive;
@@ -4020,19 +4003,6 @@ document.addEventListener('DOMContentLoaded', function(){
 
 
 
-// Inline Service Worker - biar 1 file all-in-one tetap PWA
-if('serviceWorker' in navigator){
-  const swCode = `
-self.addEventListener('install', e=>{ e.waitUntil(caches.open('laundry-v1').then(cache=>cache.addAll(['/']))); });
-self.addEventListener('fetch', e=>{ e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))); });
-`;
-  const blob = new Blob([swCode], {type:'text/javascript'});
-  const swUrl = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swUrl).then(()=>console.log('SW inline registered')).catch(e=>console.log('SW fail', e));
-}
-
-
-
 // FIX: Checklist terhubung ke preview (estimasi dll)
 function syncMasterStrukToSettings(){
   try{
@@ -4123,24 +4093,6 @@ window.openPreviewNotaModal = function(notaId, mode){
     }catch(e){ console.log('fix preview error', e); }
   }, 200);
 };
-
-
-
-document.addEventListener('DOMContentLoaded', function(){
-  var overlay = document.getElementById('modalMasterStrukOverlay');
-  if(overlay){
-    var startX=0, startY=0;
-    overlay.addEventListener('touchstart', function(e){ startX=e.touches[0].clientX; startY=e.touches[0].clientY; }, {passive:true});
-    overlay.addEventListener('touchend', function(e){
-      var dx=e.changedTouches[0].clientX-startX;
-      var dy=e.changedTouches[0].clientY-startY;
-      // FIX: Hanya horizontal untuk HP tanpa navigasi bawah, bukan vertikal
-      if(Math.abs(dx)>80 && Math.abs(dx) > Math.abs(dy)*1.5){
-        /* disabled swipe */ handleMasterStrukSwipeDisabled();
-      }
-    }, {passive:true});
-  }
-});
 
 
 
@@ -5418,25 +5370,6 @@ window.syncAntrianToSupabase = () => upsertTable('antrian', typeof antrianData!=
 
 
 
-document.addEventListener('DOMContentLoaded', ()=>{
-  const hide = ()=>{
-    document.querySelectorAll('div').forEach(el=>{
-      if(el.textContent && el.textContent.trim()==='🌐 Multi-HP Sync'){
-        let card = el.closest('div');
-        for(let i=0;i<6 && card;i++){
-          if(card.querySelector && card.querySelector('#cfgUrl')){ card.style.display='none'; break; }
-          card=card.parentElement;
-        }
-      }
-    });
-    const u=document.getElementById('cfgUrl');
-    if(u){ let p=u; for(let i=0;i<8 && p;i++){ if(p.textContent && p.textContent.includes('Multi-HP Sync')){ p.style.display='none'; break; } p=p.parentElement; } }
-  };
-  hide(); setTimeout(hide,800); setTimeout(hide,2000);
-});
-
-
-
 document.getElementById('btn-upload-logo')?.addEventListener('click', (e) => {
   if (e.target.closest('#logoFileInput')) return;
   document.getElementById('logoFileInput')?.click();
@@ -5475,5 +5408,4 @@ function fitOutletFont(){
 window.addEventListener('load', fitOutletFont);
 window.addEventListener('resize', fitOutletFont);
 
-
-console.log('✅ core-functions FINAL BENER v2.5.28 2ROW - tambah work, level work, no duplicate db, key baru 2106784407');
+console.log('✅ FINAL PROFESIONAL v2.5.28 - tambah/hapus Supa+LS anti hilang');
