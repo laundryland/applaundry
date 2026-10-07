@@ -1705,8 +1705,9 @@ function eksekusiHapusData() {
   if (deleteType === 'pelanggan') {
     pelangganData = pelangganData.filter(p => p.id !== deleteId);
     try{ localStorage.setItem('pelangganData', JSON.stringify(pelangganData)); }catch(e){}
-    deleteFromSupabase('pelanggan', deleteId);
-    renderPelangganList(); showNoticeToast('✅ Pelanggan dihapus');
+    if(window.StorageManager) window.StorageManager.deleteFromSupaAndLS('pelanggan', deleteId);
+    else deleteFromSupabase('pelanggan', deleteId);
+    renderPelangganList(); showNoticeToast('✅ Pelanggan dihapus (LS+Supa)');
   } else if (deleteType === 'karyawan') {
     if (karyawanData.length <= 1) { showNoticeToast('Minimal 1 karyawan'); closeModalKonfirmasiHapus(); return; }
     const isActive = karyawanData.find(k => k.id === deleteId)?.isActive;
