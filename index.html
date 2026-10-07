@@ -12,7 +12,7 @@
 <script src="https://unpkg.com/dexie@4/dist/dexie.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-#supabase-loading{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999}
+#supabase-loading{position:fixed;inset:0;z-index:99999;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -47,60 +47,101 @@ async function init(){
   
   console.log('📥 Fetch original-body.html...');
   const resp = await fetch('./original-body.html');
-  if(!resp.ok) throw new Error(`original-body.html ${resp.status} - cek file 914KB ada di root?`);
-  const bodyHtml = await resp.text();
-  document.getElementById('app-root').innerHTML = bodyHtml;
-  console.log(`✅ Body ${bodyHtml.length} chars loaded`);
+  if(!resp.ok) throw new Error(`original-body.html ${resp.status}`);
+  let bodyHtml = await resp.text();
   
+  // Extract scripts from original-body.html and execute them after innerHTML
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = bodyHtml;
+  
+  // Remove script tags from HTML to inject first
+  const scripts = [];
+  const scriptEls = tempDiv.querySelectorAll('script');
+  scriptEls.forEach(s => {
+    if(s.src){
+      scripts.push({src: s.src, content: ''});
+    } else {
+      scripts.push({src: null, content: s.textContent});
+    }
+    s.remove();
+  });
+  
+  // Inject body without scripts
+  document.getElementById('app-root').innerHTML = tempDiv.innerHTML;
+  console.log(`✅ Body ${tempDiv.innerHTML.length} chars loaded, ${scripts.length} scripts found`);
+  
+  // Execute scripts from original-body.html (these contain all onclick handlers)
+  for(let i=0; i<scripts.length; i++){
+    const s = scripts[i];
+    try{
+      if(s.src){
+        await new Promise((res, rej) => {
+          const el = document.createElement('script');
+          el.src = s.src;
+          el.onload = res;
+          el.onerror = res;
+          document.body.appendChild(el);
+        });
+      } else if(s.content && s.content.trim().length > 10){
+        const el = document.createElement('script');
+        el.textContent = s.content;
+        document.body.appendChild(el);
+      }
+    }catch(e){ console.warn('Script exec fail', i, e); }
+  }
+  console.log('✅ All original-body scripts executed');
+  
+  // Now init modular overrides
   setTimeout(()=>{
-    try{ initHeaderHome(); console.log('✅ header-home'); }catch(e){ console.error(e); }
+    try{ initHeaderHome(); console.log('✅ header-home modular'); }catch(e){ console.error(e); }
     try{
       if(document.getElementById('customerListContainer')){
         renderPelangganList('');
-        console.log('✅ pelanggan list');
+        console.log('✅ pelanggan list modular - deposito 2row');
       }
     }catch(e){ console.error(e); }
     
+    // FIX TAP ZONK - force pointer-events auto for all tap-model after original scripts
     document.querySelectorAll('.tap-model').forEach(el=>{
-      el.style.pointerEvents='auto'; el.style.cursor='pointer'; el.style.touchAction='manipulation';
+      el.style.pointerEvents='auto'; 
+      el.style.cursor='pointer'; 
+      el.style.touchAction='manipulation';
+      el.style.userSelect='none';
     });
     
-    // FIX: Hapus 2 splash - yang modular + yang original-body
+    // Also fix header cards that were blocked
+    document.querySelectorAll('#header-row1-karyawan-card, #header-row2-outlet-card, #headerOutletDropdown, .customer-card-item, .footer-nav, .btn-tambah').forEach(el=>{
+      if(el) el.style.pointerEvents='auto';
+    });
+    
+    // FIX: Hapus 2 splash - modular + original-body
     const splash1 = document.getElementById('supabase-loading');
     if(splash1) splash1.remove();
-    
-    // Original-body punya splash sendiri #app-splash-wrapper dan #laundry-splash
     const splash2 = document.getElementById('app-splash-wrapper');
-    if(splash2){ splash2.style.display='none'; splash2.remove(); console.log('✅ splash original-body removed'); }
-    
+    if(splash2){ splash2.style.display='none'; splash2.remove(); console.log('✅ splash app-splash-wrapper removed'); }
     const splash3 = document.getElementById('laundry-splash');
     if(splash3){ splash3.style.display='none'; splash3.remove(); }
     
-    console.log('✅ DONE - Modular v2.5.28 Clean loaded - dibawah bersih');
-  }, 500);
+    // Ensure body is scrollable and clickable
+    document.body.style.pointerEvents='auto';
+    document.body.style.overflow='auto';
+    const appRoot = document.getElementById('app-root');
+    if(appRoot){ appRoot.style.pointerEvents='auto'; }
+    
+    console.log('✅ DONE - All buttons should be clickable now - tap-model fixed');
+  }, 800);
 }
 
 init().catch(e => {
   console.error('INIT FAIL', e);
   const appRoot = document.getElementById('app-root');
-  if(appRoot) appRoot.innerHTML = `<div style="padding:20px;text-align:center"><h2>❌ ${e.message}</h2><p>Pastikan original-body.html 914KB ada di root</p><p>${e.stack || ''}</p><button onclick="location.reload()" style="padding:10px 20px;background:#f618a9;color:#fff;border:none;border-radius:8px">Reload</button></div>`;
+  if(appRoot) appRoot.innerHTML = `<div style="padding:20px;text-align:center"><h2>❌ ${e.message}</h2><p>${e.stack||''}</p><button onclick="location.reload()" style="padding:10px 20px;background:#f618a9;color:#fff;border:none;border-radius:8px">Reload</button></div>`;
   const s1 = document.getElementById('supabase-loading');
   if(s1) s1.remove();
-  const s2 = document.getElementById('app-splash-wrapper');
-  if(s2) s2.remove();
-  const s3 = document.getElementById('laundry-splash');
-  if(s3) s3.remove();
 });
 
-// Unregister old SW that caches splash loop
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.getRegistrations().then(regs => {
-      regs.forEach(r => r.unregister());
-    });
-    // Don't register new SW for now to avoid cache loop, or register clean one
-    // navigator.serviceWorker.register('./sw.js').catch(()=>{});
-  });
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
 }
 </script>
 </body>
