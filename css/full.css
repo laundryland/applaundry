@@ -1,0 +1,44 @@
+
+
+/* v2.5.28-PELANGGAN-2ROW-ICONS FINAL - 5ROW + PRINT + SHAREWA INTEGRATED + X BUTTON FIX */
+.tap-model{pointer-events:auto!important;cursor:pointer!important;touch-action:manipulation;-webkit-tap-highlight-color:rgba(0,0,0,0.1);}
+.page-view.hidden{display:none!important;}
+.modal-overlay:not(.active){pointer-events:none!important;}
+.modal-overlay.active{pointer-events:auto!important;}
+.modal-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);display:flex;justify-content:center;align-items:center;z-index:2000;opacity:0;visibility:hidden;transition:opacity 0.25s ease,visibility 0.25s ease;padding:16px;box-sizing:border-box;}
+.modal-overlay.active{opacity:1;visibility:visible;}
+.modal-card{position:relative;overflow-y:auto;}
+.modal-close-btn{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#333;background:rgba(0,0,0,0.06);border:1.5px solid rgba(0,0,0,0.08);cursor:pointer;z-index:10;transition:all 0.15s;}
+.modal-close-btn:hover{background:rgba(0,0,0,0.12);transform:scale(1.05);}
+.modal-header{width:100%;display:flex;justify-content:space-between;align-items:center;padding-right:40px;box-sizing:border-box;}
+.modal-title{font-size:14px;font-weight:800;color:#111;}
+.font-color-orange-bold{color:#ea580c!important;font-weight:800!important;}
+.font-color-red-bold{color:#dc2626!important;font-weight:800!important;}
+.badge-blink-orange{animation:blinkOrange 1.2s infinite;}
+.badge-blink-red{animation:blinkRed 1s infinite;}
+@keyframes blinkOrange{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes blinkRed{0%,100%{opacity:1}50%{opacity:0.2}}
+.antrian-card-row-estimasi{width:100%;display:flex;justify-content:space-between;padding:6px 10px;background:rgba(255,255,255,0.6);border-radius:10px;margin-top:6px;border:1px solid rgba(255,255,255,0.8);}
+
+
+@font-face {
+  font-family: "Optimistic";
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url("/fonts/OptimisticAI_VF_Optimized.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Optimistic Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/OptimisticMono_W_TextRegular.woff2") format("woff2");
+}
+:where(html) {
+  font-family: "Optimistic", system-ui, sans-serif;
+}
+:where(code, pre, kbd, samp) {
+  font-family: "Optimistic Mono", ui-monospace, monospace;
+}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}

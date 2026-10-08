@@ -1,0 +1,1 @@
+export const getData=k=>{try{return JSON.parse(localStorage.getItem(k+'Data')||'[]')}catch{return []}}; export const setData=(k,d)=>localStorage.setItem(k+'Data',JSON.stringify(d));

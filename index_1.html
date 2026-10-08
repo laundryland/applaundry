@@ -14,20 +14,7 @@
 #notaPrintCanvasArea{background:#ffffff!important;color:#000000!important;font-family:'Courier New',monospace!important;font-weight:700!important;border:1px solid #000!important;padding:12px}
 #multiHpSyncBanner{display:none!important}
 </style>
-
-  <script>
-    // Inject Vercel Env ke window.__ENV__ - diisi Vercel saat build via Edge Config atau manual
-    window.__ENV__ = window.__ENV__ || {};
-    // Jika deploy di Vercel dengan Environment Variables, Vercel akan replace ini saat build
-    // Atau bisa di-set via <meta> tag dari Vercel dashboard
-    try {
-      const metaUrl = document.querySelector('meta[name="supabase-url"]');
-      const metaKey = document.querySelector('meta[name="supabase-anon-key"]');
-      if (metaUrl) window.__ENV__.SUPABASE_URL = metaUrl.content;
-      if (metaKey) window.__ENV__.SUPABASE_ANON_KEY = metaKey.content;
-    } catch {}
-  </script>
-</head>
+<link rel="manifest" href="./manifest.json"><meta name="theme-color" content="#f618a9"></head>
 <body class="bg-[#fafafa]">
 <div id="app" class="min-h-screen max-w-[480px] mx-auto bg-white">
 <header class="sticky top-0 z-40 bg-white border-b p-3 flex justify-between items-center"><div id="label-outlet" class="font-bold">Laundry Land</div><button onclick="createBackup()" class="text-xs bg-black text-white px-3 py-1.5 rounded-full">Backup</button></header>
@@ -57,4 +44,4 @@ import './js/modules/laporan.js';
 import './js/modules/backup.js';
 initApp();
 </script>
-</body></html>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js").then(()=>console.log("✅ SW applaundry registered")).catch(e=>console.log("SW fail",e))}</script></body></html>

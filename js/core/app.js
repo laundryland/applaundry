@@ -1,0 +1,1 @@
+import { loadAll } from './supabase.js'; import { showPage } from './router.js'; export const initApp=async()=>{await loadAll(); showPage('home'); console.log('init ok');};
