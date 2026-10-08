@@ -1,1 +1,0 @@
-export const showPage=n=>{['home','antrian','laporan','setting'].forEach(p=>document.getElementById('page-'+p)?.classList.add('hidden')); document.getElementById('page-'+n)?.classList.remove('hidden');}; window.showPage=showPage;

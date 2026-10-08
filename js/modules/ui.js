@@ -1,1 +1,0 @@
-export const toast=m=>{const c=document.getElementById('toast-container'); const e=document.createElement('div'); e.className='bg-black text-white px-4 py-2 rounded-full text-sm'; e.textContent=m; c.appendChild(e); setTimeout(()=>e.remove(),2000);}; window.toast=toast;
