@@ -1,49 +1,44 @@
-// sw.js - AppLaundry Final Clean A - PWA Offline Cache
-const CACHE_NAME = 'applaundry-v3-final-clean-a-2026-05-13';
-const ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './css/base.css',
-  './css/components.css',
-  './css/modals.css',
-  './js/core/config.js',
-  './js/core/supabase.js',
-  './js/core/storage.js',
-  './js/core/router.js',
-  './js/core/app.js',
-  './js/modules/ui.js',
-  './js/modules/outlet.js',
-  './js/modules/pelanggan.js',
-  './js/modules/layanan.js',
-  './js/modules/karyawan.js',
-  './js/modules/antrian.js',
-  './js/modules/nota-bayar.js',
-  './js/modules/struk.js',
-  './js/modules/laporan.js',
-  './js/modules/backup.js',
-  './js/modules/icons.js'
+// sw.js - FINAL CLEAN A - VERSION BUMP TO CLEAR CACHE
+const CACHE_NAME = 'laundry-final-clean-A-v999';
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/js/core/app.js',
+  '/js/core/config-v2.js',
+  '/js/core/supabase.js'
 ];
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
+self.addEventListener('install', event => {
+  console.log('[SW] Installing v999 - clearing old cache');
+  self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+  );
 });
 
-self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
+self.addEventListener('activate', event => {
+  console.log('[SW] Activating v999 - deleting old caches');
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if(cacheName !== CACHE_NAME){
+            console.log('[SW] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    }).then(() => self.clients.claim())
+  );
 });
 
-self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
-      return fetch(e.request).then(res => {
-        if (!res || res.status !== 200 || res.type !== 'basic') return res;
-        const clone = res.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
-        return res;
-      });
-    }).catch(()=>caches.match('./index.html'))
+self.addEventListener('fetch', event => {
+  // NEVER cache config and supabase - always fetch fresh
+  if(event.request.url.includes('config') || event.request.url.includes('supabase')){
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  event.respondWith(
+    caches.match(event.request).then(response => response || fetch(event.request))
   );
 });
