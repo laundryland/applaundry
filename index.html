@@ -8617,7 +8617,13 @@ async function upsertTable(table, data){
       for(let k of cols){ if(o[k]!==undefined) c[k]=o[k]; }
       if(o.outletId && !c.outlet_id && cols.includes('outlet_id')) c.outlet_id=o.outletId;
       if('isActive' in o && !('is_active' in c) && cols.includes('is_active')) c.is_active=o.isActive;
-      if(c.id && String(c.id).length<20) delete c.id;
+      // FIX UUID: hapus id yang bukan UUID valid (outlet-xxx, karyawan-xxx)
+      if(c.id){
+        const idStr = String(c.id);
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idStr);
+        const isBadId = idStr.startsWith('outlet-') || idStr.startsWith('karyawan-') || idStr.startsWith('pelanggan-') || idStr.startsWith('layanan-') || idStr.startsWith('antrian-') || !isUUID && idStr.length < 36;
+        if(!isUUID || isBadId) delete c.id;
+      }
       return c;
     }).filter(c=>c && Object.keys(c).length>0);
     if(!clean.length) { console.log('📭', table, 'clean kosong'); return; }
