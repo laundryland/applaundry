@@ -1,26 +1,25 @@
-// js/core/config.js - FINAL FIX - supports sb_publishable_ + Vercel ENV
-const ENV = (typeof window !== 'undefined' && window.__ENV__) ? window.__ENV__ : {};
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-function getMeta(name){
+const SUPABASE_URL = 'https://nniecqbfjmmlrtmolnrt.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_JNkBb7xwGqYwyL6s11ffdw_DfV9dSPV';
+
+export const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false } });
+window.supabaseClient = supabaseClient;
+export const supabase = supabaseClient;
+
+export const upsertTable = async (t,d) => {
+  if(!d?.length) return;
   try{
-    const el = document.querySelector(`meta[name="${name}"]`);
-    return el ? el.content : '';
-  }catch{ return '' }
-}
-
-export const SUPABASE_URL = ENV.SUPABASE_URL || getMeta('supabase-url') || 'https://nniecqbfjmmlrtmolnrt.supabase.co';
-export const SUPABASE_KEY = ENV.SUPABASE_ANON_KEY || ENV.SUPABASE_PUBLISHABLE_KEY || ENV.SUPABASE_KEY || getMeta('supabase-anon-key') || 'sb_publishable_JNkBb7xwGqYwyL6s11ffdw_DfV9dSPV';
-export const SUPABASE_ANON_KEY = SUPABASE_KEY;
-
-// Legacy VITE_ support
-export const VITE_SUPABASE_URL = SUPABASE_URL;
-export const VITE_SUPABASE_ANON_KEY = SUPABASE_KEY;
-export const VITE_SUPABASE_PUBLISHABLE_KEY = SUPABASE_KEY;
-
-export default {
-  SUPABASE_URL,
-  SUPABASE_KEY,
-  SUPABASE_ANON_KEY
+    let clean = d.map(o=>{ let c={...o}; if(c.id && String(c.id).length<20) delete c.id; return c; });
+    const {error} = await supabaseClient.from(t).upsert(clean,{onConflict:'id'});
+    if(error) console.error(t, error.message);
+  }catch(e){ console.error(e); }
 };
-
-console.log('[Config] Loaded:', SUPABASE_URL, SUPABASE_KEY.slice(0,20)+'...');
+export const loadAll = async () => {
+  for(let t of ['outlets','pelanggan','layanan','antrian','karyawan']){
+    try{
+      const {data} = await supabaseClient.from(t).select('*').limit(2000);
+      if(data?.length) localStorage.setItem(t+'Data', JSON.stringify(data));
+    }catch(e){}
+  }
+};
