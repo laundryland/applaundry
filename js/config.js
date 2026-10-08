@@ -1,8 +1,14 @@
-// FINAL CLEAN A - Config
 export const SUPABASE_URL = 'https://nniecqbfjmmlrtmolnrt.supabase.co';
-export const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.[STRIPPED 127 bytes].p2y0V0p0p0p0p0p0p0p0p0p0'; // ganti dengan anon key asli kamu
-export const SUPABASE_ANON_KEY = SUPABASE_KEY;
+export const SUPABASE_KEY = 'sb_publishable_JNkBb7xwGqYwyL6s11ffdw_DfV9dSPV';
+export const SUPABASE_ANON_KEY = 'sb_publishable_JNkBb7xwGqYwyL6s11ffdw_DfV9dSPV';
 
-// Supaya support VITE_ juga
+// buat jaga-jaga
 export const VITE_SUPABASE_URL = SUPABASE_URL;
 export const VITE_SUPABASE_ANON_KEY = SUPABASE_KEY;
+export const VITE_SUPABASE_PUBLISHABLE_KEY = SUPABASE_KEY;
+
+export default {
+  SUPABASE_URL,
+  SUPABASE_KEY,
+  SUPABASE_ANON_KEY
+};
