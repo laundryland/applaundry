@@ -1,30 +1,42 @@
-// supabase.js - ROOT VERSION - Final
+// js/core/supabase.js - FINAL FIX - supports sb_publishable_
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { SUPABASE_URL, SUPABASE_KEY, SUPABASE_ANON_KEY } from './config.js?v=final2024';
 
-export const SUPABASE_URL = 'https://nniecqbfjmmlrtmolnrt.supabase.co';
-export const SUPABASE_KEY = 'sb_publishable_JNkBb7xwGqYwyL6s11ffdw_DfV9dSPV';
+const url = SUPABASE_URL;
+const key = SUPABASE_KEY || SUPABASE_ANON_KEY;
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { persistSession: false }
+console.log('[Supabase] Init with:', url, key ? key.slice(0,25)+'...' : 'MISSING KEY');
+
+if(!url || !key){
+  console.error('[Supabase] Config missing! Check js/core/config.js');
+}
+
+export const supabaseClient = createClient(url, key, {
+  auth: { persistSession: false, autoRefreshToken: false }
 });
 
-export const TABLES = ['outlet','pegawai','pelanggan','deposito','nota'];
+// For backward compat
+window.supabaseClient = supabaseClient;
+export const supabase = supabaseClient;
 
-export const getLocal = (t) => {
-  try { return JSON.parse(localStorage.getItem(t) || '[]'); } catch { return [] }
+export const upsertTable = async (t,d) => {
+  if(!d?.length) return;
+  try{
+    let clean = d.map(o=>{
+      let c={...o};
+      if(c.id && String(c.id).length<20) delete c.id;
+      return c;
+    });
+    const {error} = await supabaseClient.from(t).upsert(clean,{onConflict:'id'});
+    if(error) console.error('[upsert]', t, error.message);
+  }catch(e){ console.error(e); }
 };
-export const setLocal = (t, data) => localStorage.setItem(t, JSON.stringify(data));
 
-export const syncFromSupabase = async (table) => {
-  const { data, error } = await supabase.from(table).select('*').limit(2000);
-  if (error) throw error;
-  if (data) setLocal(table, data);
-  return data || [];
-};
-
-export const syncToSupabase = async (table, row) => {
-  const clean = { ...row };
-  if (clean.id && String(clean.id).startsWith('id_')) delete clean.id;
-  const { error } = await supabase.from(table).upsert(clean, { onConflict: 'id' });
-  if (error) throw error;
+export const loadAll = async () => {
+  for(let t of ['outlets','pelanggan','layanan','antrian','karyawan']){
+    try{
+      const {data} = await supabaseClient.from(t).select('*').limit(2000);
+      if(data?.length) localStorage.setItem(t+'Data', JSON.stringify(data));
+    }catch(e){}
+  }
 };
