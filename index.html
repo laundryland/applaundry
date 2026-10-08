@@ -3782,6 +3782,8 @@ function simpanOutlet() {
     if (o) { o.nama = nama; o.alamat = alamat; o.wa = wa; }
   } else outletsData.push({ id: 'outlet-' + Date.now(), nama: nama, alamat: alamat, wa: wa, isActive: false });
 
+  try{ localStorage.setItem('outletsData', JSON.stringify(outletsData)); }catch(e){}
+  if(window.syncOutletsToSupabase) window.syncOutletsToSupabase();
   resetFormOutlet();
   renderOutletList();
   renderHeaderOutletDropdown();
@@ -3871,6 +3873,7 @@ function simpanKaryawan() {
     if (k) { k.nama = nama; k.wa = wa; k.alamat = alamat; k.level = level; k.username = username; k.password = password; }
   } else karyawanData.push({ id: 'karyawan-' + Date.now(), outletId: activeOutlet.id, nama: nama, wa: wa, alamat: alamat, level: level, username: username, password: password, isActive: false });
   try{ localStorage.setItem('karyawanData', JSON.stringify(karyawanData)); }catch(e){}
+  if(window.syncKaryawanToSupabase) window.syncKaryawanToSupabase();
   resetFormKaryawan();
   renderKaryawanList();
   showNoticeToast(`Data karyawan ${nama} (${level}) disimpan.`);
@@ -8589,46 +8592,18 @@ console.log('☁️ SUPABASE MERAH 5 TABEL ACTIVE - FIXED v2.5.28-PELANGGAN-2ROW
 async function upsertTable(table, data){
   if(!data || !data.length) return;
   try{
-    const allowedColumns = {
-      outlets: ['id','nama','alamat','wa','is_active','outlet_id','created_at'],
-      karyawan: ['id','outlet_id','nama','username','password','level','is_active','created_at'],
-      pelanggan: ['id','outlet_id','nama','wa','alamat','deposito','created_at'],
-      // FIX: tambah estimasiVal & estimasiUnit, jangan cuma estimasi
-      layanan: ['id','outlet_id','nama','kode','harga','satuan','estimasiVal','estimasiUnit','estimasi','minKg','created_at'],
-      antrian: ['id','outlet_id','nota','namaPelanggan','layanan','totalNota','statusProses','statusBayar','tanggal','created_at']
-    };
-    const clean = data.map(d=>{
-      const {updated_at, created_at, ...rest}=d; 
-      let out = {...rest};
-      if(out.outletId){ out.outlet_id = out.outletId; delete out.outletId; }
-      if('isActive' in out){ out.is_active = out.isActive ? true : false; delete out.isActive; }
-      delete out.tanpaWa; delete out.simpanKontak;
-      if(allowedColumns[table]){
-        const filtered={}; 
-        for(let k of allowedColumns[table]){ if(k in out) filtered[k]=out[k]; } 
-        if('id' in out) filtered['id']=out['id']; 
-        out=filtered;
-      }
-      const r={}; for(let k in out){ if(out[k]!==undefined && typeof out[k]!=='function') r[k]=out[k]; } return r;
-    }).filter(o=>Object.keys(o).length>0);
-    const attemptUpsert = async (payload)=>{ return await window.supabaseClient.from(table).upsert(payload, {onConflict:'id'}).select(); };
-    let {error} = await attemptUpsert(clean);
-    if(error){
-      let retryPayload=[...clean];
-      const extract = (msg)=>{ const m1=msg.match(/Could not find the '([^']+)' column/); if(m1) return m1[1]; return null; };
-      let missing=extract(error.message||''); let retries=0;
-      while(missing && retries<10){
-        console.warn('⚠️ Kolom tidak ada di Supabase:', missing);
-        retryPayload=retryPayload.map(o=>{ const r={...o}; delete r[missing]; return r; });
-        const res=await attemptUpsert(retryPayload);
-        if(!res.error){ error=null; break; }
-        missing=extract(res.error.message||''); error=res.error; retries++;
-      }
-      if(error) console.error('❌ Upsert', table, error.message);
-      else console.log('✅ Upsert', table, clean.length);
-    } else {
-      console.log('✅ Upsert', table, clean.length);
-    }
+    let clean = data.map(o=>{ 
+      let c={...o}; 
+      if(c.id && String(c.id).length<20) delete c.id; 
+      if(c.outletId){ c.outlet_id = c.outletId; delete c.outletId; }
+      if('isActive' in c){ c.is_active = c.isActive; delete c.isActive; }
+      delete c.tanpaWa; delete c.simpanKontak;
+      delete c.updated_at;
+      return c;
+    });
+    const {error} = await window.supabaseClient.from(table).upsert(clean,{onConflict:'id'});
+    if(error) console.error('❌ Upsert', table, error.message);
+    else console.log('✅ Upsert', table, clean.length);
   }catch(e){ console.error('upsert error', e); }
 }
 
