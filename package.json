@@ -2,7 +2,6 @@
   "name": "applaundry",
   "version": "1.0.0",
   "description": "applaundry - Laundry Management PWA with Supabase",
-  "main": "FIX-ALL-SETTING.html",
   "scripts": {
     "dev": "vercel dev",
     "deploy": "vercel --prod"
@@ -14,5 +13,6 @@
     "applaundry"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "type": "module"
 }
