@@ -1,15 +1,15 @@
 // sw.js - Applaundry PWA Service Worker - auto version upgrade
 const CACHE_NAME = 'applaundry-v2.5.28-PELANGGAN-2ROW-ICONS-20241009';
 const ASSETS_TO_CACHE = [
-  '/',
-  '/FIX-ALL-SETTING.html',
-  '/manifest.json',
-  '/favicon-32x32.png',
-  '/favicon-192x192.png',
-  '/favicon-512x512.png',
-  '/apple-touch-icon.png',
-  '/favicon.png',
-  '/logo.png'
+  './',
+  './FIX-ALL-SETTING.html',
+  './manifest.json',
+  './favicon-32x32.png',
+  './favicon-192x192.png',
+  './favicon-512x512.png',
+  './apple-touch-icon.png',
+  './favicon.png',
+  './logo.png'
 ];
 
 // Install - cache new version
@@ -57,7 +57,7 @@ self.addEventListener('fetch', event => {
         const clone = res.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(req, clone));
         return res;
-      }).catch(() => caches.match(req).then(r => r || caches.match('/FIX-ALL-SETTING.html')))
+      }).catch(() => caches.match(req).then(r => r || caches.match('./FIX-ALL-SETTING.html')))
     );
     return;
   }
