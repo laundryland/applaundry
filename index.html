@@ -3,8 +3,8 @@
 <head>
 
 <script type="module">
-import { supabase, TABLES, getLocal, setLocal, syncFromSupabase, syncToSupabase, initAutoSync } from './supabase.js'
-window.supabaseAuto = { supabase, TABLES, getLocal, setLocal, syncFromSupabase, syncToSupabase, initAutoSync }
+import { supabase, TABLES, getLocal, setLocal, syncFromSupabase, syncToSupabase, initAutoSync, exportPelangganKeSupa } from './supabase.js'
+window.supabaseAuto = { supabase, TABLES, getLocal, setLocal, syncFromSupabase, syncToSupabase, initAutoSync, exportPelangganKeSupa }
 
 // Expose for old code compatibility
 window.supa = supabase
@@ -1047,21 +1047,20 @@ body {
 </style>
 
 <script src="https://unpkg.com/dexie@4.0.11/dist/dexie.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
-const SUPABASE_URL = localStorage.getItem('supabase_url') || 'https://YOUR_PROJECT.supabase.co';
-const SUPABASE_ANON_KEY = localStorage.getItem('supabase_key') || 'sb_publishable_JNkBb7xwGqYwyL6s11ffdw_DfV9dSPV';
-let supabaseClient = null;
-try{ if(SUPABASE_URL.includes('supabase.co') && !SUPABASE_URL.includes('YOUR_PROJECT')) supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }catch(e){}
-const db = new Dexie('LaundryPWA_Locked_v3');
-
+// LEGACY UMD BLOCK DISABLED - reuse ESM client
+const db = typeof Dexie!=='undefined' ? new Dexie('LaundryPWA_Locked_v3') : null;
+if(db){ try{
 db.version(2).stores({ 
   karyawan: 'id, outlet_id, username, level', 
   sync_queue: '++qid, table_name, created_at',
   struk_settings: 'id, outletId, key'
 });
-
 if(navigator.storage && navigator.storage.persist){ navigator.storage.persist(); }
+}catch(e){}
+}
+// DUMMY to keep db variable
+if(typeof db!=='undefined' && db){ try{ console.log('Dexie ready'); }catch(e){} }
 </script>
 
 <script>
@@ -1422,6 +1421,23 @@ div[style*="color:#555"], div[style*="color:#777"], div[style*="color:#666"], sp
   max-width: 440px !important;
 }
 </style>
+
+<style id="fix-label-merah">
+/* FIX LABEL MERAH - v2.5.28-FINAL - Export Pelanggan ke Supa */
+.font-color-orange-bold{color:#ea580c!important;font-weight:800!important;}
+.font-color-red-bold{color:#dc2626!important;font-weight:800!important;}
+.badge-blink-orange{animation:blinkOrange 1.2s infinite;}
+.badge-blink-red{animation:blinkRed 1s infinite;}
+.badge-status.st-deadline-orange{background:rgba(249,115,22,0.18);color:#ea580c;border:1px solid rgba(249,115,22,0.45);animation:smoothBlinkOrange 1.4s infinite ease-in-out;}
+.badge-status.st-terlambat-red{background:rgba(220,38,38,0.18);color:#dc2626;border:1px solid rgba(220,38,38,0.45);animation:blinkRed 1s infinite;font-weight:800!important;}
+.badge-supa{background:#10b981;color:white;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:800;}
+.badge-supa-merah{background:#dc2626;color:white;padding:2px 6px;border-radius:6px;font-size:9px;font-weight:800;animation:blinkRed 1s infinite;}
+@keyframes blinkOrange{0%,100%{opacity:1}50%{opacity:0.3}}
+@keyframes blinkRed{0%,100%{opacity:1}50%{opacity:0.2}}
+@keyframes smoothBlinkOrange{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.6;transform:scale(1.05)}}
+.label-merah{color:#dc2626!important;font-weight:800!important;background:rgba(220,38,38,0.12);padding:2px 6px;border-radius:4px;border:1px solid rgba(220,38,38,0.3);}
+</style>
+
 </head>
 
 <body>
@@ -2762,20 +2778,20 @@ let pelangganData = (()=>{ try{ const ls=localStorage.getItem('pelangganData'); 
   { id: "pelanggan-3", outletId: "outlet-2", nama: "Dewi Lestari", wa: "081122334455", tanpaWa: false, simpanKontak: true, alamat: "Jl. Anggrek No. 8", deposito: 100000 }
 ]; })();
 
-let layananData = [
+let layananData = (()=>{ try{ const ls=localStorage.getItem('layananData'); if(ls){ const p=JSON.parse(ls); if(Array.isArray(p)&&p.length>0) return p; } }catch(e){} return [
   { id: "layanan-1", outletId: "outlet-1", nama: "Cuci Komplit Express", kode: "CKE", harga: 10000, satuan: "Kg", estimasiVal: 3, estimasiUnit: "Jam", minKg: 3 },
   { id: "layanan-2", outletId: "outlet-1", nama: "Cuci Kering Karpet", kode: "CKK", harga: 30000, satuan: "Pcs", estimasiVal: 2, estimasiUnit: "Hari", minKg: 0 },
   { id: "layanan-3", outletId: "outlet-2", nama: "Cuci Komplit Hemat", kode: "CKH", harga: 7000, satuan: "Kg", estimasiVal: 2, estimasiUnit: "Hari", minKg: 3 },
   { id: "layanan-4", outletId: "outlet-2", nama: "Setrika Kilat", kode: "SKL", harga: 10000, satuan: "Kg", estimasiVal: 4, estimasiUnit: "Jam", minKg: 0 }
 ];
 
-let antrianData = [
+let antrianData = (()=>{ try{ const ls=localStorage.getItem('antrianData'); if(ls){ const p=JSON.parse(ls); if(Array.isArray(p)) return p; } }catch(e){} return [
   { id: "nota-1001", outletId: "outlet-1", nota: "#NT-1001", namaPelanggan: "Budi Santoso", totalNota: 30000, statusProses: "Proses", statusBayar: "Lunas", layanan: "Cuci Komplit Express 2.8Kg (Min 3Kg)", estimasi: "3 Jam", estimasiFormatted: "04-10-26 10:00", estimasiISO: new Date(Date.now()+3*3600000).toISOString(), tanggal: new Date().toISOString(), items:[{nama:"Cuci Komplit Express", qtyInput:"2.8", satuan:"Kg", estimasiVal:3, estimasiUnit:"Jam"}] },
   { id: "nota-1002", outletId: "outlet-1", nota: "#NT-1002", namaPelanggan: "Siti Aminah", totalNota: 30000, statusProses: "Antrian", statusBayar: "Belum Lunas", layanan: "Cuci Kering Karpet 1 Pcs", estimasi: "2 Hari", estimasiFormatted: "06-10-26 10:00", estimasiISO: new Date(Date.now()+2*86400000).toISOString(), tanggal: new Date(Date.now()-86400000).toISOString(), items:[{nama:"Cuci Kering Karpet", qtyInput:"1", satuan:"Pcs", estimasiVal:2, estimasiUnit:"Hari"}] }
 ];
 
-let pengeluaranKasData = [];
-let riwayatNotaData = [];
+let pengeluaranKasData = (()=>{ try{ const ls=localStorage.getItem('pengeluaranKasData'); if(ls){ const p=JSON.parse(ls); if(Array.isArray(p)) return p; } }catch(e){} return []; })();;
+let riwayatNotaData = (()=>{ try{ const ls=localStorage.getItem('riwayatNotaData'); if(ls){ const p=JSON.parse(ls); if(Array.isArray(p)) return p; } }catch(e){} return []; })();;
 
 /* State Pembuatan & Preview Nota */
 let currentNotaPelanggan = null;
@@ -9165,6 +9181,45 @@ function importPelanggan(event){
   if(file.name.endsWith('.csv')) reader.readAsText(file); else reader.readAsBinaryString(file); 
   event.target.value=''; 
 }
+function exportPelangganKeSupaManual(){
+  try{
+    var statusEl=document.getElementById('importPelangganStatus')||document.getElementById('exportPelangganSupaStatus');
+    if(statusEl) statusEl.innerHTML='<span class="badge-supa">⏳ Export '+ (pelangganData?pelangganData.length:0) +' ke Supa...</span>';
+    if(window.supabaseAuto && window.supabaseAuto.exportPelangganKeSupa){
+      window.supabaseAuto.exportPelangganKeSupa().then(function(res){
+        if(res.ok){
+          if(statusEl) statusEl.innerHTML='<span class="badge-supa">✅ '+res.count+' pelanggan di Supa</span> <span class="label-merah">Merah OK</span>';
+          if(typeof showNoticeToast==='function') showNoticeToast('✅ '+res.count+' pelanggan export ke Supa - label merah aktif');
+          // Trigger label merah check
+          if(typeof checkSupabaseRows==='function') checkSupabaseRows();
+        } else {
+          if(statusEl) statusEl.innerHTML='<span class="badge-supa-merah">❌ Gagal: '+(res.msg||'error')+'</span>';
+        }
+      });
+    } else if(window.syncPelangganToSupabase){
+      window.syncPelangganToSupabase();
+      if(statusEl) statusEl.innerHTML='<span class="badge-supa">✅ Sync pelanggan ke Supa</span>';
+      if(typeof showNoticeToast==='function') showNoticeToast('✅ Sync pelanggan ke Supa via legacy');
+    } else {
+      if(statusEl) statusEl.innerHTML='<span class="badge-supa-merah">❌ Supa client tidak siap</span>';
+    }
+  }catch(e){
+    console.error('exportPelangganKeSupaManual fail', e);
+    var statusEl=document.getElementById('exportPelangganSupaStatus');
+    if(statusEl) statusEl.innerText='❌ '+e.message;
+  }
+}
+
+function forceExportPelangganSupa(){
+  if(typeof pelangganData==='undefined' || !pelangganData.length){
+    if(typeof showNoticeToast==='function') showNoticeToast('❌ Tidak ada pelanggan lokal');
+    return;
+  }
+  if(confirm('Export '+pelangganData.length+' pelanggan ke Supabase? (hardreset aman)')){
+    exportPelangganKeSupaManual();
+  }
+}
+
 function importLayanan(event){ var file=event.target.files[0]; if(!file) return; var mode=document.querySelector('input[name="importModeLayanan"]:checked')?.value||'append'; var statusEl=document.getElementById('importLayananStatus'); if(statusEl) statusEl.innerText='⏳ Membaca...'; var reader=new FileReader(); reader.onload=function(e){ try{ var data=[]; if(file.name.endsWith('.csv')){ data=fromCSV(e.target.result); } else { if(typeof XLSX!=='undefined'){ var wb=XLSX.read(e.target.result,{type:'binary'}); var ws=wb.Sheets[wb.SheetNames[0]]; data=XLSX.utils.sheet_to_json(ws,{defval:''}); } else { statusEl.innerText='❌ XLSX butuh SheetJS'; return; } } var added=0,deleted=0; if(mode==='replace') layananData=[]; data.forEach(function(row){ var nama=(row.nama||'').trim(); if(!nama) return; var action=(row.action||'').toLowerCase(); if(action==='delete'||mode==='delete'){ var before=layananData.length; layananData=layananData.filter(l=>l.nama.toLowerCase()!==nama.toLowerCase()&&(l.kode||'').toLowerCase()!==(row.kode||'').toLowerCase()); if(layananData.length<before) deleted++; } else { var existing=layananData.find(l=>l.nama.toLowerCase()===nama.toLowerCase()|| (l.kode&&row.kode&&l.kode.toLowerCase()===String(row.kode).toLowerCase())); var outletId=row.outletId||getOutletIdByName(row.outlet||'')||(typeof outletsData!=='undefined'&&outletsData[0]?outletsData[0].id:'outlet-1'); if(existing){ existing.kode=row.kode||existing.kode; existing.harga=parseInt(row.harga)||existing.harga; existing.satuan=row.satuan||existing.satuan; existing.estimasiVal=parseInt(row.estimasiVal)||existing.estimasiVal; existing.estimasiUnit=row.estimasiUnit||existing.estimasiUnit; existing.minKg=parseInt(row.minKg)||existing.minKg||0; existing.outletId=outletId; } else { layananData.push({id:(typeof crypto!=='undefined' && crypto.randomUUID)?crypto.randomUUID():'layanan-'+Date.now()+'-'+Math.random().toString(36).slice(2,7), outletId:outletId, nama:nama, kode:row.kode||'', harga:parseInt(row.harga)||0, satuan:row.satuan||'Kg', estimasiVal:parseInt(row.estimasiVal)||3, estimasiUnit:row.estimasiUnit||'Jam', minKg:parseInt(row.minKg)||0}); added++; } } }); try{ localStorage.setItem('layananData',JSON.stringify(layananData));
     if(typeof setLocal==='function') setLocal('layanan', layananData);
     if(window.supabaseAuto && window.supabaseAuto.syncToSupabase){ window.supabaseAuto.syncToSupabase('layanan'); } }catch(e){} if(typeof renderLayananList==='function') renderLayananList(); if(statusEl) statusEl.innerText='✅ +'+added+' -'+deleted+' Total:'+layananData.length; if(typeof showNoticeToast==='function') showNoticeToast('✅ Import Layanan +'+added+' -'+deleted); }catch(err){ if(statusEl) statusEl.innerText='❌ '+err.message; } }; if(file.name.endsWith('.csv')) reader.readAsText(file); else reader.readAsBinaryString(file); event.target.value=''; }
@@ -9176,11 +9231,12 @@ function importFullBackup(event){ var file=event.target.files[0]; if(!file) retu
 
 
 <script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-const SUPABASE_URL = 'https://nniecqbfjmmlrtmolnrt.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_JNkBb7xwGqYwyL6s11ffdw_DfV9dSPV'; // applaundry publishable
-window.supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-console.log('☁️ SUPABASE MERAH 5 TABEL ACTIVE - FIXED v2.5.28-PELANGGAN-2ROW-ICONS');
+// REUSE supabaseAuto client to avoid Multiple GoTrueClient - FIXED FINAL
+// import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+// const SUPABASE_URL = 'https://nniecqbfjmmlrtmolnrt.supabase.co';
+// const SUPABASE_KEY = 'sb_publishable_JNkBb7xwGqYwyL6s11ffdw_DfV9dSPV';
+window.supabaseClient = window.supabaseAuto?.supabase || window.supabaseClient;
+console.log('☁️ SUPABASE MERAH 5 TABEL ACTIVE - FIXED FINAL v2.5.28 - single client', window.supabaseClient ? 'OK' : 'FAIL');
 
 async function upsertTable(table, data){
   if(!data || !data.length) return;
