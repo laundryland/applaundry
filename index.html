@@ -2645,17 +2645,36 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* Helper Functions */
-function getActiveOutlet() { return outletsData.find(o => o.isActive) || outletsData[0]; }
+function getActiveOutlet() { 
+  try{
+    var savedId = localStorage.getItem('activeOutletId');
+    if(savedId){
+      var saved = outletsData.find(o => o.id === savedId);
+      if(saved) return saved;
+    }
+  }catch(e){}
+  return outletsData.find(o => o.isActive) || outletsData[0]; 
+}
 function getActiveKaryawan() { const activeOutlet = getActiveOutlet(); return karyawanData.find(k => k.isActive && (k.outletId === activeOutlet.id || !k.outletId)) || karyawanData[0]; }
 
 function syncActiveOutletHeader() { 
   try{
-    const activeOutlet = typeof getActiveOutlet==='function'?getActiveOutlet():null;
+    var activeOutlet = (typeof getActiveOutlet==='function'?getActiveOutlet():null);
+    if(!activeOutlet) {
+      var savedId = localStorage.getItem('activeOutletId');
+      if(savedId && typeof outletsData!=='undefined'){
+        activeOutlet = outletsData.find(o=>o.id===savedId) || outletsData[0];
+      } else {
+        activeOutlet = (typeof outletsData!=='undefined'?outletsData[0]:null);
+      }
+    }
     if(!activeOutlet) return;
-    const labelHeader = document.getElementById('label-outlet'); 
-    if (labelHeader) { labelHeader.innerText = activeOutlet.nama; console.log('✅ Header outlet:', activeOutlet.nama); }
-    // Update logo/title if exists
-    const titleEl=document.querySelector('title');
+    var labelHeader = document.getElementById('label-outlet'); 
+    if (labelHeader) { 
+      labelHeader.innerText = activeOutlet.nama; 
+      console.log('✅ Header outlet:', activeOutlet.nama, 'id:', activeOutlet.id); 
+    }
+    var titleEl=document.querySelector('title');
     if(titleEl && activeOutlet.nama) titleEl.innerText = activeOutlet.nama + ' - SH4NDY';
   }catch(e){ console.error('syncActiveOutletHeader fail', e); }
 }
@@ -3763,11 +3782,13 @@ function setActiveOutlet(id) {
   try{ localStorage.setItem('outletsData', JSON.stringify(outletsData)); }catch(e){}
   try{ 
     var active = outletsData.find(o=>o.id===id);
-    if(active && typeof supa!=='undefined' && supa){
-      // Update semua outlet is_active di Supabase - nonaktifkan semua dulu, aktifkan yang dipilih
-      supa.from('outlets').update({is_active:false}).neq('id','00000000-0000-0000-0000-000000000000').then(function(){
-        supa.from('outlets').update({is_active:true}).eq('id', id).then(function(r){ console.log('✅ Outlet active sync to Supa:', id, r); });
-      });
+    var client = window.supabaseClient || window.supa || (typeof supabaseClient!=='undefined'?supabaseClient:null);
+    localStorage.setItem('activeOutletId', id); // simpan pilihan user
+    if(active && client){
+      // Update semua outlet is_active di Supabase
+      client.from('outlets').update({is_active:false}).neq('id','00000000-0000-0000-0000-000000000000').then(function(){
+        client.from('outlets').update({is_active:true}).eq('id', id).then(function(r){ console.log('✅ Outlet active sync to Supa:', id, r); });
+      }).catch(function(err){ console.warn('Supa outlet sync fail', err); });
     }
   }catch(e){ console.warn('Outlet Supa sync fail', e); }
   if(typeof syncActiveOutletHeader==='function') syncActiveOutletHeader();
@@ -8745,13 +8766,24 @@ window.syncAntrianToSupabase = () => upsertTable('antrian', typeof antrianData!=
       });
 
       if(t==='outlets'){ 
+        // Respect saved activeOutletId
+        try{
+          var savedId = localStorage.getItem('activeOutletId');
+          if(savedId){
+            normalized.forEach(function(o){ o.isActive = (o.id===savedId); });
+          } else {
+            // Jika di Supa ada yang is_active true, pakai itu
+            var hasActive = normalized.some(function(o){ return o.isActive; });
+            if(!hasActive && normalized.length>0) normalized[0].isActive = true;
+          }
+        }catch(e){}
         outletsData=normalized; 
         localStorage.setItem('outletsData', JSON.stringify(normalized)); 
         if(typeof renderOutletList==='function') renderOutletList(); 
         if(typeof syncActiveOutletHeader==='function') syncActiveOutletHeader();
         if(typeof renderHeaderOutletDropdown==='function') renderHeaderOutletDropdown();
         if(typeof syncActiveKaryawanHeader==='function') syncActiveKaryawanHeader();
-        console.log('✅ Outlet header sync:', normalized.map(o=>o.nama));
+        console.log('✅ Outlet header sync:', normalized.map(function(o){ return o.nama+'('+(o.isActive?'aktif':'')+')'; }));
       }
       if(t==='pelanggan'){ 
         // FIX HILANG SEBAGIAN: merge, jangan timpa langsung - jika supabase lebih sedikit dari local, pakai local
@@ -9128,8 +9160,11 @@ if(typeof window.toCSV !== 'function'){
     // Coba set outlet ke-2 jika ada
     if(outletsData.length>1){
       var second=outletsData[1];
-      console.log('Coba set active ke:', second.nama);
+      console.log('Coba set active ke:', second.nama, 'id:', second.id);
       if(typeof setActiveOutlet==='function') setActiveOutlet(second.id);
+      setTimeout(function(){ if(typeof syncActiveOutletHeader==='function') syncActiveOutletHeader(); }, 300);
+    } else {
+      console.log('Hanya 1 outlet, tidak bisa switch');
     }
   };
 
@@ -9142,6 +9177,39 @@ if(typeof window.toCSV !== 'function'){
     }, 1500);
   });
 })();
+</script>
+
+
+<!-- DEBUG PANEL OUTLET - visible untuk fix Laundry Land -->
+<div id="debugOutletPanel" style="position:fixed; bottom:80px; right:12px; z-index:99999; background:#111; color:#fff; padding:10px; border-radius:12px; font-size:11px; max-width:200px; box-shadow:0 4px 20px rgba(0,0,0,0.3); display:none;">
+  <div style="font-weight:800; margin-bottom:6px;">🔧 Fix Laundry Land</div>
+  <div id="debugOutletInfo" style="font-size:10px; color:#aaa; margin-bottom:8px;">Loading...</div>
+  <button onclick="testerOtomatisOutlet()" style="width:100%; padding:6px; background:#f618a9; color:#fff; border:none; border-radius:8px; font-weight:700; font-size:11px; margin-bottom:4px;">🧪 Tester Outlet</button>
+  <button onclick="document.getElementById('debugOutletPanel').style.display='none'" style="width:100%; padding:4px; background:#333; color:#fff; border:none; border-radius:8px; font-size:10px;">Tutup</button>
+</div>
+<button id="btnShowDebugOutlet" onclick="document.getElementById('debugOutletPanel').style.display='block'; updateDebugOutletInfo()" style="position:fixed; bottom:20px; right:12px; z-index:99999; background:#f618a9; color:#fff; border:none; border-radius:50%; width:48px; height:48px; font-size:20px; box-shadow:0 4px 12px rgba(246,24,169,0.4);">🔧</button>
+<script>
+function updateDebugOutletInfo(){
+  try{
+    var outlets = (typeof outletsData!=='undefined'?outletsData:[]);
+    var active = outlets.find(o=>o.isActive) || outlets[0];
+    var info = document.getElementById('debugOutletInfo');
+    if(info){
+      if(outlets.length===0) info.innerHTML='Outlets kosong';
+      else {
+        var html = 'Aktif: <b>'+(active?active.nama:'-')+'</b><br>Header: <b>'+(document.getElementById('label-outlet')?document.getElementById('label-outlet').innerText:'-')+'</b><br><br>';
+        outlets.forEach(function(o,i){ html+=''+(i+1)+'. '+o.nama+' '+(o.isActive?'✅':'')+'<br>'; });
+        info.innerHTML=html;
+      }
+    }
+  }catch(e){}
+}
+// Show debug button after 2 sec
+setTimeout(function(){
+  var btn=document.getElementById('btnShowDebugOutlet');
+  if(btn) btn.style.display='flex';
+  updateDebugOutletInfo();
+}, 2000);
 </script>
 
 </body>
