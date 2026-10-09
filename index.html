@@ -1169,6 +1169,7 @@ document.addEventListener('DOMContentLoaded', function(){
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>if(typeof XLSX==='undefined'){ document.write('<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>'); }</script>
 <style>.export-tab-content{border:1px solid rgba(0,0,0,0.08); border-radius:10px; padding:10px;}</style>
 <style>
 /* ===== v18 WINDOWS 7 RAPI - BLACK & WHITE ONLY ===== */
@@ -8834,6 +8835,16 @@ window.addEventListener('resize', fitOutletFont);
 
 /* KARYAWAN CLEAN - NO BOCOR - 70-5-25 */
 function openModalKaryawan(){ renderKaryawanList(''); document.getElementById('modalKaryawanOverlay').classList.add('active'); }
+function openKaryawanPicker(){ 
+  // Picker untuk header - buka modal karyawan yang sama, tapi mode picker
+  try{
+    if(typeof renderKaryawanList==='function') renderKaryawanList('');
+    var ov=document.getElementById('modalKaryawanOverlay');
+    if(ov) ov.classList.add('active');
+    console.log('✅ openKaryawanPicker -> openModalKaryawan');
+  }catch(e){ console.error('openKaryawanPicker fail', e); }
+}
+function openKaryawanPickerModal(){ return openKaryawanPicker(); }
 function closeModalKaryawan(){ var ov=document.getElementById('modalKaryawanOverlay'); if(ov) ov.classList.remove('active'); }
 function closeModalKaryawanOnBackdrop(e){ if(e.target && e.target.id==='modalKaryawanOverlay') closeModalKaryawan(); }
 function resetFormKaryawan(){ editingKaryawanId=null; var el; el=document.getElementById('inputNamaKaryawan'); if(el) el.value=''; el=document.getElementById('inputWaKaryawan'); if(el) el.value=''; el=document.getElementById('inputAlamatKaryawan'); if(el) el.value=''; el=document.getElementById('inputLevelKaryawan'); if(el) el.value=''; el=document.getElementById('inputUsernameKaryawan'); if(el) el.value=''; el=document.getElementById('inputPasswordKaryawan'); if(el){ el.value=''; el.type='password'; } el=document.getElementById('btnTogglePass'); if(el) el.innerText='LIHAT'; el=document.getElementById('infoLevelDesc'); if(el) el.style.display='none'; el=document.getElementById('title-form-karyawan'); if(el) el.innerText='Form Data Karyawan'; el=document.getElementById('title-form-karyawan-header'); if(el) el.innerText='Tambah Karyawan'; }
@@ -9006,6 +9017,35 @@ function simpanPelanggan(){
     console.error('simpanPelanggan crash Level3', e);
     if(typeof showNoticeToast==='function') showNoticeToast('Gagal simpan: '+e.message);
   }
+}
+</script>
+
+
+<script>
+// Fix export import di Vercel - pastikan XLSX ready & download via blob
+function ensureXLSXReady(cb){
+  if(typeof XLSX!=='undefined'){ cb(); return; }
+  var s=document.createElement('script');
+  s.src='https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
+  s.onload=function(){ cb(); };
+  s.onerror=function(){ alert('Gagal load library XLSX - cek koneksi'); };
+  document.head.appendChild(s);
+}
+// Override download helper to work on Vercel (blob)
+function downloadFileBlob(content, filename, mime){
+  try{
+    var blob = (content instanceof Blob) ? content : new Blob([content], {type: mime||'text/plain'});
+    var url = URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url; a.download=filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+    if(typeof showNoticeToast==='function') showNoticeToast('✅ Export '+filename+' berhasil');
+  }catch(e){ console.error('download fail', e); alert('Gagal export: '+e.message); }
+}
+// Fix for Vercel: export functions yang lama pakai data URI kadang blocked, pakai blob
+if(typeof window.toCSV !== 'function'){
+  window.toCSV = function(rows){ return rows.map(r=>r.map(v=>{ var s=(v==null?'':String(v)); if(s.includes(',')||s.includes('"')||s.includes('\n')){ return '"'+s.replace(/"/g,'""')+'"'; } return s; }).join(',')).join('\n'); };
 }
 </script>
 
