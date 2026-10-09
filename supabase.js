@@ -27,13 +27,13 @@ const ALLOWED_COLUMNS = {
   'outlets': ['id','nama','alamat','wa','is_active','created_at','updated_at'],
   'karyawan': ['id','outlet_id','nama','username','password','level','is_active','wa','alamat','created_at','updated_at'],
   'pelanggan': ['id','outlet_id','nama','wa','alamat','deposito','is_active','created_at','updated_at'],
-  'layanan': ['id','outlet_id','nama','kode','harga','satuan','estimasi','estimasiUnit','minKg','is_active','created_at','updated_at'],
+  'layanan': ['id','outlet_id','nama','kode','harga','satuan','estimasi','estimasiVal','estimasiUnit','minKg','is_active','created_at','updated_at'],
   'antrian': ['id','outlet_id','pelanggan_id','layanan_id','karyawan_id','nama','layanan','status','total','total_bayar','metode_bayar','estimasi','created_at','updated_at','tanggal_selesai'],
   'pengeluaran_kas': ['id','outlet_id','karyawan_id','jumlah','kategori','keterangan','tanggal','created_at'],
   'riwayat_nota': ['id','outlet_id','pelanggan_id','total','created_at','detail'],
-  'riwayat_laporan': ['id','outlet_id','karyawan_id','jenis','judul','total_transaksi','total_omzet','total_pendapatan','total_pengeluaran','laba_bersih','periode_awal','periode_akhir','detail','is_active','created_at','updated_at'],
-  'omzet': ['id','outlet_id','tanggal','total_nota','total_omzet','tunai','non_tunai','deposito','is_active','created_at'],
-  'pendapatan': ['id','outlet_id','tanggal','sumber','jumlah','keterangan','metode','is_active','created_at']
+  'riwayat_laporan': ['id','outlet_id','karyawan_id','jenis','judul','total_transaksi','total_omzet','total_pendapatan','total_pengeluaran','laba_bersih','periode_awal','periode_akhir','detail','created_at','updated_at'],
+  'omzet': ['id','outlet_id','tanggal','total_nota','total_omzet','tunai','non_tunai','deposito','created_at'],
+  'pendapatan': ['id','outlet_id','tanggal','sumber','jumlah','keterangan','metode','created_at']
 }
 
 export function getLocal(table){
