@@ -9251,15 +9251,20 @@ async function upsertTable(table, data){
       outlets: ['id','nama','alamat','wa','is_active','outlet_id','created_at'],
       karyawan: ['id','outlet_id','nama','wa','alamat','username','password','level','is_active','created_at'],
       pelanggan: ['id','outlet_id','nama','wa','alamat','deposito','is_active','created_at'],
-      // FIX: tambah estimasiVal & estimasiUnit, jangan cuma estimasi
-      layanan: ['id','outlet_id','nama','kode','harga','satuan','estimasiVal','estimasiUnit','estimasi','minKg','created_at'],
-      antrian: ['id','outlet_id','nota','namaPelanggan','layanan','totalNota','statusProses','statusBayar','tanggal','created_at']
+      layanan: ['id','outlet_id','nama','kode','harga','satuan','estimasi','estimasiVal','estimasiUnit','estimasiUnit','minKg','is_active','created_at'],
+      antrian: ['id','outlet_id','pelanggan_id','layanan_id','karyawan_id','nama','layanan','status','total','total_bayar','metode_bayar','estimasi','created_at','tanggal_selesai'],
+      pengeluaran_kas: ['id','outlet_id','karyawan_id','jumlah','kategori','keterangan','tanggal','created_at'],
+      riwayat_nota: ['id','outlet_id','pelanggan_id','total','created_at','detail'],
+      riwayat_laporan: ['id','outlet_id','karyawan_id','jenis','judul','total_transaksi','total_omzet','total_pendapatan','total_pengeluaran','laba_bersih','periode_awal','periode_akhir','detail','created_at'],
+      omzet: ['id','outlet_id','tanggal','total_nota','total_omzet','tunai','non_tunai','deposito','created_at'],
+      pendapatan: ['id','outlet_id','tanggal','sumber','jumlah','keterangan','metode','created_at']
     };
     const clean = data.map(d=>{
       const {updated_at, created_at, ...rest}=d; 
       let out = {...rest};
       if(out.outletId){ out.outlet_id = out.outletId; delete out.outletId; }
-      if('isActive' in out){ out.is_active = out.isActive ? true : false; delete out.isActive; }
+      if('isActive' in out){ delete out.isActive; } // Jangan kirim isActive/is_active kalau tabel tidak punya kolom - auto fallback akan hapus
+      if('is_active' in out && ['riwayat_laporan','omzet','pendapatan','riwayat_nota','pengeluaran_kas'].includes(table)){ delete out.is_active; }
       delete out.tanpaWa; delete out.simpanKontak;
       if(allowedColumns[table]){
         const filtered={}; 
