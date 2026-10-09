@@ -21,20 +21,50 @@ document.addEventListener('DOMContentLoaded', async function(){
     var fetched = await initAutoSync()
     // Setelah sync, update global variables yang dipakai FIX-ALL-SETTING
     if(typeof outletsData !== 'undefined'){
-      outletsData = getLocal('outlets')
+      outletsData = getLocal('outlets');
+      // FIX DUPLICATE 4 OUTLETS -> HAPUS YANG ID PANJANG UUID
+      try{
+        if(outletsData.length>2){
+          var cleaned = outletsData.filter(function(o){ return o.id==='outlet-1' || o.id==='outlet-2' || o.id.length<=10; });
+          if(cleaned.length>=2 && cleaned.length < outletsData.length){
+            console.log('🔧 FIX 4 outlets ->', cleaned.length, 'outlets');
+            outletsData = cleaned;
+          }
+        }
+      }catch(e){}
       try{
         var savedId = localStorage.getItem('activeOutletId')
         if(savedId){
-          outletsData.forEach(function(o){ o.isActive = (o.id===savedId) })
+          outletsData.forEach(function(o){ 
+            var isAct = (o.id===savedId);
+            o.isActive = isAct; o.is_active = isAct;
+          });
         } else {
-          var hasActive = outletsData.some(function(o){ return o.isActive })
-          if(!hasActive && outletsData.length>0) outletsData[0].isActive = true
+          var hasActive = outletsData.some(function(o){ return o.isActive===true || o.is_active===true; });
+          if(!hasActive && outletsData.length>0){
+            outletsData[0].isActive = true;
+            outletsData[0].is_active = true;
+            localStorage.setItem('activeOutletId', outletsData[0].id);
+            console.log('🔧 FIX Outlet false false -> set', outletsData[0].id, 'active');
+          }
         }
       }catch(e){}
       setLocal('outlets', outletsData)
     }
     if(typeof karyawanData !== 'undefined'){ 
       karyawanData = getLocal('karyawan');
+      // FIX FALSE FALSE FALSE - Karyawan
+      try{
+        if(karyawanData.length>0){
+          var hasActiveK = karyawanData.some(function(k){ return k.isActive===true || k.is_active===true; });
+          if(!hasActiveK){
+            karyawanData[0].isActive = true;
+            karyawanData[0].is_active = true;
+            console.log('🔧 FIX Karyawan false false false -> set', karyawanData[0].nama, 'active');
+            setLocal('karyawan', karyawanData);
+          }
+        }
+      }catch(e){}
       if(karyawanData.length===0){
         try{
           var bk = sessionStorage.getItem('backup_karyawanData') || localStorage.getItem('backup_karyawanData');
