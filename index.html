@@ -1,6 +1,84 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+
+<script type="module">
+import { supabase, TABLES, getLocal, setLocal, syncFromSupabase, syncToSupabase, initAutoSync } from './supabase.js'
+window.supabaseAuto = { supabase, TABLES, getLocal, setLocal, syncFromSupabase, syncToSupabase, initAutoSync }
+
+// Expose for old code compatibility
+window.supa = supabase
+window.supabaseClient = supabase
+
+// Override getLocal/setLocal globally so old functions use new system
+window.getLocalData = getLocal
+window.setLocalData = setLocal
+
+// Auto sync on load - ini sistem yang kemarin lancar 5 tabel
+document.addEventListener('DOMContentLoaded', async function(){
+  console.log('🚀 AUTO SYNC SYSTEM - 7 TABEL - START')
+  try{
+    var fetched = await initAutoSync()
+    // Setelah sync, update global variables yang dipakai FIX-ALL-SETTING
+    if(typeof outletsData !== 'undefined'){
+      outletsData = getLocal('outlets')
+      try{
+        var savedId = localStorage.getItem('activeOutletId')
+        if(savedId){
+          outletsData.forEach(function(o){ o.isActive = (o.id===savedId) })
+        } else {
+          var hasActive = outletsData.some(function(o){ return o.isActive })
+          if(!hasActive && outletsData.length>0) outletsData[0].isActive = true
+        }
+      }catch(e){}
+      setLocal('outlets', outletsData)
+    }
+    if(typeof karyawanData !== 'undefined'){ karyawanData = getLocal('karyawan') }
+    if(typeof pelangganData !== 'undefined'){ pelangganData = getLocal('pelanggan') }
+    if(typeof layananData !== 'undefined'){ layananData = getLocal('layanan') }
+    if(typeof antrianData !== 'undefined'){ antrianData = getLocal('antrian') }
+    if(typeof pengeluaranKasData !== 'undefined'){ pengeluaranKasData = getLocal('pengeluaran_kas') }
+    if(typeof riwayatNotaData !== 'undefined'){ riwayatNotaData = getLocal('riwayat_nota') }
+
+    // Render all
+    if(typeof renderOutletList==='function') renderOutletList()
+    if(typeof renderKaryawanList==='function') renderKaryawanList()
+    if(typeof renderPelangganList==='function') renderPelangganList()
+    if(typeof renderLayananList==='function') renderLayananList()
+    if(typeof renderAntrianList==='function') renderAntrianList('Semua')
+    if(typeof syncActiveOutletHeader==='function') syncActiveOutletHeader()
+    if(typeof syncActiveKaryawanHeader==='function') syncActiveKaryawanHeader()
+    if(typeof renderHeaderOutletDropdown==='function') renderHeaderOutletDropdown()
+    if(typeof updateSummaryCounters==='function') updateSummaryCounters()
+    if(typeof hitungRingkasanKas==='function') hitungRingkasanKas()
+
+    console.log('✅ AUTO SYNC SYSTEM - SELESAI - 7 tabel lancar')
+    if(window.showNoticeToast) showNoticeToast('✅ Auto Sync 7 tabel selesai - '+(fetched||0)+' data dari Supabase')
+  }catch(e){
+    console.error('Auto Sync fail', e)
+  }
+})
+
+// Override simpan functions to auto sync
+// Hook into existing simpanOutlet, simpanKaryawan, etc to use setLocal + syncToSupabase
+window.addEventListener('load', function(){
+  // Wrap setActiveOutlet to use new system
+  var origSetActive = window.setActiveOutlet
+  if(origSetActive){
+    window.setActiveOutlet = function(id){
+      try{ localStorage.setItem('activeOutletId', id) }catch(e){}
+      if(typeof outletsData!=='undefined'){
+        outletsData.forEach(function(o){ o.isActive = (o.id===id) })
+        setLocal('outlets', outletsData)
+        // Sync to Supabase
+        syncToSupabase('outlets')
+      }
+      return origSetActive.apply(this, arguments)
+    }
+  }
+})
+</script>
+
 <script>
 // === CONFIG PUBLISH - applaundry - ID & API ===
 // Project ID: nniecqbfjmmlrtmolnrt - tinggal ganti disini untuk publish
@@ -6460,7 +6538,8 @@ function saveLevelSetting(){
     applyLevelPermissions();
   }catch(e){ if(typeof showNoticeToast==='function') showNoticeToast('Gagal simpan: '+e.message); }
 }
-function applyLevelPermissions(){ return; /* DISABLED LOCK SYSTEM - tester otomatis work */ 
+function applyLevelPermissions(){ return; /* DISABLED - AUTO SYNC SYSTEM */ 
+ return; /* DISABLED LOCK SYSTEM - tester otomatis work */ 
 
   try{
     // Get current user level from localStorage or default Owner
@@ -9129,88 +9208,8 @@ if(typeof window.toCSV !== 'function'){
 </script>
 
 
-<script>
-// FIX HEADER LAUNDRY LAND TERUS - paksa sync setiap 1 detik sampai outlet ada, lalu pakai sistem tester otomatis
-(function(){
-  var attempts=0;
-  var interval=setInterval(function(){
-    attempts++;
-    try{
-      var outlets = (typeof outletsData!=='undefined'?outletsData:[]);
-      var active = outlets.find(o=>o.isActive) || outlets[0];
-      var label=document.getElementById('label-outlet');
-      if(label && active && label.innerText!==active.nama){
-        label.innerText=active.nama;
-        console.log('🔧 FIX HEADER: Laundry Land ->', active.nama, 'attempt', attempts);
-      }
-      if(attempts>20) clearInterval(interval);
-      if(active && label && label.innerText===active.nama && attempts>3) clearInterval(interval);
-    }catch(e){}
-  }, 500);
-
-  // Tester otomatis yang dulu work - restore
-  window.testerOtomatisOutlet = function(){
-    console.log('🧪 Tester Otomatis Outlet - mulai');
-    if(typeof outletsData==='undefined' || outletsData.length===0){ console.warn('outletsData kosong'); return; }
-    console.log('Outlets:', outletsData.map(o=>o.nama+' isActive:'+o.isActive));
-    // Tampilkan semua outlet di console
-    outletsData.forEach(function(o, i){
-      console.log((i+1)+'. '+o.nama+' id:'+o.id+' active:'+o.isActive);
-    });
-    // Coba set outlet ke-2 jika ada
-    if(outletsData.length>1){
-      var second=outletsData[1];
-      console.log('Coba set active ke:', second.nama, 'id:', second.id);
-      if(typeof setActiveOutlet==='function') setActiveOutlet(second.id);
-      setTimeout(function(){ if(typeof syncActiveOutletHeader==='function') syncActiveOutletHeader(); }, 300);
-    } else {
-      console.log('Hanya 1 outlet, tidak bisa switch');
-    }
-  };
-
-  // Auto run tester 2 detik setelah load
-  document.addEventListener('DOMContentLoaded', function(){
-    setTimeout(function(){
-      if(typeof syncActiveOutletHeader==='function') syncActiveOutletHeader();
-      if(typeof renderHeaderOutletDropdown==='function') renderHeaderOutletDropdown();
-      console.log('🧪 Auto tester - header should be:', (typeof getActiveOutlet==='function'?getActiveOutlet().nama:'unknown'));
-    }, 1500);
-  });
-})();
-</script>
 
 
-<!-- DEBUG PANEL OUTLET - visible untuk fix Laundry Land -->
-<div id="debugOutletPanel" style="position:fixed; bottom:80px; right:12px; z-index:99999; background:#111; color:#fff; padding:10px; border-radius:12px; font-size:11px; max-width:200px; box-shadow:0 4px 20px rgba(0,0,0,0.3); display:none;">
-  <div style="font-weight:800; margin-bottom:6px;">🔧 Fix Laundry Land</div>
-  <div id="debugOutletInfo" style="font-size:10px; color:#aaa; margin-bottom:8px;">Loading...</div>
-  <button onclick="testerOtomatisOutlet()" style="width:100%; padding:6px; background:#f618a9; color:#fff; border:none; border-radius:8px; font-weight:700; font-size:11px; margin-bottom:4px;">🧪 Tester Outlet</button>
-  <button onclick="document.getElementById('debugOutletPanel').style.display='none'" style="width:100%; padding:4px; background:#333; color:#fff; border:none; border-radius:8px; font-size:10px;">Tutup</button>
-</div>
-<button id="btnShowDebugOutlet" onclick="document.getElementById('debugOutletPanel').style.display='block'; updateDebugOutletInfo()" style="position:fixed; bottom:20px; right:12px; z-index:99999; background:#f618a9; color:#fff; border:none; border-radius:50%; width:48px; height:48px; font-size:20px; box-shadow:0 4px 12px rgba(246,24,169,0.4);">🔧</button>
-<script>
-function updateDebugOutletInfo(){
-  try{
-    var outlets = (typeof outletsData!=='undefined'?outletsData:[]);
-    var active = outlets.find(o=>o.isActive) || outlets[0];
-    var info = document.getElementById('debugOutletInfo');
-    if(info){
-      if(outlets.length===0) info.innerHTML='Outlets kosong';
-      else {
-        var html = 'Aktif: <b>'+(active?active.nama:'-')+'</b><br>Header: <b>'+(document.getElementById('label-outlet')?document.getElementById('label-outlet').innerText:'-')+'</b><br><br>';
-        outlets.forEach(function(o,i){ html+=''+(i+1)+'. '+o.nama+' '+(o.isActive?'✅':'')+'<br>'; });
-        info.innerHTML=html;
-      }
-    }
-  }catch(e){}
-}
-// Show debug button after 2 sec
-setTimeout(function(){
-  var btn=document.getElementById('btnShowDebugOutlet');
-  if(btn) btn.style.display='flex';
-  updateDebugOutletInfo();
-}, 2000);
-</script>
 
 </body>
 </html>
