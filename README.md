@@ -1,107 +1,147 @@
-# applaundry 🧺
+# Applaundry - Laundry Management PWA
 
-Laundry Land - Final Clean A - Enteng Tidak Crash
+Laundry Management PWA dengan Supabase sync - 5 tabel aktif, export import CSV/XLSX, multi-outlet.
 
-> Dari 8736 baris monolit → 47 baris modular (99.5% reduction)
+## 🚀 Live Demo
+Deploy di Vercel - static hosting.
 
-## ✨ Fitur Final Clean
+## 📦 Struktur
+- `FIX-ALL-SETTING.html` - Main app (single file PWA)
+- `vercel.json` - Vercel config (static)
+- `package.json` - Project meta
 
-- **Enteng**: 86KB vs 1.4MB asli
-- **Tidak Crash**: hapus 38 script block tabrakan + window.print pause hack
-- **Thermal Putih Hitam**: nota `#ffffff` font `#000` Courier bold
-- **Tombol Bagus**: rounded 20px + shadow + hover scale
-- **Icon Original**: single outline (tidak ganda)
-- **Bayar Nota 5 Row**: Jumlah, Deposito Split, Metode (Tunai/TF/QRIS), Kalkulasi, Simpan
-- **Fix Supabase**: UUID cleanPayload + DISABLE RLS
+## 🔧 Setup Supabase
 
-## 📁 Struktur
+Project ID: `nniecqbfjmmlrtmolnrt` (applaundry)
+
+### 1. Buat tabel di Supabase Dashboard → SQL Editor:
+
+```sql
+-- Outlets
+create table outlets (
+  id text primary key,
+  nama text,
+  alamat text,
+  wa text,
+  is_active boolean default true,
+  created_at timestamptz default now()
+);
+
+-- Karyawan
+create table karyawan (
+  id text primary key,
+  outlet_id text,
+  nama text,
+  wa text,
+  alamat text,
+  username text,
+  password text,
+  level text,
+  is_active boolean default true,
+  created_at timestamptz default now()
+);
+
+-- Pelanggan (fix nama tercantum)
+create table pelanggan (
+  id text primary key,
+  outlet_id text,
+  nama text,
+  wa text,
+  alamat text,
+  deposito int default 0,
+  is_active boolean default true,
+  created_at timestamptz default now()
+);
+
+-- Layanan
+create table layanan (
+  id text primary key,
+  outlet_id text,
+  nama text,
+  kode text,
+  harga int,
+  satuan text,
+  estimasiVal int,
+  estimasiUnit text,
+  minKg int,
+  created_at timestamptz default now()
+);
+
+-- Antrian / Nota
+create table antrian (
+  id text primary key,
+  outlet_id text,
+  nota text,
+  namaPelanggan text,
+  layanan text,
+  totalNota int,
+  statusProses text,
+  statusBayar text,
+  tanggal date,
+  created_at timestamptz default now()
+);
+
+-- RLS - allow all untuk anon publishable key (ganti dengan policy yang lebih ketat untuk production)
+alter table outlets enable row level security;
+alter table karyawan enable row level security;
+alter table pelanggan enable row level security;
+alter table layanan enable row level security;
+alter table antrian enable row level security;
+
+create policy "Allow all for anon" on outlets for all using (true) with check (true);
+create policy "Allow all for anon" on karyawan for all using (true) with check (true);
+create policy "Allow all for anon" on pelanggan for all using (true) with check (true);
+create policy "Allow all for anon" on layanan for all using (true) with check (true);
+create policy "Allow all for anon" on antrian for all using (true) with check (true);
+```
+
+### 2. Set Env di Vercel Dashboard → Settings → Environment Variables:
 
 ```
-applaundry/
-├── index.html (47 baris - entry point)
-├── js/
-│   ├── core/
-│   │   ├── config.js (SUPABASE_URL, KEY, TABLES)
-│   │   ├── supabase.js (FIX UUID - hapus id_xxx)
-│   │   ├── storage.js (getData/setData)
-│   │   ├── router.js (showPage)
-│   │   └── app.js (initApp)
-│   └── modules/
-│       ├── outlet.js
-│       ├── pelanggan.js (2ROW + search)
-│       ├── layanan.js (fix estimasiVal/Unit)
-│       ├── karyawan.js
-│       ├── antrian.js (filter + status cycle)
-│       ├── nota-bayar.js (5 ROW)
-│       ├── struk.js (thermal putih hitam + Print/ShareWA PNG/Text)
-│       ├── laporan.js (Kas Hari Ini, Omzet, Riwayat)
-│       ├── backup.js (JSON)
-│       └── ui.js (toast)
-├── css/
-├── sql/
-│   └── reset.sql (DISABLE RLS + UUID fix)
-└── README.md
+NEXT_PUBLIC_SUPABASE_URL=https://nniecqbfjmmlrtmolnrt.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_JNkBb7xwGqYwyL6s11ffdw_DfV9dSPV
 ```
 
-## 🚀 Cara Pakai
+Atau isi di file utama `FIX-ALL-SETTING.html`:
 
-1. **Supabase Setup** (sekali):
-   ```sql
-   -- Jalankan di Supabase SQL Editor
-   -- File: sql/reset.sql
-   ALTER TABLE outlets DISABLE ROW LEVEL SECURITY;
-   ALTER TABLE pelanggan DISABLE ROW LEVEL SECURITY;
-   ALTER TABLE layanan DISABLE ROW LEVEL SECURITY;
-   ALTER TABLE antrian DISABLE ROW LEVEL SECURITY;
-   ```
+```javascript
+// === CONFIG PUBLISH - APPLAUDNRY ===
+const PUBLISH_SUPABASE_URL = 'https://nniecqbfjmmlrtmolnrt.supabase.co';
+const PUBLISH_SUPABASE_ANON_KEY = 'sb_publishable_JNkBb7xwGqYwyL6s11ffdw_DfV9dSPV';
+```
 
-2. **Local**:
-   - Buka `index.html` di Chrome
-   - Test flow: Outlet → Pelanggan → Layanan → Antrian → Bayar → Print
+## 📤 Deploy ke Vercel
 
-3. **Deploy**:
-   - Vercel/Netlify: drag folder `applaundry`
-   - Atau GitHub Pages: push repo ini, enable Pages
+### Via GitHub:
+1. Push repo ini ke GitHub (pastikan `.env` tidak ikut - sudah di `.gitignore`)
+2. Vercel → New Project → Import GitHub repo
+3. Framework preset: `Other`
+4. Add Environment Variables (2 key di atas)
+5. Deploy
 
-## 🧹 Apa yang Dibersihkan?
+### Via CLI:
+```bash
+vercel --prod
+```
 
-| Sebelum | Sesudah |
-|---------|---------|
-| 8736 baris, 38 script block | 47 baris index + 8 module |
-| window.print = paused (crash) | Hapus, print jalan |
-| DOM hack 6 level parentElement | CSS display:none |
-| Logo base64 5MB localStorage | Max 200KB compressed |
-| Icon SVG inject 2x (ganda) | Single outline |
-| id_xxx text ditolak uuid | cleanPayload hapus id_xxx |
-| RLS ON tanpa policy 401 | DISABLE RLS |
+### Via drag & drop:
+- Buka vercel.com/new → Browse → upload `FIX-ALL-SETTING.html` + `vercel.json`
 
-## 📦 Base Backup
+## 📋 Features
 
-Jika butuh rollback ke versi utuh sebelum clean:
-- File asli: `LAUNDRY-UTUH-REAL-BUKAN-MOCK_1.html` (1.4MB, 8736 baris)
-- Base final restore: `LAUNDRY-RESTORE-ICON-ORIGINAL-BUTTON-BAGUS.html`
+- ✅ 5 tabel Supabase aktif: outlets, pelanggan, layanan, antrian, karyawan
+- ✅ Export Import CSV/XLSX: pelanggan & layanan
+- ✅ Backup Full JSON
+- ✅ Multi-outlet filter
+- ✅ Deposito pelanggan
+- ✅ PWA ready
+
+## 🔒 Security
+
+- `.env` tidak di-push (di `.gitignore`)
+- `supabase-config.json` tidak di-push
+- Publishable key aman untuk public (bukan secret key)
+- Untuk production, ganti RLS policy jadi lebih ketat
 
 ## 📝 License
-
-MIT - Free for laundry business
-
----
-Made with ❤️ by Shandy - Madiun, East Java
-
-
-## 🔐 Setup Aman - Tidak Hardcode Key di GitHub
-
-### Local Dev:
-1. Copy `.env.example` → `.env.local`
-2. Isi `VITE_SUPABASE_URL` & `VITE_SUPABASE_ANON_KEY` dari Supabase Dashboard
-3. `.env.local` sudah di `.gitignore`, tidak akan ke-push
-
-### Vercel Production (Recommended):
-1. Vercel Dashboard → Project `applaundry` → Settings → Environment Variables
-2. Add:
-   - `SUPABASE_URL` = `https://xxx.supabase.co`
-   - `SUPABASE_ANON_KEY` = `eyJhbG...`
-3. Redeploy → Key aman, tidak kelihatan di GitHub
-4. Atau pakai 1 klik Integration: Settings → Integrations → Supabase → Connect
-
-Config otomatis baca: `window.__ENV__` → `import.meta.env` → fallback hardcode.
+MIT

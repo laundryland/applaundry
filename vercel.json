@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "name": "applaundry",
+  "builds": [
+    {
+      "src": "FIX-ALL-SETTING.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/FIX-ALL-SETTING.html"
+    }
+  ]
+}
