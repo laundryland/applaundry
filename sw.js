@@ -9,7 +9,8 @@ const ASSETS_TO_CACHE = [
   './favicon-512x512.png',
   './apple-touch-icon.png',
   './favicon.png',
-  './logo.png'
+  './logo.png',
+  './supabase.js'
 ];
 
 // Install - cache new version
