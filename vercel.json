@@ -1,5 +1,8 @@
 {
   "rewrites": [
-    {"source": "/(.*)", "destination": "/FIX-ALL-SETTING.html"}
+    {
+      "source": "/(.*)",
+      "destination": "/FIX-ALL-SETTING.html"
+    }
   ]
 }
