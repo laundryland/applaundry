@@ -54,19 +54,38 @@ export function setLocal(table, data){
 
 function cleanRow(table, item){
   var copy = Object.assign({}, item)
-  if('isActive' in copy){ if(!('is_active' in copy)) copy.is_active = copy.isActive; }
+  // Convert camelCase to snake_case - tapi JANGAN kirim isActive jika tabel tidak punya is_active
   if('outletId' in copy){ if(!('outlet_id' in copy)) copy.outlet_id = copy.outletId; }
   if('karyawanId' in copy){ if(!('karyawan_id' in copy)) copy.karyawan_id = copy.karyawanId; }
   if('pelangganId' in copy){ if(!('pelanggan_id' in copy)) copy.pelanggan_id = copy.pelangganId; }
   if('layananId' in copy){ if(!('layanan_id' in copy)) copy.layanan_id = copy.layananId; }
-  delete copy.isActive; delete copy.outletId; delete copy.karyawanId; delete copy.pelangganId; delete copy.layananId;
-  delete copy.tanpaWa; delete copy.simpanKontak; delete copy.hp;
-  delete copy.outlet_id_id; delete copy.is_active_active;
+  // HAPUS TOTAL field yang bikin 400 Bad Request - isActive, tanpaWa, simpanKontak, hp, dll
+  delete copy.isActive;
+  delete copy.outletId;
+  delete copy.karyawanId;
+  delete copy.pelangganId;
+  delete copy.layananId;
+  delete copy.tanpaWa;
+  delete copy.simpanKontak;
+  delete copy.hp;
+  delete copy.outlet_id_id;
+  delete copy.is_active_active;
+  // Untuk tabel yang TIDAK punya is_active di DB, hapus juga is_active agar tidak error
+  var tablesNoIsActive = ['riwayat_laporan','omzet','pendapatan','pengeluaran_kas','riwayat_nota','antrian'];
+  if(tablesNoIsActive.indexOf(table) !== -1){
+    delete copy.is_active;
+  }
+  // Untuk layanan, estimasiUnit mungkin tidak ada di DB lama - biarkan, nanti auto retry hapus
   var allowed = ALLOWED_COLUMNS[table]
   if(allowed){
     var f={}
-    allowed.forEach(function(col){ if(col in copy) f[col]=copy[col] })
+    allowed.forEach(function(col){ if(col in copy && copy[col] !== undefined) f[col]=copy[col] })
     if(!('id' in f) && 'id' in copy) f.id=copy.id
+    // Final guard: jangan pernah kirim isActive
+    delete f.isActive;
+    delete f.outletId;
+    delete f.tanpaWa;
+    delete f.simpanKontak;
     return f
   }
   return copy
