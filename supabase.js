@@ -1,4 +1,4 @@
-// supabase.js - Auto Sync LocalFirst System - 10 TABEL - FIXED v2.5.28
+// supabase.js - Auto Sync LocalFirst System - 10 TABEL - FIXED v2.5.28-FINAL
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
 export const SUPABASE_URL = 'https://nniecqbfjmmlrtmolnrt.supabase.co'
@@ -22,11 +22,11 @@ const KEY_MAP = {
   'pegawai': 'karyawanData'
 }
 
-// Whitelist kolom yang ada di Supabase (snake_case only)
+// Whitelist - HANYA snake_case lowercase yang pasti ada di Supabase - FIX 400
 const ALLOWED_COLUMNS = {
   'outlets': ['id','nama','alamat','wa','is_active','created_at','updated_at'],
   'karyawan': ['id','outlet_id','nama','username','password','level','is_active','wa','alamat','created_at','updated_at'],
-  'pelanggan': ['id','outlet_id','nama','wa','alamat','deposito','is_active','created_at','updated_at','tanpaWa','simpanKontak'],
+  'pelanggan': ['id','outlet_id','nama','wa','alamat','deposito','is_active','created_at','updated_at'],
   'layanan': ['id','outlet_id','nama','kode','harga','satuan','estimasi','estimasiUnit','minKg','is_active','created_at','updated_at'],
   'antrian': ['id','outlet_id','pelanggan_id','layanan_id','karyawan_id','nama','layanan','status','total','total_bayar','metode_bayar','estimasi','created_at','updated_at','tanggal_selesai'],
   'pengeluaran_kas': ['id','outlet_id','karyawan_id','jumlah','kategori','keterangan','tanggal','created_at'],
@@ -55,17 +55,15 @@ export function setLocal(table, data){
 
 export async function syncFromSupabase(table){
   try{
-    var supaTable = table
-    const {data, error} = await supabase.from(supaTable).select('*')
+    const {data, error} = await supabase.from(table).select('*')
     if(error){
       if(error.code==='42P01' || error.message?.includes('permission denied') || error.code==='42501'){
-        console.log('📭 Tabel '+table+' belum ada / no RLS - pakai local, skip fetch')
+        console.log('📭 Tabel '+table+' belum ada / no RLS - pakai local')
         return getLocal(table)
       }
       throw error
     }
-    if(!data) return []
-    if(data.length===0){
+    if(!data || data.length===0){
       console.log('📭 Tabel '+table+' kosong di Supabase - pakai local')
       return []
     }
@@ -77,10 +75,9 @@ export async function syncFromSupabase(table){
       if('layanan_id' in d && !('layananId' in d)) d.layananId = d.layanan_id
       return d
     })
-    // FIX: Jangan overwrite local jika Supabase lebih sedikit (hindari hardreset hilang)
     var local = getLocal(table)
     if(local.length > normalized.length){
-      console.log('⚠ Supabase '+table+' lebih sedikit ('+normalized.length+') dari local ('+local.length+') - pakai local, sync balik ke Supabase')
+      console.log('⚠ Supabase '+table+' lebih sedikit ('+normalized.length+') dari local ('+local.length+') - pakai local, sync balik')
       await syncToSupabase(table)
       return local
     }
@@ -93,6 +90,43 @@ export async function syncFromSupabase(table){
   }
 }
 
+// Fungsi inti dengan retry auto-hapus kolom yang tidak ada (FIX 400 Could not find column)
+async function upsertWithRetry(table, clean){
+  try{
+    const attempt = async (payload)=>{ return await supabase.from(table).upsert(payload, {onConflict:'id'}).select(); };
+    let res = await attempt(clean);
+    if(res.error){
+      let errMsg = res.error.message||'';
+      let extract = (msg)=>{ const m1=msg.match(/Could not find the '([^']+)' column/); if(m1) return m1[1]; const m2=msg.match(/column "([^"]+)"/); if(m2) return m2[1]; return null; };
+      let missing = extract(errMsg);
+      let retries=0;
+      let payload=[...clean];
+      while(missing && retries<10){
+        console.warn('⚠️ Kolom tidak ada di Supabase '+table+':', missing, '- hapus & retry');
+        payload=payload.map(o=>{ const r={...o}; delete r[missing]; return r; });
+        const r2=await attempt(payload);
+        if(!r2.error){ console.log('✅ Retry sukses '+table+' tanpa kolom '+missing); return; }
+        missing=extract(r2.error.message||'');
+        res=r2;
+        retries++;
+      }
+      throw res.error;
+    }
+    console.log('📤 Auto push '+table+' '+clean.length+' ke Supabase - OK');
+  }catch(e){
+    if(e.code==='42P01'){
+      console.log('📭 Tabel '+table+' belum ada di Supabase - skip push');
+      return;
+    }
+    if(e.code==='42501' || (e.message||'').includes('permission denied')){
+      console.warn('🔒 RLS block '+table+' - jalankan FINAL-10-TABEL-FIX-ALL.sql di Supabase');
+      return;
+    }
+    console.warn('syncToSupabase '+table+' fail', e.message);
+    throw e;
+  }
+}
+
 export async function syncToSupabase(table){
   try{
     var local = getLocal(table)
@@ -100,48 +134,36 @@ export async function syncToSupabase(table){
     var allowed = ALLOWED_COLUMNS[table] || null
     var clean = local.map(function(item){
       var copy = Object.assign({}, item)
-      // Map camelCase -> snake_case
       if('isActive' in copy){ if(!('is_active' in copy)) copy.is_active = copy.isActive; delete copy.isActive; }
       if('outletId' in copy){ if(!('outlet_id' in copy)) copy.outlet_id = copy.outletId; delete copy.outletId; }
       if('karyawanId' in copy){ if(!('karyawan_id' in copy)) copy.karyawan_id = copy.karyawanId; delete copy.karyawanId; }
       if('pelangganId' in copy){ if(!('pelanggan_id' in copy)) copy.pelanggan_id = copy.pelangganId; delete copy.pelangganId; }
       if('layananId' in copy){ if(!('layanan_id' in copy)) copy.layanan_id = copy.layananId; delete copy.layananId; }
-      // Hapus field yang tidak ada di DB (camelCase sisa)
       delete copy.isActive
       delete copy.outletId
       delete copy.karyawanId
       delete copy.pelangganId
       delete copy.layananId
-      // Jika ada whitelist, filter
+      // Hapus field extra yang tidak ada di DB (tanpaWa, simpanKontak, hp, dll)
+      delete copy.tanpaWa
+      delete copy.simpanKontak
+      delete copy.hp
       if(allowed){
         var filtered={}
         allowed.forEach(function(col){ if(col in copy) filtered[col]=copy[col] })
-        // Selalu sertakan id
         if(!('id' in filtered) && 'id' in copy) filtered.id=copy.id
         return filtered
       }
       return copy
     })
-    const {error} = await supabase.from(table).upsert(clean, {onConflict:'id'})
-    if(error){
-      if(error.code==='42P01'){
-        console.log('📭 Tabel '+table+' belum ada di Supabase - skip push')
-        return
-      }
-      if(error.code==='42501' || error.message?.includes('permission denied')){
-        console.warn('🔒 RLS block '+table+' - perlu buat policy di Supabase SQL')
-        return
-      }
-      throw error
-    }
-    console.log('📤 Auto push '+table+' '+clean.length+' ke Supabase')
+    await upsertWithRetry(table, clean)
   }catch(e){
-    console.warn('syncToSupabase '+table+' fail', e.message)
+    console.warn('syncToSupabase outer '+table+' fail', e.message)
   }
 }
 
 export async function initAutoSync(){
-  console.log('🔄 Init Auto Sync LocalFirst - 10 TABEL - FIXED')
+  console.log('🔄 Init Auto Sync LocalFirst - 10 TABEL - FIXED FINAL')
   var totalFetched=0
   var results={}
   for(var i=0;i<TABLES.length;i++){
@@ -158,4 +180,23 @@ export async function initAutoSync(){
   }
   console.log('✅ Auto Sync selesai', results, 'total fetch '+totalFetched)
   return {totalFetched, results}
+}
+
+// EXPORT MANUAL PELANGGAN KE SUPA - dengan label merah fix
+export async function exportPelangganKeSupa(){
+  try{
+    var data = getLocal('pelanggan')
+    if(!data.length){ 
+      if(window.showNoticeToast) showNoticeToast('❌ Tidak ada data pelanggan untuk export');
+      return {ok:false, msg:'kosong'};
+    }
+    console.log('🚀 Export '+data.length+' pelanggan ke Supa...');
+    await syncToSupabase('pelanggan')
+    if(window.showNoticeToast) showNoticeToast('✅ Export '+data.length+' pelanggan ke Supa sukses');
+    return {ok:true, count:data.length}
+  }catch(e){
+    console.error('exportPelangganKeSupa fail', e)
+    if(window.showNoticeToast) showNoticeToast('❌ Export gagal: '+e.message)
+    return {ok:false, msg:e.message}
+  }
 }
