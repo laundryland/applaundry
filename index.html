@@ -9323,122 +9323,14 @@ window.syncPelangganToSupabase = () => upsertTable('pelanggan', typeof pelanggan
 window.syncLayananToSupabase = () => upsertTable('layanan', typeof layananData!=='undefined'?layananData:[]);
 window.syncAntrianToSupabase = () => upsertTable('antrian', typeof antrianData!=='undefined'?antrianData:[]);
 
-// FIX KORUP: yang tadinya "(async()=>{ const tables = ['outlets','pelanggan','layanan','antrian','karyawan']; for(let t of tables){" sekarang jadi IIFE lengkap
-(async()=>{
-  const tables = ['outlets','pelanggan','layanan','antrian','karyawan'];
-  for(let t of tables){
-    try{
-      const {data,error} = await window.supabaseClient.from(t).select('*').limit(2000);
-      if(error){ console.warn('Load', t, error.message); continue; }
-      if(!data || !data.length){ console.log('📭', t, 'kosong - pakai local'); continue; }
-      console.log('📥 Load '+t, data.length);
-      
-      // Normalisasi outlet_id & is_active
-      const normalized = data.map(d=>{
-        if(d.outlet_id && !d.outletId) d.outletId = d.outlet_id;
-        if('is_active' in d && !('isActive' in d)) d.isActive = d.is_active;
-        return d;
-      });
-
-      if(t==='outlets'){ 
-        // Respect saved activeOutletId
-        try{
-          var savedId = localStorage.getItem('activeOutletId');
-          if(savedId){
-            normalized.forEach(function(o){ o.isActive = (o.id===savedId); });
-          } else {
-            // Jika di Supa ada yang is_active true, pakai itu
-            var hasActive = normalized.some(function(o){ return o.isActive; });
-            if(!hasActive && normalized.length>0) normalized[0].isActive = true;
-          }
-        }catch(e){}
-        outletsData=normalized; 
-        localStorage.setItem('outletsData', JSON.stringify(normalized)); 
-        if(typeof renderOutletList==='function') renderOutletList(); 
-        if(typeof syncActiveOutletHeader==='function') syncActiveOutletHeader();
-        if(typeof renderHeaderOutletDropdown==='function') renderHeaderOutletDropdown();
-        if(typeof syncActiveKaryawanHeader==='function') syncActiveKaryawanHeader();
-        console.log('✅ Outlet header sync:', normalized.map(function(o){ return o.nama+'('+(o.isActive?'aktif':'')+')'; }));
-      }
-      if(t==='pelanggan'){ 
-        // FIX HILANG SEBAGIAN: merge, jangan timpa langsung - jika supabase lebih sedikit dari local, pakai local
-        try{
-          const localLen = (typeof pelangganData!=='undefined' && pelangganData.length) ? pelangganData.length : 0;
-          if(normalized.length < localLen && localLen > 3){
-            console.warn('⚠️ Supabase pelanggan lebih sedikit ('+normalized.length+') dari local ('+localLen+') - pakai local, sync balik ke Supabase');
-            if(typeof upsertTable==='function') setTimeout(()=>upsertTable('pelanggan', pelangganData), 1000);
-          } else {
-            pelangganData=normalized; 
-            localStorage.setItem('pelangganData', JSON.stringify(normalized)); 
-          }
-        }catch(e){ pelangganData=normalized; localStorage.setItem('pelangganData', JSON.stringify(normalized)); }
-        if(typeof renderPelangganList==='function') renderPelangganList(); 
-      }
-      if(t==='layanan'){ 
-        // FIX ANTI-HILANG layanan + handle 2 schema
-        const fixed = normalized.map(l=>{
-          if(l.estimasiVal && l.estimasiUnit) return l;
-          if(l.estimasi){
-            const parts = String(l.estimasi).split(' ');
-            l.estimasiVal = parseInt(parts[0]) || 3;
-            l.estimasiUnit = parts[1] || 'Jam';
-          }
-          if(!l.estimasiVal) l.estimasiVal = 3;
-          if(!l.estimasiUnit) l.estimasiUnit = 'Jam';
-          return l;
-        });
-        try{
-          var localLenL = (typeof layananData!=='undefined' && layananData.length) ? layananData.length : 0;
-          if(fixed.length < localLenL && localLenL>0){
-            console.warn('⚠️ Supabase layanan lebih sedikit ('+fixed.length+') dari local ('+localLenL+') - PAKAI LOCAL');
-            if(typeof upsertTable==='function') setTimeout(()=>upsertTable('layanan', layananData), 800);
-          } else if(fixed.length && fixed[0].nama){
-            layananData=fixed; 
-          localStorage.setItem('layananData', JSON.stringify(fixed)); 
-            if(typeof renderLayananList==='function') renderLayananList();
-          }
-        }catch(e){ layananData=fixed; localStorage.setItem('layananData', JSON.stringify(fixed)); }
-      }
-      if(t==='antrian'){ antrianData=normalized; }
-      if(t==='karyawan'){ 
-        // FIX ANTI-HILANG: jangan timpa jika Supabase lebih sedikit dari local
-        try{
-          var localLenK = (typeof karyawanData!=='undefined' && karyawanData.length) ? karyawanData.length : 0;
-          if(normalized.length < localLenK && localLenK>0){
-            console.warn('⚠️ Supabase karyawan lebih sedikit ('+normalized.length+') dari local ('+localLenK+') - PAKAI LOCAL, push balik');
-            if(typeof upsertTable==='function') setTimeout(()=>upsertTable('karyawan', karyawanData), 800);
-          } else {
-            karyawanData=normalized; 
-            localStorage.setItem('karyawanData', JSON.stringify(normalized));
-          }
-        }catch(e){
-          karyawanData=normalized; 
-          localStorage.setItem('karyawanData', JSON.stringify(normalized));
-        } 
-        console.log('✅ Karyawan sync ke app:', normalized.length, normalized.map(k=>k.nama));
-        try{ 
-          if(typeof renderKaryawanList==='function') renderKaryawanList();
-          if(typeof renderHeaderKaryawanDropdown==='function') renderHeaderKaryawanDropdown();
-          if(typeof syncActiveKaryawanHeader==='function') syncActiveKaryawanHeader();
-          // Paksa tampilkan container jika kosong karena filter outlet
-          setTimeout(function(){
-            var c=document.getElementById('karyawanListContainer');
-            if(c && c.children.length===0 && karyawanData.length>0){
-              console.warn('⚠️ Karyawan container kosong, force render semua');
-              c.innerHTML='';
-              karyawanData.forEach(function(k){
-                var card=document.createElement('div');
-                card.className='customer-card-item border-3-glass-blur rounded-12';
-                card.innerHTML='<div class="customer-card-row1"><span>'+k.nama+'</span><span>'+(k.level||'')+'</span></div>';
-                c.appendChild(card);
-              });
-            }
-          },500);
-        }catch(e){ console.error('Karyawan render fail', e); }
-      }
-    }catch(e){ console.error('Load', t, e); }
-  }
-})();
+// FIX KORUP DISABLED - ANTI HILANG v2.5.28 FINAL
+// Legacy loader dimatikan total karena bikin hilang data karyawan & layanan
+// Sekarang hanya pakai supabase.js FAST auto sync
+// (async()=>{
+//   const tables = ['outlets','pelanggan','layanan','antrian','karyawan'];
+//   ... DISABLED ...
+// })();
+console.log('🛡️ Legacy loader karyawan/layanan DISABLED - pakai supabase.js FAST saja - ANTI HILANG');
 
 </script>
 
