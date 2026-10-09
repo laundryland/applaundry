@@ -1,7 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api|.*\\.(js|json|css|png|jpg|jpeg|svg|ico|webp|woff|woff2|ttf)).*)",
       "destination": "/FIX-ALL-SETTING.html"
     }
   ],
@@ -29,6 +29,10 @@
         {
           "key": "Cache-Control",
           "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Service-Worker-Allowed",
+          "value": "/"
         }
       ]
     },
@@ -40,8 +44,16 @@
           "value": "no-cache, no-store, must-revalidate"
         }
       ]
+    },
+    {
+      "source": "/FIX-ALL-SETTING.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
     }
   ],
-  "cleanUrls": true,
-  "public": true
+  "cleanUrls": true
 }
