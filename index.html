@@ -33,9 +33,25 @@ document.addEventListener('DOMContentLoaded', async function(){
       }catch(e){}
       setLocal('outlets', outletsData)
     }
-    if(typeof karyawanData !== 'undefined'){ karyawanData = getLocal('karyawan') }
+    if(typeof karyawanData !== 'undefined'){ 
+      karyawanData = getLocal('karyawan');
+      if(karyawanData.length===0){
+        try{
+          var bk = sessionStorage.getItem('backup_karyawanData') || localStorage.getItem('backup_karyawanData');
+          if(bk){ var pbk=JSON.parse(bk); if(pbk.length>0){ karyawanData=pbk; setLocal('karyawan', pbk); console.log('🔄 Karyawan restored dari backup - anti F5 hilang', pbk.length); } }
+        }catch(e){}
+      }
+    }
     if(typeof pelangganData !== 'undefined'){ pelangganData = getLocal('pelanggan') }
-    if(typeof layananData !== 'undefined'){ layananData = getLocal('layanan') }
+    if(typeof layananData !== 'undefined'){ 
+      layananData = getLocal('layanan');
+      if(layananData.length===0){
+        try{
+          var bk2 = sessionStorage.getItem('backup_layananData') || localStorage.getItem('backup_layananData');
+          if(bk2){ var pbk2=JSON.parse(bk2); if(pbk2.length>0){ layananData=pbk2; setLocal('layanan', pbk2); console.log('🔄 Layanan restored dari backup - anti F5 hilang', pbk2.length); } }
+        }catch(e){}
+      }
+    }
     if(typeof antrianData !== 'undefined'){ antrianData = getLocal('antrian') }
     if(typeof pengeluaranKasData !== 'undefined'){ pengeluaranKasData = getLocal('pengeluaran_kas') }
     if(typeof riwayatNotaData !== 'undefined'){ riwayatNotaData = getLocal('riwayat_nota') }
@@ -2954,7 +2970,7 @@ function doLogoutKaryawan(){
     if(typeof karyawanData!=='undefined'){
       karyawanData.forEach(function(k){ k.isActive=false; k.is_active=false; });
       try{ localStorage.setItem('karyawanData', JSON.stringify(karyawanData)); }catch(e){}
-      if(typeof setLocal==='function') setLocal('karyawan', karyawanData);
+      if(typeof setLocal==='function') setLocal('karyawan', karyawanData); try{ localStorage.setItem('backup_karyawanData', JSON.stringify(karyawanData)); }catch(e){};
       if(window.supabaseAuto && window.supabaseAuto.syncToSupabase) window.supabaseAuto.syncToSupabase('karyawan');
     }
     try{ 
@@ -4339,7 +4355,7 @@ function simpanKaryawan() {
     karyawanData.push({ id: newId, outlet_id: activeOutlet.id, outletId: activeOutlet.id, nama: nama, wa: wa, alamat: alamat, level: level, username: username, password: password, is_active: true, isActive: false });
   }
   try{ localStorage.setItem('karyawanData', JSON.stringify(karyawanData)); }catch(e){}
-  try{ if(typeof setLocal==='function') setLocal('karyawan', karyawanData); }catch(e){}
+  try{ if(typeof setLocal==='function') setLocal('karyawan', karyawanData); try{ localStorage.setItem('backup_karyawanData', JSON.stringify(karyawanData)); }catch(e){}; }catch(e){}
   try{ if(window.supabaseAuto && window.supabaseAuto.syncToSupabase) window.supabaseAuto.syncToSupabase('karyawan'); }catch(e){}
   try{ if(window.syncKaryawanToSupabase) window.syncKaryawanToSupabase(); }catch(e){}
   resetFormKaryawan();
@@ -4384,7 +4400,9 @@ function renderKaryawanList() {
   const container = document.getElementById('karyawanListContainer');
   if (!container) return;
   container.innerHTML = '';
-  let listK = karyawanData; try{ const activeOutlet = typeof getActiveOutlet==='function'?getActiveOutlet():null; if(activeOutlet && activeOutlet.id){ var filtered = karyawanData.filter(function(k){ return !k.outletId || !k.outlet_id || k.outletId === activeOutlet.id || k.outlet_id === activeOutlet.id; }); if(filtered.length>0) { listK = filtered; } else { listK = karyawanData; console.warn('⚠️ Filter karyawan outlet kosong, tampil semua', karyawanData.length); } } }catch(e){ listK = karyawanData; }
+  // FIX F5 HILANG - JANGAN FILTER OUTLET, TAMPIL SEMUA KARYAWAN
+  let listK = karyawanData;
+  console.log('👥 Render Karyawan - Total:', karyawanData.length, 'Tampil:', listK.length, 'Outlet filter DISABLED - anti hilang F5');
   listK.forEach(k => {
     const card = document.createElement('div');
     card.className = `customer-card-item border-3-glass-blur rounded-12 ${k.isActive ? 'active-item' : ''}`;
@@ -9446,7 +9464,7 @@ function simpanKaryawan(){
     karyawanData.push({ id:newId, outlet_id:activeOutlet.id, outletId:activeOutlet.id, nama:nama, wa:wa, alamat:alamat, level:level, username:username, password:password, is_active:false, isActive:false }); 
   } 
   try{ localStorage.setItem('karyawanData', JSON.stringify(karyawanData)); }catch(e){} 
-  if(typeof setLocal==='function') setLocal('karyawan', karyawanData);
+  if(typeof setLocal==='function') setLocal('karyawan', karyawanData); try{ localStorage.setItem('backup_karyawanData', JSON.stringify(karyawanData)); }catch(e){};
   if(window.supabaseAuto && window.supabaseAuto.syncToSupabase){ window.supabaseAuto.syncToSupabase('karyawan'); }
   if(typeof window!=='undefined'){ window.karyawanData=karyawanData; }
   resetFormKaryawan(); 
