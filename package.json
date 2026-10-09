@@ -6,13 +6,7 @@
     "dev": "vercel dev",
     "deploy": "vercel --prod"
   },
-  "keywords": [
-    "laundry",
-    "supabase",
-    "pwa",
-    "applaundry"
-  ],
+  "keywords": ["laundry", "supabase", "pwa", "applaundry"],
   "author": "",
-  "license": "MIT",
-  "type": "module"
+  "license": "MIT"
 }
