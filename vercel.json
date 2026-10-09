@@ -1,72 +1,9 @@
 {
-  "version": 2,
-  "name": "applaundry",
   "builds": [
-    {
-      "src": "FIX-ALL-SETTING.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "manifest.json",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "sw.js",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "favicon-*.png",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "apple-touch-icon.png",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "favicon.png",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "logo.png",
-      "use": "@vercel/static"
-    }
+    {"src": "FIX-ALL-SETTING.html", "use": "@vercel/static"},
+    {"src": "manifest.json", "use": "@vercel/static"},
+    {"src": "sw.js", "use": "@vercel/static"},
+    ... 4 lagi
   ],
-  "routes": [
-    {
-      "src": "/manifest.json",
-      "dest": "/manifest.json"
-    },
-    {
-      "src": "/sw.js",
-      "dest": "/sw.js"
-    },
-    {
-      "src": "/favicon-32x32.png",
-      "dest": "/favicon-32x32.png"
-    },
-    {
-      "src": "/favicon-192x192.png",
-      "dest": "/favicon-192x192.png"
-    },
-    {
-      "src": "/favicon-512x512.png",
-      "dest": "/favicon-512x512.png"
-    },
-    {
-      "src": "/apple-touch-icon.png",
-      "dest": "/apple-touch-icon.png"
-    },
-    {
-      "src": "/favicon.png",
-      "dest": "/favicon.png"
-    },
-    {
-      "src": "/logo.png",
-      "dest": "/logo.png"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/FIX-ALL-SETTING.html"
-    }
-  ]
+  "routes": [ ... 9 routes ]
 }
