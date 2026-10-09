@@ -1,15 +1,12 @@
-
-// supabase.js - Auto Sync LocalFirst System - 7 TABEL - extracted from tester
+// supabase.js - Auto Sync LocalFirst System - 10 TABEL - extracted from tester + 3 laporan
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
 export const SUPABASE_URL = 'https://nniecqbfjmmlrtmolnrt.supabase.co'
 export const SUPABASE_KEY = 'sb_publishable_JNkBb7xwGqYwyL6s11ffdw_DfV9dSPV'
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-// 7 TABEL - sesuai FIX-ALL-SETTING.html
-export const TABLES = ['outlets','karyawan','pelanggan','layanan','antrian','pengeluaran_kas','riwayat_nota']
+export const TABLES = ['outlets','karyawan','pelanggan','layanan','antrian','pengeluaran_kas','riwayat_nota','riwayat_laporan','omzet','pendapatan']
 
-// Mapping ke localStorage keys
 const KEY_MAP = {
   'outlets': 'outletsData',
   'karyawan': 'karyawanData',
@@ -18,6 +15,9 @@ const KEY_MAP = {
   'antrian': 'antrianData',
   'pengeluaran_kas': 'pengeluaranKasData',
   'riwayat_nota': 'riwayatNotaData',
+  'riwayat_laporan': 'riwayatLaporanData',
+  'omzet': 'omzetData',
+  'pendapatan': 'pendapatanData',
   'outlet': 'outletsData',
   'pegawai': 'karyawanData'
 }
@@ -44,7 +44,6 @@ export async function syncFromSupabase(table){
     var supaTable = table
     const {data, error} = await supabase.from(supaTable).select('*')
     if(error){
-      // Jika tabel belum ada di Supabase, jangan error, anggap kosong
       if(error.code==='42P01'){
         console.log('📭 Tabel '+table+' belum ada di Supabase - pakai local')
         return []
@@ -55,6 +54,7 @@ export async function syncFromSupabase(table){
     var normalized = data.map(function(d){
       if('is_active' in d && !('isActive' in d)) d.isActive = d.is_active
       if('outlet_id' in d && !('outletId' in d)) d.outletId = d.outlet_id
+      if('karyawan_id' in d && !('karyawanId' in d)) d.karyawanId = d.karyawan_id
       return d
     })
     setLocal(table, normalized)
@@ -74,6 +74,7 @@ export async function syncToSupabase(table){
       var copy = Object.assign({}, item)
       if('isActive' in copy){ copy.is_active = copy.isActive; }
       if('outletId' in copy && !('outlet_id' in copy)){ copy.outlet_id = copy.outletId; }
+      if('karyawanId' in copy && !('karyawan_id' in copy)){ copy.karyawan_id = copy.karyawanId; }
       return copy
     })
     const {error} = await supabase.from(table).upsert(clean, {onConflict:'id'})
@@ -91,7 +92,7 @@ export async function syncToSupabase(table){
 }
 
 export async function initAutoSync(){
-  console.log('🔄 Init Auto Sync LocalFirst - 7 TABEL')
+  console.log('🔄 Init Auto Sync LocalFirst - 10 TABEL')
   var totalFetched=0
   var results={}
   for(var i=0;i<TABLES.length;i++){

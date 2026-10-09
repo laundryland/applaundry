@@ -1,5 +1,5 @@
 // sw.js - Applaundry PWA Service Worker - auto version upgrade
-const CACHE_NAME = 'applaundry-v2.5.28-PELANGGAN-2ROW-ICONS-20241009';
+const CACHE_NAME = 'applaundry-v2.6.0-10TABEL-LAPORAN-20241010';
 const ASSETS_TO_CACHE = [
   './',
   './FIX-ALL-SETTING.html',
