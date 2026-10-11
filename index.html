@@ -8664,5 +8664,115 @@ document.addEventListener('DOMContentLoaded', ()=>{
 });
 </script>
 
+
+<script>
+// === FIX 5 MENIT LAMBAT -> INSTANT KARYAWAN ===
+console.log('⚡ Fix instant karyawan loading...');
+
+// Override process queue to not break
+window.v2ProcessQueueInstant = async function(){
+  if(typeof v2Queue==='undefined' || v2Queue.length===0){ if(typeof v2UpdateIndicator==='function') v2UpdateIndicator(); return; }
+  if(!navigator.onLine){ console.log('⏸️ Offline'); return; }
+  let client=null;
+  try{ client=window.supabaseClient || window.supa || (window.supabaseAuto && window.supabaseAuto.supabase); }catch(e){}
+  if(!client){
+    try{ if(window.supabase && window.supabase.createClient){ client=window.supabase.createClient('https://nniecqbfjmmlrtmolnrt.supabase.co','sb_publishable_JNkBb7xwGqYwyL6s11ffdw_DfV9dSPV'); window.supabaseClient=client; } }catch(e){}
+    if(!client) return;
+  }
+  
+  let batch=v2Queue.slice(0,5); // smaller batch for instant
+  for(let q of batch){
+    try{
+      let tableName=(typeof V2_TABLES!=='undefined' && V2_TABLES[q.table])?V2_TABLES[q.table]:q.table;
+      if(q.action==='upsert'){
+        let {error}=await client.from(tableName).upsert(q.data, {onConflict:'id'});
+        if(error) throw error;
+      }else if(q.action==='delete'){
+        let {error}=await client.from(tableName).delete().eq('id', q.data.id);
+        if(error) throw error;
+      }
+      // Success
+      v2Queue=v2Queue.filter(item=> item.qid!==q.qid);
+      if(typeof v2SaveQueue==='function') v2SaveQueue(); else { try{ localStorage.setItem('laundryland_v2_queue', JSON.stringify(v2Queue)); }catch(e){} }
+      console.log('⚡ Instant Synced', q.table, q.data.id);
+    }catch(e){
+      q.retries=(q.retries||0)+1;
+      console.warn('❌ Sync fail', q.table, e.message, 'retry', q.retries);
+      if(q.retries>3){
+        v2Queue=v2Queue.filter(item=> item.qid!==q.qid);
+        if(typeof v2SaveQueue==='function') v2SaveQueue();
+        console.log('🗑️ Dropped after 3 retries', q.table, q.data.id);
+      }
+      // CONTINUE, don't break - this was the 5 minute bug!
+    }
+  }
+  if(typeof v2UpdateIndicator==='function') v2UpdateIndicator();
+};
+
+// Replace interval with faster instant version
+if(typeof v2ProcessQueue!=='undefined'){
+  // Keep old but also run instant
+  setInterval(()=>{ if(typeof v2ProcessQueueInstant==='function') v2ProcessQueueInstant(); }, 400);
+}
+
+function triggerSync(){ 
+  if(typeof v2ProcessQueueInstant==='function') v2ProcessQueueInstant();
+  if(typeof v2TriggerSync==='function'){ 
+    if(window.v2SyncTimer) clearTimeout(window.v2SyncTimer);
+    window.v2SyncTimer=setTimeout(()=>{ if(typeof v2ProcessQueue!=='undefined') v2ProcessQueue(); }, 100);
+  }
+}
+
+// Override simpanKaryawan to be INSTANT 0.4 detik, not queue 5 menit
+setTimeout(()=>{
+  if(typeof simpanKaryawan!=='undefined'){
+    let originalSimpan = simpanKaryawan;
+    window.simpanKaryawan = async function(){
+      console.log('⚡ Instant simpanKaryawan...');
+      // Call original to save local
+      let result = originalSimpan.apply(this, arguments);
+      
+      // Instant direct upsert to Supabase (bypass queue for speed)
+      try{
+        let client = window.supabaseClient || window.supa;
+        if(!client && window.supabase && window.supabase.createClient){
+          client = window.supabase.createClient('https://nniecqbfjmmlrtmolnrt.supabase.co','sb_publishable_JNkBb7xwGqYwyL6s11ffdw_DfV9dSPV');
+          window.supabaseClient = client;
+        }
+        if(client){
+          let data = (typeof v2Get==='function') ? v2Get('karyawan') : [];
+          let target = null;
+          if(typeof editingKaryawanId!=='undefined' && editingKaryawanId){
+            target = data.find(k=> k.id===editingKaryawanId);
+          }else{
+            target = data[data.length-1];
+          }
+          if(target){
+            target.updated_at = new Date().toISOString();
+            if(!target.outlet_id && target.outletId) target.outlet_id = target.outletId;
+            console.log('⚡ Direct upsert to Supa', target.nama);
+            let {error} = await client.from('karyawan').upsert(target, {onConflict:'id'});
+            if(error){
+              console.error('❌ Direct upsert fail', error.message);
+              if(typeof v2QueueUpsert==='function') v2QueueUpsert('karyawan', target);
+            }else{
+              console.log('✅ Instant 0.4 detik tampil di Supa', target.nama);
+              // Remove from queue if already there
+              if(typeof v2Queue!=='undefined'){
+                v2Queue = v2Queue.filter(q=> !(q.table==='karyawan' && q.data && q.data.id===target.id));
+                if(typeof v2SaveQueue==='function') v2SaveQueue();
+              }
+              if(typeof showNoticeToast==='function') showNoticeToast('✅ '+target.nama+' langsung tampil 0.4 detik');
+            }
+          }
+        }
+      }catch(e){ console.error('Instant save error', e); }
+      return result;
+    };
+    console.log('✅ simpanKaryawan overridden to instant 0.4s');
+  }
+}, 2000);
+</script>
+
 </body>
 </html>
