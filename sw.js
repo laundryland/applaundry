@@ -1,14 +1,10 @@
 // sw.js - Nota Setrika Dexie + Supabase ready
-const CACHE_NAME = "nota-setrika-dexie-v6";
+const CACHE_NAME = "nota-setrika-dexie-v4-fix";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
   "./supabase.js",
-  "./manifest.json",
-  "./favicon.png",
-  "./icon-32.png",
-  "./icon-192.png",
-  "./icon-512.png"
+  "./manifest.json"
 ];
 
 self.addEventListener("install", (e) => {
