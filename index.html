@@ -37,21 +37,11 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<!-- Supabase external - multi HP - label status warna -->
+
+<!-- Supabase external single - no double declare -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://unpkg.com/dexie@4.0.11/dist/dexie.min.js"></script>
 <script src="./supabase.js"></script>
-
-
-
-
-
-<!-- Supabase external - hidden, no bocor UI, sync tetep jalan -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="https://unpkg.com/dexie@4.0.11/dist/dexie.min.js"></script>
-<script src="./supabase.js"></script>
-<div id="supabase-badge" style="display:none !important"></div>
-<div id="supabase-last-sync" style="display:none !important"></div>
 
 </body>
 </html>
