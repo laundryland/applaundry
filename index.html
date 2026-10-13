@@ -29,21 +29,26 @@ Error generating stack: `+u.message+`
 </script>
   <script>(function(){function m(a){var h=a.getAttribute("href");if(!h)return;try{var u=new URL(h,document.baseURI);if((u.protocol==="http:"||u.protocol==="https:")&&u.host!==location.host){a.target="_blank";a.rel="noopener noreferrer";}}catch(e){}}function s(){document.querySelectorAll("a[href]").forEach(m);}if(document.readyState!=="loading"){s();}else{document.addEventListener("DOMContentLoaded",s);}document.addEventListener("click",function(e){var a=e.target&&e.target.closest&&e.target.closest("a[href]");if(a){m(a);}},true);})();</script>
   <script type="application/json" data-clippy-inline-media-manifest="1">{"version":1,"slots":[]}</script>
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then(r=>console.log('SW ok', r.scope)).catch(e=>console.log('SW fail', e));
-  });
-}
-</script>
 
-<!-- Supabase CDN + External supabase.js no build -->
+<!-- Supabase external no build - hidden status, no bocor UI -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://unpkg.com/dexie@4.0.11/dist/dexie.min.js"></script>
 <script src="./supabase.js"></script>
-<style>#supabase-badge{position:fixed;bottom:76px;right:12px;z-index:50;}</style>
-<div id="supabase-badge" class="text-[10px] px-2 py-1 rounded-full font-bold bg-gray-100 text-gray-600">Supabase: Idle</div>
-<div id="supabase-last-sync" style="position:fixed;bottom:56px;right:12px;z-index:50;font-size:9px;color:#64748b;background:rgba(255,255,255,0.9);padding:2px 6px;border-radius:8px;"></div>
+<style>
+/* Hidden badge - tidak bocor di UI, cuma untuk debug */
+#supabase-badge{display:none !important}
+#supabase-last-sync{display:none !important}
+</style>
+<div id="supabase-badge" style="display:none">Supabase: Idle</div>
+<div id="supabase-last-sync" style="display:none"></div>
+<script>
+// SW register single - external no build
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').then(function(r){ console.log('SW ok', r.scope); }).catch(function(e){ console.log('SW fail', e); });
+  });
+}
+</script>
 
 </body>
 </html>
