@@ -16,7 +16,8 @@ function log(msg){
   if(el) el.textContent = msg;
 }
 
-function updateBadge(){
+function updateBadge(){ const b = document.getElementById("supabase-badge"); if(!b) return; /* hidden mode - no UI bocor */ return; // original code below disabled
+ const _orig_b=b; if(true){return;} // 
   const b = document.getElementById("supabase-badge");
   if(!b) return;
   const map = {
@@ -85,7 +86,7 @@ async function syncToSupabase(){
   syncStatus="syncing"; updateBadge();
   try{
     const db = new Dexie("setrika_db");
-    db.version(1).stores({nota:"++id, customer, kg, date, createdAt", backup_harian:"date"});
+    db.version(10).stores({nota:"++id, customer, kg, date, createdAt", backup_harian:"date"});
     await db.open();
     const all = await db.nota.toArray();
     if(all.length===0){ syncStatus="connected"; updateBadge(); return {ok:true, empty:true}; }
@@ -141,7 +142,7 @@ async function loadFromSupabase(silent=false){
   if(!silent){ syncStatus="syncing"; updateBadge(); }
   try{
     const db = new Dexie("setrika_db");
-    db.version(1).stores({nota:"++id, customer, kg, date, createdAt", backup_harian:"date"});
+    db.version(10).stores({nota:"++id, customer, kg, date, createdAt", backup_harian:"date"});
     await db.open();
     const localAll = await db.nota.toArray();
     const localKeys = new Set(localAll.map(r=>makeKey(r.customer, r.kg, r.date)));
