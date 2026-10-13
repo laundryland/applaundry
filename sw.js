@@ -1,5 +1,5 @@
 // sw.js - Nota Setrika Dexie + Supabase ready
-const CACHE_NAME = "nota-setrika-dexie-v5";
+const CACHE_NAME = "nota-setrika-dexie-v3";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
