@@ -1,147 +1,100 @@
-# Applaundry - Laundry Management PWA
+# Nota Setrika PWA - Dexie + Supabase (applaundry)
 
-Laundry Management PWA dengan Supabase sync - 5 tabel aktif, export import CSV/XLSX, multi-outlet.
+PWA Nota Setrika tahan reload, parser WA bersih, laporan harian progresif tier reset 00:00 WIB, auto-backup Dexie IndexedDB + sync Supabase.
 
-## 🚀 Live Demo
-Deploy di Vercel - static hosting.
+**Project Supabase:** applaundry `https://nniecqbfjmmlrtmolnrt.supabase.co`
 
-## 📦 Struktur
-- `FIX-ALL-SETTING.html` - Main app (single file PWA)
-- `vercel.json` - Vercel config (static)
-- `package.json` - Project meta
+## Fitur
+- **Parser WA bersih:** Buang `[timestamp]` + `Rahma:` + panggilan `p/b/mb/bu/pak/mas` → `dwi bantengan 2.8kg`
+- **Dexie IndexedDB:** Tahan `F5` & `Ctrl+Shift+F5`, kapasitas 500MB+, async no lag, no build
+- **Tier harian reset 00:00 WIB:** 0-50kg=0, 51-70kg=1250, 71+kg=1500 cumulative, per hari riset ke tier 1
+- **Laporan Level 2:** 3 kolom Timestamps | Satuan kg harian (1 desimal) | Jumlah komisi harian, tab Harian/Mingguan/Bulanan
+- **Supabase external:** `supabase.js` external no build, auto-sync tiap 60 detik + saat tab aktif
+- **PWA external:** `manifest.json` + `sw.js` external, no bundler
 
-## 🔧 Setup Supabase
+## Struktur No Build (Vercel friendly)
 
-Project ID: `nniecqbfjmmlrtmolnrt` (applaundry)
+```
+/
+├── index.html        # PWA final (React artifact + Dexie)
+├── supabase.js       # External Supabase sync applaundry - no build
+├── manifest.json     # External PWA manifest
+├── sw.js             # External Service Worker (skip supabase.co)
+├── icon-32.png
+├── icon-192.png
+├── icon-512.png
+├── favicon.png
+├── vercel.json       # optional header config
+└── README.md
+```
 
-### 1. Buat tabel di Supabase Dashboard → SQL Editor:
+> Semua external, tidak perlu `npm run build`. Vercel serve static.
+
+## Setup Supabase (sekali)
+
+Jalankan di SQL Editor Supabase applaundry:
 
 ```sql
--- Outlets
-create table outlets (
-  id text primary key,
-  nama text,
-  alamat text,
-  wa text,
-  is_active boolean default true,
+create table public.nota (
+  id bigserial primary key,
+  customer text not null,
+  kg numeric(5,1) check (kg > 0 and kg < 100),
+  date text not null,
   created_at timestamptz default now()
 );
 
--- Karyawan
-create table karyawan (
-  id text primary key,
-  outlet_id text,
-  nama text,
-  wa text,
-  alamat text,
-  username text,
-  password text,
-  level text,
-  is_active boolean default true,
-  created_at timestamptz default now()
+create table public.nota_backup (
+  date text primary key,
+  total_kg numeric(6,1) default 0,
+  total_komisi integer default 0,
+  entries jsonb default '[]'::jsonb,
+  updated_at timestamptz default now()
 );
 
--- Pelanggan (fix nama tercantum)
-create table pelanggan (
-  id text primary key,
-  outlet_id text,
-  nama text,
-  wa text,
-  alamat text,
-  deposito int default 0,
-  is_active boolean default true,
-  created_at timestamptz default now()
-);
+alter table public.nota enable row level security;
+alter table public.nota_backup enable row level security;
 
--- Layanan
-create table layanan (
-  id text primary key,
-  outlet_id text,
-  nama text,
-  kode text,
-  harga int,
-  satuan text,
-  estimasiVal int,
-  estimasiUnit text,
-  minKg int,
-  created_at timestamptz default now()
-);
+create policy "Allow anon" on public.nota for all using (true) with check (true);
+create policy "Allow anon" on public.nota_backup for all using (true) with check (true);
 
--- Antrian / Nota
-create table antrian (
-  id text primary key,
-  outlet_id text,
-  nota text,
-  namaPelanggan text,
-  layanan text,
-  totalNota int,
-  statusProses text,
-  statusBayar text,
-  tanggal date,
-  created_at timestamptz default now()
-);
-
--- RLS - allow all untuk anon publishable key (ganti dengan policy yang lebih ketat untuk production)
-alter table outlets enable row level security;
-alter table karyawan enable row level security;
-alter table pelanggan enable row level security;
-alter table layanan enable row level security;
-alter table antrian enable row level security;
-
-create policy "Allow all for anon" on outlets for all using (true) with check (true);
-create policy "Allow all for anon" on karyawan for all using (true) with check (true);
-create policy "Allow all for anon" on pelanggan for all using (true) with check (true);
-create policy "Allow all for anon" on layanan for all using (true) with check (true);
-create policy "Allow all for anon" on antrian for all using (true) with check (true);
+create index idx_nota_date on public.nota(date);
 ```
 
-### 2. Set Env di Vercel Dashboard → Settings → Environment Variables:
+## Deploy GitHub → Vercel
 
-```
-NEXT_PUBLIC_SUPABASE_URL=https://nniecqbfjmmlrtmolnrt.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_JNkBb7xwGqYwyL6s11ffdw_DfV9dSPV
-```
-
-Atau isi di file utama `FIX-ALL-SETTING.html`:
-
-```javascript
-// === CONFIG PUBLISH - APPLAUDNRY ===
-const PUBLISH_SUPABASE_URL = 'https://nniecqbfjmmlrtmolnrt.supabase.co';
-const PUBLISH_SUPABASE_ANON_KEY = 'sb_publishable_JNkBb7xwGqYwyL6s11ffdw_DfV9dSPV';
-```
-
-## 📤 Deploy ke Vercel
-
-### Via GitHub:
-1. Push repo ini ke GitHub (pastikan `.env` tidak ikut - sudah di `.gitignore`)
+1. Push repo ini ke GitHub
 2. Vercel → New Project → Import GitHub repo
-3. Framework preset: `Other`
-4. Add Environment Variables (2 key di atas)
+3. Framework Preset: **Other**
+4. Build Command: kosongkan, Output Directory: `./`
 5. Deploy
 
-### Via CLI:
-```bash
-vercel --prod
+PWA butuh HTTPS, Vercel sudah HTTPS otomatis.
+
+Supabase config ada di `supabase.js`:
+```js
+const SUPABASE_URL = "https://nniecqbfjmmlrtmolnrt.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_...";
 ```
 
-### Via drag & drop:
-- Buka vercel.com/new → Browse → upload `FIX-ALL-SETTING.html` + `vercel.json`
+Publishable key aman untuk frontend. Kalau mau pakai ENV Vercel, ganti jadi `import.meta.env` atau `process.env` dan set di Vercel Environment Variables.
 
-## 📋 Features
+## Cara pakai
 
-- ✅ 5 tabel Supabase aktif: outlets, pelanggan, layanan, antrian, karyawan
-- ✅ Export Import CSV/XLSX: pelanggan & layanan
-- ✅ Backup Full JSON
-- ✅ Multi-outlet filter
-- ✅ Deposito pelanggan
-- ✅ PWA ready
+1. Buka PWA, paste chat WA: `[10:30] Rahma: b dwi bantengan 2.8`
+2. Klik Proses → Dexie → auto-sync Supabase (badge kanan bawah)
+3. Laporan → cek Timestamps | Kg | Komisi harian
+4. Export WA Bisnis
 
-## 🔒 Security
+## Tier harian
 
-- `.env` tidak di-push (di `.gitignore`)
-- `supabase-config.json` tidak di-push
-- Publishable key aman untuk public (bukan secret key)
-- Untuk production, ganti RLS policy jadi lebih ketat
+- `Ri(totalKgDay)` per tanggal lokal `bn() = Fn(new Date)` → `YYYY-MM-DD` WIB
+- Reset jam 00:00 WIB otomatis masuk key tanggal baru
+- Contoh: 13/10 71kg = komisi 26.500, 14/10 10kg = komisi 0 (balik tier 1)
 
-## 📝 License
-MIT
+## Supabase quota
+
+Free tier per proyek 500MB DB + 1GB Storage, bukan total gabungan. 2 proyek gratis = 1GB DB.
+
+## License
+
+Internal - applaundry
