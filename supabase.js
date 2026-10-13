@@ -29,15 +29,22 @@ function initSupabase(){
 }
 
 async function getDexie(){
-  var db=new Dexie("setrika_db");
-  db.version(100).stores({nota:"++id, customer, kg, date, createdAt",backup_harian:"date"});
-  try{ await db.open(); return db; }
-  catch(e){
-    if(String(e).includes("less than the existing") || String(e).includes("VersionError")){
-      console.warn("Dexie version too low, resetting DB", e);
+  // Final fix: lock version di 10000, auto reset kalau masih ada versi lebih tinggi nyangkut
+  var DB_VER=10000;
+  var STORES={nota:"++id, customer, kg, date, createdAt",backup_harian:"date"};
+  try{
+    var db=new Dexie("setrika_db");
+    db.version(DB_VER).stores(STORES);
+    await db.open();
+    return db;
+  }catch(e){
+    var msg=String(e);
+    if(msg.includes("less than the existing") || msg.includes("VersionError") || msg.includes("version")){
+      console.warn("Dexie version mismatch, force reset DB", e);
       try{ await Dexie.delete("setrika_db"); }catch(_){}
+      try{ indexedDB.deleteDatabase("setrika_db"); }catch(_){}
       var db2=new Dexie("setrika_db");
-      db2.version(100).stores({nota:"++id, customer, kg, date, createdAt",backup_harian:"date"});
+      db2.version(DB_VER).stores(STORES);
       await db2.open();
       return db2;
     }
