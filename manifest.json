@@ -2,7 +2,7 @@
   "name": "Nota Setrika Dexie - PWA",
   "short_name": "Nota Setrika",
   "description": "Parser WA Nota Setrika tahan reload, Dexie IndexedDB, laporan harian progresif",
-  "start_url": "././",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
@@ -20,13 +20,13 @@
     },
     {
       "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f9f9.png",
-      "sizes": "192x192",
+      "sizes": "72x72",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
       "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f9f9.png",
-      "sizes": "512x512",
+      "sizes": "72x72",
       "type": "image/png",
       "purpose": "any maskable"
     }
@@ -35,12 +35,12 @@
     {
       "name": "Paste WA Baru",
       "description": "Langsung paste chat WA",
-      "url": "././#paste"
+      "url": "./#paste"
     },
     {
       "name": "Laporan Harian",
       "description": "Buka laporan ringkas",
-      "url": "././#laporan"
+      "url": "./#laporan"
     }
   ]
 }
