@@ -37,13 +37,16 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<!-- Supabase external no build - hidden no bocor -->
+<!-- Supabase external - multi HP - label status warna -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://unpkg.com/dexie@4.0.11/dist/dexie.min.js"></script>
 <script src="./supabase.js"></script>
-<style>#supabase-badge,#supabase-last-sync{display:none !important}</style>
-<div id="supabase-badge" style="display:none">Supabase: Idle</div>
-<div id="supabase-last-sync" style="display:none"></div>
+<style>
+#supabase-badge{position:fixed;bottom:8px;left:8px;z-index:9999;font-size:10px;padding:4px 8px;border-radius:999px;font-weight:700;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,0.15)}
+#supabase-last-sync{position:fixed;bottom:8px;right:8px;z-index:9999;font-size:9px;color:#64748b;background:rgba(255,255,255,0.95);padding:3px 6px;border-radius:8px;pointer-events:none}
+</style>
+<div id="supabase-badge">Supabase: Idle</div>
+<div id="supabase-last-sync"></div>
 
 </body>
 </html>
