@@ -3,6 +3,7 @@ const CACHE_NAME = "nota-setrika-dexie-v3";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
+  "./supabase.js",
   "./manifest.json",
   "./favicon.png",
   "./icon-32.png",
