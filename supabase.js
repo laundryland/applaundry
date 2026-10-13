@@ -28,14 +28,29 @@ function initSupabase(){
  return false;
 }
 
+async function getDexie(){
+  var db=new Dexie("setrika_db");
+  db.version(100).stores({nota:"++id, customer, kg, date, createdAt",backup_harian:"date"});
+  try{ await db.open(); return db; }
+  catch(e){
+    if(String(e).includes("less than the existing") || String(e).includes("VersionError")){
+      console.warn("Dexie version too low, resetting DB", e);
+      try{ await Dexie.delete("setrika_db"); }catch(_){}
+      var db2=new Dexie("setrika_db");
+      db2.version(100).stores({nota:"++id, customer, kg, date, createdAt",backup_harian:"date"});
+      await db2.open();
+      return db2;
+    }
+    throw e;
+  }
+}
+
 async function syncToSupabase(){
  if(!supabaseClient&&!initSupabase()){syncStatus="offline";log("Client belum ready");return{ok:false};}
  if(syncStatus==="syncing")return{ok:false};
  syncStatus="syncing";
  try{
-  var db=new Dexie("setrika_db");
-  db.version(10).stores({nota:"++id, customer, kg, date, createdAt",backup_harian:"date"});
-  await db.open();
+  var db=await getDexie();
   var all=await db.nota.toArray();
   if(all.length===0){syncStatus="connected";log("Dexie kosong");return{ok:true,empty:true};}
   var map=new Map();
@@ -67,9 +82,7 @@ async function syncToSupabase(){
 async function loadFromSupabase(silent){
  if(!supabaseClient&&!initSupabase())return{ok:false};
  try{
-  var db=new Dexie("setrika_db");
-  db.version(10).stores({nota:"++id, customer, kg, date, createdAt",backup_harian:"date"});
-  await db.open();
+  var db=await getDexie();
   var localAll=await db.nota.toArray();
   var localKeys=new Set(localAll.map(function(r){return makeKey(r.customer,r.kg,r.date)}));
   var res=await supabaseClient.from("nota_backup").select("*").order("date",{ascending:false}).limit(30);
