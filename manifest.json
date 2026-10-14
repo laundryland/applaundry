@@ -1,46 +1,11 @@
 {
-  "name": "Nota Setrika Dexie - PWA",
-  "short_name": "Nota Setrika",
-  "description": "Parser WA Nota Setrika tahan reload, Dexie IndexedDB, laporan harian progresif",
+  "name": "WA Nota Setrika - Dexie Edition",
+  "short_name": "Nota Dexie",
+  "description": "Dexie Edition progresif 50x0 + 20x1250 + x1500, 1 desimal, IndexedDB + LocalStorage + Supabase",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui"],
-  "orientation": "portrait",
   "background_color": "#f8fafc",
   "theme_color": "#14b8a6",
-  "lang": "id",
-  "categories": ["business", "productivity", "utilities"],
-  "icons": [
-    {
-      "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f9f9.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f9f9.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f9f9.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Paste WA Baru",
-      "description": "Langsung paste chat WA",
-      "url": "./#paste"
-    },
-    {
-      "name": "Laporan Harian",
-      "description": "Buka laporan ringkas",
-      "url": "./#laporan"
-    }
-  ]
+  "icons": [{"src": "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f9f9.png","sizes": "72x72","type": "image/png"}]
 }
