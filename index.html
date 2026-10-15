@@ -41,8 +41,14 @@ Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] 
 
   <div class="w-full max-w-full border-2 border-[#cbd5e1] rounded-xl bg-white flex flex-col shadow-sm overflow-hidden box-border">
     <div class="flex items-center justify-between px-4 h-[44px] border-b border-[#e2e8f0]">
-      <h2 class="font-bold text-[14px]">Nota Setrika</h2>
-      <span id="notaCount" class="text-[11px] text-[#64748b]">0 nota</span>
+      <div class="flex items-center gap-2">
+        <h2 class="font-bold text-[14px]">Nota Setrika</h2>
+        <span class="text-[9px] bg-[#f1f5f9] px-1.5 py-0.5 rounded font-bold text-[#475569]">Hasil Paste</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="notaCount" class="text-[11px] text-[#64748b]">0 nota</span>
+        <button id="btnHapusNotaHeader" class="text-[10px] bg-red-50 text-red-600 border border-red-200 px-2.5 py-1 rounded-lg font-bold hover:bg-red-100 active:scale-[0.97] transition shrink-0">Hapus</button>
+      </div>
     </div>
     <div id="listHeader" class="grid grid-cols-12 px-4 py-2 bg-[#f8fafc] text-[10px] font-bold text-[#64748b] border-b hidden">
       <div class="col-span-6">Customer</div>
@@ -286,6 +292,7 @@ document.getElementById("waInput").addEventListener("input", function(){ documen
 document.getElementById("btnProses").onclick = function(){ const text=document.getElementById("waInput").value; const parsed=parseWA(text); if(parsed.length===0){ setStatus("Tidak ada data valid"); return; } const date=todayLocal(); const now=new Date().toISOString(); let all=getAll(); const existing=new Set(all.map(function(r){return makeKey(r.customer,r.kg,r.date);})); let added=0; parsed.forEach(function(p){ const k=makeKey(p.customer,p.kg,date); if(!existing.has(k)){ all.push({customer:p.customer, kg:p.kg, date:date, createdAt:now, _key:k+"|"+Math.random().toString(36).slice(2,5)}); existing.add(k); added++; } }); const map=new Map(); all.forEach(function(r){ const k=makeKey(r.customer,r.kg,r.date); if(!map.has(k)) map.set(k,r); }); all=Array.from(map.values()).map(function(r){ return {customer:r.customer, kg:r.kg, date:r.date, createdAt:r.createdAt, _key:makeKey(r.customer,r.kg,r.date)+"|"+Math.random().toString(36).slice(2,4)}; }); saveAll(all); render(); setStatus("Berhasil: "+added+" baru / "+parsed.length+" diparse"); document.getElementById("waInput").value=""; };
 document.getElementById("btnBersih").onclick = function(){ document.getElementById("waInput").value=""; setStatus("Textarea dibersihkan"); document.getElementById("barisCount").textContent="0 baris • LS+SUPA"; };
 document.getElementById("btnHapusSemua").onclick = function(){ document.getElementById("modalHapusSemua").classList.remove("hidden"); document.getElementById("modalHapusSemua").classList.add("flex"); };
+document.getElementById("btnHapusNotaHeader").onclick = function(){ document.getElementById("modalHapusSemua").classList.remove("hidden"); document.getElementById("modalHapusSemua").classList.add("flex"); };
 document.getElementById("btnBatalHapusSemua").onclick = function(){ document.getElementById("modalHapusSemua").classList.add("hidden"); document.getElementById("modalHapusSemua").classList.remove("flex"); };
 document.getElementById("btnKonfirmHapusSemua").onclick = function(){ const today=todayLocal(); let all=getAll().filter(function(r){return r.date!==today;}); saveAll(all); render(); document.getElementById("modalHapusSemua").classList.add("hidden"); document.getElementById("modalHapusSemua").classList.remove("flex"); setStatus("Hapus Semua hari ini"); };
 document.getElementById("btnExport").onclick = function(){ const data=JSON.stringify(getAll(),null,2); const blob=new Blob([data],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download="nota_data_"+todayLocal()+".json"; a.click(); };
