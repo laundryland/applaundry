@@ -1,100 +1,40 @@
-# Nota Setrika PWA - Dexie + Supabase (applaundry)
+RESTORE POINT v13 FINAL - 3 Kolom Rapi
+Tanggal: 2026-10-14 04:03 WIB
+Tag: nota-ls-supa-exact-v13 + 3kolom + harian/mingguan/bulanan + share WA
+Status: FINAL STABLE - LS+SUPA ONLY, NO DEXIE
 
-PWA Nota Setrika tahan reload, parser WA bersih, laporan harian progresif tier reset 00:00 WIB, auto-backup Dexie IndexedDB + sync Supabase.
-
-**Project Supabase:** applaundry `https://nniecqbfjmmlrtmolnrt.supabase.co`
-
-## Fitur
-- **Parser WA bersih:** Buang `[timestamp]` + `Rahma:` + panggilan `p/b/mb/bu/pak/mas` → `dwi bantengan 2.8kg`
-- **Dexie IndexedDB:** Tahan `F5` & `Ctrl+Shift+F5`, kapasitas 500MB+, async no lag, no build
-- **Tier harian reset 00:00 WIB:** 0-50kg=0, 51-70kg=1250, 71+kg=1500 cumulative, per hari riset ke tier 1
-- **Laporan Level 2:** 3 kolom Timestamps | Satuan kg harian (1 desimal) | Jumlah komisi harian, tab Harian/Mingguan/Bulanan
-- **Supabase external:** `supabase.js` external no build, auto-sync tiap 60 detik + saat tab aktif
-- **PWA external:** `manifest.json` + `sw.js` external, no bundler
-
-## Struktur No Build (Vercel friendly)
-
-```
-/
-├── index.html        # PWA final (React artifact + Dexie)
-├── supabase.js       # External Supabase sync applaundry - no build
-├── manifest.json     # External PWA manifest
-├── sw.js             # External Service Worker (skip supabase.co)
-├── icon-32.png
-├── icon-192.png
-├── icon-512.png
-├── favicon.png
-├── vercel.json       # optional header config
-└── README.md
-```
-
-> Semua external, tidak perlu `npm run build`. Vercel serve static.
-
-## Setup Supabase (sekali)
-
-Jalankan di SQL Editor Supabase applaundry:
-
-```sql
-create table public.nota (
-  id bigserial primary key,
-  customer text not null,
-  kg numeric(5,1) check (kg > 0 and kg < 100),
-  date text not null,
-  created_at timestamptz default now()
-);
-
-create table public.nota_backup (
-  date text primary key,
-  total_kg numeric(6,1) default 0,
-  total_komisi integer default 0,
-  entries jsonb default '[]'::jsonb,
-  updated_at timestamptz default now()
-);
-
-alter table public.nota enable row level security;
-alter table public.nota_backup enable row level security;
-
-create policy "Allow anon" on public.nota for all using (true) with check (true);
-create policy "Allow anon" on public.nota_backup for all using (true) with check (true);
-
-create index idx_nota_date on public.nota(date);
-```
-
-## Deploy GitHub → Vercel
-
-1. Push repo ini ke GitHub
-2. Vercel → New Project → Import GitHub repo
-3. Framework Preset: **Other**
-4. Build Command: kosongkan, Output Directory: `./`
-5. Deploy
-
-PWA butuh HTTPS, Vercel sudah HTTPS otomatis.
-
-Supabase config ada di `supabase.js`:
-```js
-const SUPABASE_URL = "https://nniecqbfjmmlrtmolnrt.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_...";
-```
-
-Publishable key aman untuk frontend. Kalau mau pakai ENV Vercel, ganti jadi `import.meta.env` atau `process.env` dan set di Vercel Environment Variables.
-
-## Cara pakai
-
-1. Buka PWA, paste chat WA: `[10:30] Rahma: b dwi bantengan 2.8`
-2. Klik Proses → Dexie → auto-sync Supabase (badge kanan bawah)
-3. Laporan → cek Timestamps | Kg | Komisi harian
-4. Export WA Bisnis
-
-## Tier harian
-
-- `Ri(totalKgDay)` per tanggal lokal `bn() = Fn(new Date)` → `YYYY-MM-DD` WIB
-- Reset jam 00:00 WIB otomatis masuk key tanggal baru
-- Contoh: 13/10 71kg = komisi 26.500, 14/10 10kg = komisi 0 (balik tier 1)
-
-## Supabase quota
-
-Free tier per proyek 500MB DB + 1GB Storage, bukan total gabungan. 2 proyek gratis = 1GB DB.
-
-## License
-
-Internal - applaundry
+File yang di-restore
+index.html (max-w-[390px] min-h-[1028px] border-[3px] #e2e8f0 p-5 bg-[#f8fafc] rounded-[16px])
+manifest.json (WA Nota Setrika - LS+SUPA only)
+supabase.js (LS_KEY=nota_data ↔ nota_backup realtime, dedup makeKey(customer|kg|date))
+sw.js (CACHE_NAME=nota-ls-supa-exact-v13)
+Fitur yang sudah FINAL di restore point ini
+Tampilan exact upload Index_10.html - style inline dari upload + tailwind CDN, container 390px
+Parser bersih - ^\[.*?\]\s*, ^\d{1,2}[/\-].*?-\s*, ^[^:]{1,25}:\s*, ^(p|b|mb|bu|pak|mas)\s+ aman karakter [ ]
+Logika penyimpanan baru LS+SUPA ONLY - NO DEXIE, tahan F5, multi-HP realtime via supabase channel nota-ls
+Tombol WA balik semua - Proses → LS+SUPA, Bersihkan, Edit/Hapus
+Share WA Laporan + WA Bisnis - Bi(m) https://wa.me/?text= + Xc() Export Laporan ke WA Bisnis + Salin Laporan (Clipboard)
+Laporan Harian/Mingguan/Bulanan - tabs grid 3, grouping:
+Harian: Fn(L)=YYYY-MM-DD, label Ui=dd/mm/yy
+Mingguan: Lv(L)=Senin start, Fn(monday), label dd/mm/yy - dd/mm/yy
+Bulanan: YYYY-MM, label MM/YYYY
+Desc: 3 kolom Timestamps | Satuan | Jumlah
+3 Kolom Rapi - Nota Setrika + share WA:
+UI: Customer col-span-6, Satuan col-span-3, Komisi col-span-3
+Share WA monospace: ``` Customer(18) + Satuan(7) + Komisi(10) + Total + Rincian progresif 50×0 + 20×1250 + ×1500 • 1 desimal
+Cara Restore
+git checkout main
+cp restore_point_v13_final_3kolom/* ./
+git add index.html manifest.json supabase.js sw.js
+git commit -m "restore v13 final 3kolom harian/mingguan/bulanan"
+git push
+# Clear cache HP sekali untuk hapus setrika_db Dexie lama
+Cache Key
+LocalStorage: nota_data
+Supabase: nota_backup table date PK, total_kg, total_komisi, entries JSON, updated_at
+ServiceWorker: nota-ls-supa-exact-v13
+Progresif
+0-50kg = 0
+51-70kg = 1250/kg
+71+ = 1500/kg
+1 desimal, Math.round
