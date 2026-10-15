@@ -1,7 +1,7 @@
 {
   "name": "WA Nota Setrika",
   "short_name": "Nota Setrika",
-  "description": "LocalStorage + Supabase only, progresif 50x0 + 20x1250 + x1500, 1 desimal",
+  "description": "LS+SUPA only, komisi mingguan/bulanan berdasar sum harian, 3 kolom rapi",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
