@@ -39,7 +39,7 @@ Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] 
     </div>
   </div>
 
-  <div class="w-full border-2 border-[#cbd5e1] rounded-xl bg-white flex flex-col shadow-sm">
+  <div class="w-full max-w-full border-2 border-[#cbd5e1] rounded-xl bg-white flex flex-col shadow-sm overflow-hidden box-border">
     <div class="flex items-center justify-between px-4 h-[44px] border-b border-[#e2e8f0]">
       <h2 class="font-bold text-[14px]">Nota Setrika</h2>
       <span id="notaCount" class="text-[11px] text-[#64748b]">0 nota</span>
@@ -92,13 +92,13 @@ Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] 
       </div>
       <div id="laporanDesc" class="text-[11px] text-[#64748b] mb-2 px-1">3 kolom: Timestamps (dd/mm/yy dari field date YYYY-MM-DD) | Satuan (total kg harian 1 desimal) | Jumlah (komisi harian progresif)</div>
     </div>
-    <div class="p-3 flex flex-col gap-2">
-      <div class="flex gap-2 flex-wrap">
-        <button id="btnSalin" class="text-[11px] bg-[#f1f5f9] border px-3 py-1.5 rounded-lg">Salin Laporan (Clipboard)</button>
-        <button id="btnHapusSemua" class="text-[11px] bg-red-50 text-red-600 border border-red-100 px-3 py-1.5 rounded-lg">Hapus Semua</button>
-        <button id="btnExport" class="ml-auto text-[11px] bg-white border px-3 py-1.5 rounded-lg">Export JSON</button>
+    <div class="p-3 flex flex-col gap-2 w-full max-w-full overflow-hidden box-border">
+      <div class="grid grid-cols-3 gap-2 w-full">
+        <button id="btnSalin" class="text-[10px] bg-[#f1f5f9] border px-2 py-2 rounded-lg font-medium leading-tight text-center shrink-0 min-w-0 truncate">Salin Laporan</button>
+        <button id="btnHapusSemua" class="text-[10px] bg-red-50 text-red-600 border border-red-100 px-2 py-2 rounded-lg font-bold leading-tight text-center shrink-0 min-w-0 truncate">Hapus Semua</button>
+        <button id="btnExport" class="text-[10px] bg-white border px-2 py-2 rounded-lg font-medium leading-tight text-center shrink-0 min-w-0 truncate">Export JSON</button>
       </div>
-      <button id="btnExportWA" class="w-full mt-2 h-11 bg-[#0f766e] text-white rounded-xl font-black text-[12px] flex items-center justify-center gap-2 hover:bg-[#115e59] active:scale-[0.98] transition shadow">
+      <button id="btnExportWA" class="w-full max-w-full mt-2 h-11 bg-[#0f766e] text-white rounded-xl font-black text-[12px] flex items-center justify-center gap-2 hover:bg-[#115e59] active:scale-[0.98] transition shadow box-border shrink-0">
         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0a12 12 0 0 0-10.1 18.4L0 24l5.8-1.5A12 12 0 1 0 12 0zm5.6 17.3c-.2.6-1.3 1.1-1.8 1.2-.5.1-1 .1-1.6-.1-.4-.2-1-.5-1.7-.9-3-1.3-4.9-4.3-5-4.5-.2-.2-1.3-1.7-1.3-3.3 0-1.5.8-2.3 1.1-2.6.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5.2.5.8 1.7.9 1.8.1.2.1.3 0 .5-.1.2-.2.4-.4.6-.2.2-.4.4-.5.6-.2.2-.4.4-.2.7.2.3.8 1.3 1.7 2.1 1.1 1 2 1.3 2.3 1.5.3.1.4.1.6 0 .2-.1.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.3.6 1.5.7.2.1.4.1.5.1.1 0 .3-.1.4-.3.1-.2.4-1.1.4-1.1z"/></svg>
         Export Laporan ke WA Bisnis
       </button>
@@ -119,40 +119,41 @@ Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] 
 </div>
 
 <div id="modalEdit" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
-  <div class="bg-white rounded-2xl p-5 w-full max-w-[340px] border-2 border-[#e2e8f0]">
+  <div class="bg-white rounded-2xl p-4 w-[90%] max-w-[300px] border-2 border-[#e2e8f0] box-border mx-auto overflow-hidden">
     <h3 class="font-black text-[14px] mb-3">Edit Nota</h3>
     <label class="text-[11px] font-bold">Nama Customer</label>
-    <input id="editCustomer" class="w-full border-2 border-[#cbd5e1] rounded-lg px-3 py-2 text-[13px] mt-1 mb-3 focus:border-teal-400 outline-none">
+    <input id="editCustomer" class="w-full border-2 border-[#cbd5e1] rounded-lg px-3 py-2 text-[13px] mt-1 mb-3 focus:border-teal-400 outline-none box-border">
     <label class="text-[11px] font-bold">Kg (1 desimal)</label>
-    <input id="editKg" type="number" step="0.1" class="w-full border-2 border-[#cbd5e1] rounded-lg px-3 py-2 text-[13px] mt-1 mb-4 focus:border-teal-400 outline-none">
-    <div class="flex gap-2">
-      <button id="btnBatalEdit" class="flex-1 h-10 bg-white border-2 border-[#cbd5e1] rounded-lg font-bold text-[13px]">Batal</button>
-      <button id="btnSimpanEdit" class="flex-1 h-10 bg-[#0f766e] text-white rounded-lg font-bold text-[13px]">Simpan</button>
+    <input id="editKg" type="number" step="0.1" class="w-full border-2 border-[#cbd5e1] rounded-lg px-3 py-2 text-[13px] mt-1 mb-4 focus:border-teal-400 outline-none box-border">
+    <div class="grid grid-cols-2 gap-2 w-full">
+      <button id="btnBatalEdit" class="h-9 bg-white border-2 border-[#cbd5e1] rounded-xl font-bold text-[12px]">Batal</button>
+      <button id="btnSimpanEdit" class="h-9 bg-[#0f766e] text-white rounded-xl font-bold text-[12px]">Simpan</button>
     </div>
   </div>
 </div>
 
 <div id="modalHapus" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
-  <div class="bg-white rounded-2xl p-5 w-full max-w-[340px] border-2 border-[#e2e8f0] text-center">
+  <div class="bg-white rounded-2xl p-4 w-[90%] max-w-[300px] border-2 border-[#e2e8f0] text-center box-border mx-auto overflow-hidden">
     <h3 class="font-black text-[14px] mb-1">Hapus Nota?</h3>
-    <p class="text-[10px] text-[#94a3b8] mb-4">Data akan dihapus dari LocalStorage + Supabase</p>
-    <div class="flex gap-2">
-      <button id="btnBatalHapus" class="flex-1 h-10 bg-white border-2 border-[#cbd5e1] rounded-lg font-bold text-[13px]">Batal</button>
-      <button id="btnKonfirmHapus" class="flex-1 h-10 bg-red-500 text-white rounded-lg font-bold text-[13px]">Hapus</button>
+    <p class="text-[11px] text-[#64748b] mb-3 leading-tight">Yakin hapus nota ini?</p>
+    <div class="grid grid-cols-2 gap-2 w-full">
+      <button id="btnBatalHapus" class="h-9 bg-white border-2 border-[#cbd5e1] rounded-xl font-bold text-[12px]">Batal</button>
+      <button id="btnKonfirmHapus" class="h-9 bg-red-500 text-white rounded-xl font-bold text-[12px]">Hapus</button>
     </div>
   </div>
 </div>
 
 <div id="modalHapusSemua" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
-  <div class="bg-white rounded-2xl p-5 w-full max-w-[340px] border-2 border-[#e2e8f0] text-center">
-    <h3 class="font-black text-[14px] mb-2">Hapus Semua?</h3>
-    <p class="text-[11px] text-[#64748b] mb-4">Hapus semua nota hari ini</p>
-    <div class="flex gap-2">
-      <button id="btnBatalHapusSemua" class="flex-1 h-10 bg-white border-2 rounded-lg font-bold">Batal</button>
-      <button id="btnKonfirmHapusSemua" class="flex-1 h-10 bg-red-600 text-white rounded-lg font-bold">Hapus Semua</button>
+  <div class="bg-white rounded-2xl p-4 w-[90%] max-w-[300px] border-2 border-[#e2e8f0] text-center box-border mx-auto overflow-hidden">
+    <h3 class="font-black text-[14px] mb-1 leading-tight">Hapus Semua?</h3>
+    <p class="text-[11px] text-[#64748b] mb-3 leading-tight">Hapus semua nota hari ini</p>
+    <div class="grid grid-cols-2 gap-2 w-full">
+      <button id="btnBatalHapusSemua" class="h-9 bg-white border-2 border-[#cbd5e1] rounded-xl font-bold text-[12px]">Batal</button>
+      <button id="btnKonfirmHapusSemua" class="h-9 bg-red-600 text-white rounded-xl font-bold text-[11px]">Hapus Semua</button>
     </div>
   </div>
 </div>
+
 
 <script>
 const LS_KEY = "nota_data";
@@ -201,9 +202,10 @@ function renderLaporan(){
   const all=getAll();
   const el=document.getElementById("laporan"); const emptyEl=document.getElementById("laporanEmpty");
   document.getElementById("tsCount").textContent = all.length; document.getElementById("lapJumlah").textContent = all.length;
-  if(all.length===0){ el.innerHTML=""; emptyEl.classList.remove("hidden"); return; }
+  if(all.length===0){ el.innerHTML=""; emptyEl.classList.remove("hidden"); const te=document.getElementById("laporanTotal"); if(te) te.remove(); return; }
   emptyEl.classList.add("hidden");
-  const map=new Map();
+  // Step 1: hitung harian dulu - komisi berdasar hasil harian
+  const dailyMap=new Map();
   all.forEach(function(r){
     if(!r || typeof r.kg!=="number") return;
     let L;
@@ -212,41 +214,71 @@ function renderLaporan(){
       else if(r.createdAt){ L=new Date(r.createdAt); if(isNaN(L.getTime())) L=new Date(); }
       else L=new Date();
     }catch{ L=new Date(); }
-    let key;
-    if(laporanMode==="Harian") key=Fn(L);
-    else if(laporanMode==="Mingguan"){ const monday=Lv(L); key=Fn(monday); }
-    else key=L.getFullYear()+"-"+String(L.getMonth()+1).padStart(2,"0");
-    const existing=map.get(key);
-    if(existing) existing.totalKg=parseFloat((existing.totalKg+r.kg).toFixed(1));
-    else map.set(key, {totalKg:parseFloat(r.kg.toFixed(1)), dates:[L]});
+    const key=Fn(L);
+    const ex=dailyMap.get(key);
+    if(ex) ex.totalKg=parseFloat((ex.totalKg+r.kg).toFixed(1));
+    else dailyMap.set(key, {totalKg:parseFloat(r.kg.toFixed(1)), dateObj:Fi(key)});
   });
+  // dailyRows = hasil komisi harian (dasar yang benar)
+  let dailyRows=[];
+  dailyMap.forEach(function(v,k){
+    const total=parseFloat(v.totalKg.toFixed(1));
+    const kom=hitungKomisi(total);
+    dailyRows.push({key:k, label:Ui(k), totalKg:total, totalKomisi:kom, dateObj:v.dateObj});
+  });
+  dailyRows.sort(function(a,b){ return b.dateObj.getTime()-a.dateObj.getTime(); });
+
   let rows=[];
-  map.forEach(function(v,k){
-    const total=parseFloat(v.totalKg.toFixed(1)); const kom=hitungKomisi(total);
-    let dateObj, label;
-    if(laporanMode==="Harian"){ dateObj=Fi(k); label=Ui(k); }
-    else if(laporanMode==="Mingguan"){ const monday=Fi(k); const sunday=Iv(monday); dateObj=monday; label=Ui(Fn(monday))+" - "+Ui(Fn(sunday)); }
-    else { const parts=k.split("-").map(Number); dateObj=new Date(parts[0], parts[1]-1, 1); label=String(parts[1]).padStart(2,"0")+"/"+parts[0]; }
-    rows.push({key:k, label:label, totalKg:total, totalKomisi:kom, dateObj:dateObj});
-  });
-  rows.sort(function(a,b){ return b.dateObj.getTime()-a.dateObj.getTime(); });
+  if(laporanMode==="Harian"){
+    rows=dailyRows;
+  }else if(laporanMode==="Mingguan"){
+    // group harian by minggu, komisi = sum komisi harian (berdasar hasil harian)
+    const weekMap=new Map();
+    dailyRows.forEach(function(d){
+      const monday=Lv(d.dateObj);
+      const wKey=Fn(monday);
+      const ex=weekMap.get(wKey);
+      if(ex){ ex.totalKg=parseFloat((ex.totalKg+d.totalKg).toFixed(1)); ex.totalKomisi+=d.totalKomisi; }
+      else { weekMap.set(wKey, {totalKg:d.totalKg, totalKomisi:d.totalKomisi, dateObj:monday}); }
+    });
+    weekMap.forEach(function(v,k){
+      const monday=Fi(k); const sunday=Iv(monday);
+      const label=Ui(Fn(monday))+" - "+Ui(Fn(sunday));
+      rows.push({key:k, label:label, totalKg:parseFloat(v.totalKg.toFixed(1)), totalKomisi:v.totalKomisi, dateObj:v.dateObj});
+    });
+    rows.sort(function(a,b){ return b.dateObj.getTime()-a.dateObj.getTime(); });
+  }else{ // Bulanan - komisi = sum komisi harian dalam bulan
+    const monthMap=new Map();
+    dailyRows.forEach(function(d){
+      const mKey=d.dateObj.getFullYear()+"-"+String(d.dateObj.getMonth()+1).padStart(2,"0");
+      const ex=monthMap.get(mKey);
+      if(ex){ ex.totalKg=parseFloat((ex.totalKg+d.totalKg).toFixed(1)); ex.totalKomisi+=d.totalKomisi; }
+      else { const first=new Date(d.dateObj.getFullYear(), d.dateObj.getMonth(), 1); monthMap.set(mKey, {totalKg:d.totalKg, totalKomisi:d.totalKomisi, dateObj:first}); }
+    });
+    monthMap.forEach(function(v,k){
+      const parts=k.split("-").map(Number);
+      const label=String(parts[1]).padStart(2,"0")+"/"+parts[0];
+      rows.push({key:k, label:label, totalKg:parseFloat(v.totalKg.toFixed(1)), totalKomisi:v.totalKomisi, dateObj:v.dateObj});
+    });
+    rows.sort(function(a,b){ return b.dateObj.getTime()-a.dateObj.getTime(); });
+  }
+
   const displayRows=rows.slice(0,30);
   el.innerHTML = displayRows.map(function(r){
-    return '<div class="flex justify-between items-center bg-[#f8fafc] border rounded-xl px-3 py-2"><div><div class="font-bold text-[12px]">'+r.label+'</div><div class="text-[10px] text-[#64748b]">Total: '+r.totalKg.toFixed(1)+'kg</div></div><div class="text-right"><div class="font-bold text-[12px]">Rp '+r.totalKomisi.toLocaleString('id-ID')+'</div><div class="text-[10px] text-[#64748b]">'+(laporanMode==='Harian' ? 'Komisi Harian' : laporanMode==='Mingguan' ? 'Komisi Mingguan' : 'Komisi Bulanan')+'</div></div></div>';
+    return '<div class="flex justify-between items-center bg-[#f8fafc] border rounded-xl px-3 py-2 w-full max-w-full overflow-hidden box-border"><div class="min-w-0 flex-1 pr-2"><div class="font-bold text-[12px] truncate">'+r.label+'</div><div class="text-[10px] text-[#64748b] truncate">Total: '+r.totalKg.toFixed(1)+'kg</div></div><div class="text-right shrink-0 ml-2"><div class="font-bold text-[12px]">Rp '+r.totalKomisi.toLocaleString('id-ID')+'</div><div class="text-[9px] text-[#64748b]">'+(laporanMode==='Harian' ? 'Harian' : laporanMode==='Mingguan' ? 'Mingguan' : 'Bulanan')+'</div></div></div>';
   }).join("");
-  // update total all
-  const totalKgAll=parseFloat(rows.reduce(function(s,e){return s+e.totalKg;},0).toFixed(1));
-  const totalKomAll=rows.reduce(function(s,e){return s+e.totalKomisi;},0);
-  // inject total summary if not exist
+  // total berdasar hasil komisi harian (sum daily)
+  const totalKgAll=parseFloat(dailyRows.reduce(function(s,e){return s+e.totalKg;},0).toFixed(1));
+  const totalKomAll=dailyRows.reduce(function(s,e){return s+e.totalKomisi;},0);
   let totalEl=document.getElementById("laporanTotal");
   if(!totalEl){
     const cont=el.parentElement;
     totalEl=document.createElement("div");
     totalEl.id="laporanTotal";
-    totalEl.className="mt-3 flex justify-between font-black text-[13px] px-1";
+    totalEl.className="mt-3 w-full max-w-full overflow-hidden bg-[#f0fdfa] border border-[#14b8a6]/30 rounded-xl p-2.5 flex flex-col gap-1 box-border";
     cont.appendChild(totalEl);
   }
-  totalEl.innerHTML='<span>Total ('+laporanMode+')</span><span>'+totalKgAll.toFixed(1)+'kg | '+formatRupiah(totalKomAll)+'</span>';
+  totalEl.innerHTML='<div class="flex justify-between items-center w-full"><span class="text-[11px] font-bold text-[#0f172a] truncate">Total '+laporanMode+'</span><span class="text-[11px] font-black text-[#0f766e] shrink-0 ml-2">'+totalKgAll.toFixed(1)+'kg</span></div><div class="text-[12px] font-black text-[#0f172a]">'+formatRupiah(totalKomAll)+' <span class="text-[9px] font-medium text-[#64748b]">(sum harian)</span></div>';
 }
 
 function setStatus(m){ const el=document.getElementById("status"); el.textContent=m; setTimeout(function(){ if(el.textContent===m) el.textContent="Siap • LocalStorage + Supabase"; }, 3000); }
@@ -304,23 +336,41 @@ function buatNotaWA(){
 }
 function buatLaporanWA(){
   const all=getAll();
-  // use same grouping as renderLaporan for current mode
-  const map=new Map();
+  // Hitung harian dulu sebagai dasar yang benar
+  const dailyMap=new Map();
   all.forEach(function(r){
     if(!r || typeof r.kg!=="number") return;
     let L; try{ if(r.date && /^\d{4}-\d{2}-\d{2}$/.test(r.date)) L=Fi(r.date); else if(r.createdAt){ L=new Date(r.createdAt); if(isNaN(L.getTime())) L=new Date(); } else L=new Date(); }catch{ L=new Date(); }
-    let key; if(laporanMode==="Harian") key=Fn(L); else if(laporanMode==="Mingguan"){ const monday=Lv(L); key=Fn(monday); } else key=L.getFullYear()+"-"+String(L.getMonth()+1).padStart(2,"0");
-    const existing=map.get(key); if(existing) existing.totalKg=parseFloat((existing.totalKg+r.kg).toFixed(1)); else map.set(key, {totalKg:parseFloat(r.kg.toFixed(1))});
+    const key=Fn(L);
+    const ex=dailyMap.get(key);
+    if(ex) ex.totalKg=parseFloat((ex.totalKg+r.kg).toFixed(1));
+    else dailyMap.set(key, {totalKg:parseFloat(r.kg.toFixed(1)), dateObj:Fi(key)});
   });
-  let rows=[]; map.forEach(function(v,k){ const total=parseFloat(v.totalKg.toFixed(1)); const kom=hitungKomisi(total); let label; if(laporanMode==="Harian") label=Ui(k); else if(laporanMode==="Mingguan"){ const monday=Fi(k); const sunday=Iv(monday); label=Ui(Fn(monday))+" - "+Ui(Fn(sunday)); } else { const p=k.split("-"); label=p[1]+"/"+p[0]; } rows.push({label:label, totalKg:total, totalKomisi:kom, key:k}); });
-  rows.sort(function(a,b){ return b.key.localeCompare(a.key); });
-  let lines=[]; lines.push("LAPORAN RINGKAS SETRIKA");
-  if(rows.length>0){ lines.push(rows[rows.length-1].label+" - "+rows[0].label+" ("+laporanMode+")"); } else { lines.push(new Date().toLocaleDateString('id-ID')+" ("+laporanMode+")"); }
+  let dailyRows=[]; dailyMap.forEach(function(v,k){ const total=parseFloat(v.totalKg.toFixed(1)); const kom=hitungKomisi(total); dailyRows.push({key:k, label:Ui(k), totalKg:total, totalKomisi:kom, dateObj:v.dateObj}); });
+  dailyRows.sort(function(a,b){ return b.dateObj.getTime()-a.dateObj.getTime(); });
+
+  let rows=[];
+  if(laporanMode==="Harian"){ rows=dailyRows; }
+  else if(laporanMode==="Mingguan"){
+    const weekMap=new Map();
+    dailyRows.forEach(function(d){ const monday=Lv(d.dateObj); const wKey=Fn(monday); const ex=weekMap.get(wKey); if(ex){ ex.totalKg=parseFloat((ex.totalKg+d.totalKg).toFixed(1)); ex.totalKomisi+=d.totalKomisi; } else weekMap.set(wKey, {totalKg:d.totalKg, totalKomisi:d.totalKomisi, dateObj:monday}); });
+    weekMap.forEach(function(v,k){ const monday=Fi(k); const sunday=Iv(monday); const label=Ui(Fn(monday))+" - "+Ui(Fn(sunday)); rows.push({label:label, totalKg:parseFloat(v.totalKg.toFixed(1)), totalKomisi:v.totalKomisi, key:k, dateObj:v.dateObj}); });
+    rows.sort(function(a,b){ return b.key.localeCompare(a.key); });
+  }else{
+    const monthMap=new Map();
+    dailyRows.forEach(function(d){ const mKey=d.dateObj.getFullYear()+"-"+String(d.dateObj.getMonth()+1).padStart(2,"0"); const ex=monthMap.get(mKey); if(ex){ ex.totalKg=parseFloat((ex.totalKg+d.totalKg).toFixed(1)); ex.totalKomisi+=d.totalKomisi; } else { const first=new Date(d.dateObj.getFullYear(), d.dateObj.getMonth(), 1); monthMap.set(mKey, {totalKg:d.totalKg, totalKomisi:d.totalKomisi, dateObj:first}); } });
+    monthMap.forEach(function(v,k){ const p=k.split("-"); const label=p[1]+"/"+p[0]; rows.push({label:label, totalKg:parseFloat(v.totalKg.toFixed(1)), totalKomisi:v.totalKomisi, key:k, dateObj:v.dateObj}); });
+    rows.sort(function(a,b){ return b.key.localeCompare(a.key); });
+  }
+
+  let lines=[]; lines.push("LAPORAN RINGKAS SETRIKA - "+laporanMode+" (berdasar harian)");
+  if(rows.length>0){ lines.push(rows[rows.length-1].label+" - "+rows[0].label); } else { lines.push(new Date().toLocaleDateString('id-ID')+" ("+laporanMode+")"); }
   lines.push("");
-  if(rows.length===0){ lines.push("Tidak ada data"); } else { rows.slice(0,20).forEach(function(r){ lines.push(r.label+" | "+formatKg(r.totalKg)+"kg | "+formatRupiah(r.totalKomisi)); }); }
-  const totalKgAll=all.reduce(function(s,e){return s+e.kg;},0); const totalKomAll=hitungKomisi(totalKgAll);
-  lines.push(""); lines.push("Total: "+formatKg(totalKgAll)+"kg | Komisi: "+formatRupiah(totalKomAll));
-  lines.push("Rincian progresif: 0-50kg=0, 51-70kg=1250, 71+kg=1500");
+  if(rows.length===0){ lines.push("Tidak ada data"); } else { rows.slice(0,20).forEach(function(r){ lines.push(r.label+" | "+formatKg(r.totalKg)+"kg | "+formatRupiah(r.totalKomisi)+" (sum harian)"); }); }
+  const totalKgAll=dailyRows.reduce(function(s,e){return s+e.totalKg;},0);
+  const totalKomAll=dailyRows.reduce(function(s,e){return s+e.totalKomisi;},0);
+  lines.push(""); lines.push("Total: "+formatKg(totalKgAll)+"kg | Komisi: "+formatRupiah(totalKomAll)+" (sum komisi harian)");
+  lines.push("Rincian progresif harian: 0-50kg=0, 51-70kg=1250, 71+kg=1500");
   return lines.join("\n");
 }
 function shareWA(isBisnis){
