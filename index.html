@@ -28,6 +28,10 @@ body{font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Int
       <span class="text-white font-bold text-[15px] tracking-wide">Paste WA</span>
       <span class="ml-auto text-white/80 text-[11px] font-medium" id="barisCount">0 baris • LS+SUPA</span>
     </div>
+    <div class="flex items-center justify-between bg-[#f0fdfa] border border-[#99f6e0] rounded-lg px-3 py-2">
+      <label class="text-[11px] font-bold text-[#0f766e]">📅 Tanggal:</label>
+      <input id="tglInput" type="date" class="text-[12px] font-bold bg-white border border-[#cbd5e1] rounded-lg px-2 py-1 outline-none focus:border-[#14b8a6]">
+    </div>
     <textarea id="waInput" placeholder="Paste chat WA di sini...
 Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] rounded-[8px] border border-[#cbd5e1] p-3 text-[14px] outline-none focus:ring-2 focus:ring-[#14b8a6]/30 focus:border-[#14b8a6] bg-[#f8fafc] resize-y"></textarea>
     <div class="flex gap-2">
@@ -39,7 +43,7 @@ Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] 
     </div>
   </div>
 
-  <div class="w-full max-w-full border-2 border-[#cbd5e1] rounded-xl bg-white flex flex-col shadow-sm overflow-hidden box-border">
+  <div class="w-full border-2 border-[#cbd5e1] rounded-xl bg-white flex flex-col shadow-sm">
     <div class="flex items-center justify-between px-4 h-[44px] border-b border-[#e2e8f0]">
       <h2 class="font-bold text-[14px]">Nota Setrika</h2>
       <span id="notaCount" class="text-[11px] text-[#64748b]">0 nota</span>
@@ -63,7 +67,15 @@ Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] 
       <div class="text-[11px] font-bold mb-1">Rincian Progresif (1 desimal):</div>
       <div id="rincian" class="text-[10px] bg-[#f1f5f9] p-2 rounded-lg border leading-5">Belum ada data</div>
     </div>
-    <div class="p-3 border-t flex gap-2">
+    <div class="p-3 border-t flex flex-col gap-2">
+      <div class="flex items-center justify-between bg-[#fefce8] border border-[#fde68a] rounded-xl px-3 py-2.5">
+        <label class="text-[12px] font-black text-[#92400e]">💰 Uang Hadir</label>
+        <div class="flex items-center gap-1">
+          <span class="text-[11px] font-bold text-[#92400e]">Rp</span>
+          <input id="uangHadirInput" type="number" step="500" value="7500" class="w-[90px] text-[12px] font-black bg-white border-2 border-[#fde68a] rounded-lg px-2 py-1 text-right outline-none focus:border-[#f59e0b]">
+        </div>
+      </div>
+      <div class="flex gap-2">
       <button id="btnShareWA" class="flex-1 h-10 bg-[#25D366] text-white rounded-lg font-bold text-[12px] flex items-center justify-center gap-1.5 hover:bg-[#20bd5a] active:scale-[0.98] transition">
         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0a12 12 0 0 0-10.1 18.4L0 24l5.8-1.5A12 12 0 1 0 12 0zm5.6 17.3c-.2.6-1.3 1.1-1.8 1.2-.5.1-1 .1-1.6-.1-.4-.2-1-.5-1.7-.9-3-1.3-4.9-4.3-5-4.5-.2-.2-1.3-1.7-1.3-3.3 0-1.5.8-2.3 1.1-2.6.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5.2.5.8 1.7.9 1.8.1.2.1.3 0 .5-.1.2-.2.4-.4.6-.2.2-.4.4-.5.6-.2.2-.4.4-.2.7.2.3.8 1.3 1.7 2.1 1.1 1 2 1.3 2.3 1.5.3.1.4.1.6 0 .2-.1.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.3.6 1.5.7.2.1.4.1.5.1.1 0 .3-.1.4-.3.1-.2.4-1.1.4-1.1z"/></svg>
         Share WA
@@ -72,6 +84,7 @@ Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] 
         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0a12 12 0 0 0-10.1 18.4L0 24l5.8-1.5A12 12 0 1 0 12 0zm5.6 17.3c-.2.6-1.3 1.1-1.8 1.2-.5.1-1 .1-1.6-.1-.4-.2-1-.5-1.7-.9-3-1.3-4.9-4.3-5-4.5-.2-.2-1.3-1.7-1.3-3.3 0-1.5.8-2.3 1.1-2.6.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5.2.5.8 1.7.9 1.8.1.2.1.3 0 .5-.1.2-.2.4-.4.6-.2.2-.4.4-.5.6-.2.2-.4.4-.2.7.2.3.8 1.3 1.7 2.1 1.1 1 2 1.3 2.3 1.5.3.1.4.1.6 0 .2-.1.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.3.6 1.5.7.2.1.4.1.5.1.1 0 .3-.1.4-.3.1-.2.4-1.1.4-1.1z"/></svg>
         WA Bisnis
       </button>
+      </div>
     </div>
 
   </div>
@@ -92,13 +105,13 @@ Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] 
       </div>
       <div id="laporanDesc" class="text-[11px] text-[#64748b] mb-2 px-1">3 kolom: Timestamps (dd/mm/yy dari field date YYYY-MM-DD) | Satuan (total kg harian 1 desimal) | Jumlah (komisi harian progresif)</div>
     </div>
-    <div class="p-3 flex flex-col gap-2 w-full max-w-full overflow-hidden box-border">
-      <div class="grid grid-cols-3 gap-2 w-full">
-        <button id="btnSalin" class="text-[10px] bg-[#f1f5f9] border px-2 py-2 rounded-lg font-medium leading-tight text-center shrink-0 min-w-0 truncate">Salin Laporan</button>
-        <button id="btnHapusSemua" class="text-[10px] bg-red-50 text-red-600 border border-red-100 px-2 py-2 rounded-lg font-bold leading-tight text-center shrink-0 min-w-0 truncate">Hapus Semua</button>
-        <button id="btnExport" class="text-[10px] bg-white border px-2 py-2 rounded-lg font-medium leading-tight text-center shrink-0 min-w-0 truncate">Export JSON</button>
+    <div class="p-3 flex flex-col gap-2">
+      <div class="flex gap-2 flex-wrap">
+        <button id="btnSalin" class="text-[11px] bg-[#f1f5f9] border px-3 py-1.5 rounded-lg">Salin Laporan (Clipboard)</button>
+        <button id="btnHapusSemua" class="text-[11px] bg-red-50 text-red-600 border border-red-100 px-3 py-1.5 rounded-lg">Hapus Semua</button>
+        <button id="btnExport" class="ml-auto text-[11px] bg-white border px-3 py-1.5 rounded-lg">Export JSON</button>
       </div>
-      <button id="btnExportWA" class="w-full max-w-full mt-2 h-11 bg-[#0f766e] text-white rounded-xl font-black text-[12px] flex items-center justify-center gap-2 hover:bg-[#115e59] active:scale-[0.98] transition shadow box-border shrink-0">
+      <button id="btnExportWA" class="w-full mt-2 h-11 bg-[#0f766e] text-white rounded-xl font-black text-[12px] flex items-center justify-center gap-2 hover:bg-[#115e59] active:scale-[0.98] transition shadow">
         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0a12 12 0 0 0-10.1 18.4L0 24l5.8-1.5A12 12 0 1 0 12 0zm5.6 17.3c-.2.6-1.3 1.1-1.8 1.2-.5.1-1 .1-1.6-.1-.4-.2-1-.5-1.7-.9-3-1.3-4.9-4.3-5-4.5-.2-.2-1.3-1.7-1.3-3.3 0-1.5.8-2.3 1.1-2.6.3-.3.6-.4.8-.4h.6c.2 0 .4 0 .6.5.2.5.8 1.7.9 1.8.1.2.1.3 0 .5-.1.2-.2.4-.4.6-.2.2-.4.4-.5.6-.2.2-.4.4-.2.7.2.3.8 1.3 1.7 2.1 1.1 1 2 1.3 2.3 1.5.3.1.4.1.6 0 .2-.1.7-.8.9-1.1.2-.3.4-.2.6-.1.2.1 1.3.6 1.5.7.2.1.4.1.5.1.1 0 .3-.1.4-.3.1-.2.4-1.1.4-1.1z"/></svg>
         Export Laporan ke WA Bisnis
       </button>
@@ -119,65 +132,186 @@ Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] 
 </div>
 
 <div id="modalEdit" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
-  <div class="bg-white rounded-2xl p-4 w-[90%] max-w-[300px] border-2 border-[#e2e8f0] box-border mx-auto overflow-hidden">
+  <div class="bg-white rounded-2xl p-5 w-full max-w-[340px] border-2 border-[#e2e8f0]">
     <h3 class="font-black text-[14px] mb-3">Edit Nota</h3>
     <label class="text-[11px] font-bold">Nama Customer</label>
-    <input id="editCustomer" class="w-full border-2 border-[#cbd5e1] rounded-lg px-3 py-2 text-[13px] mt-1 mb-3 focus:border-teal-400 outline-none box-border">
+    <input id="editCustomer" class="w-full border-2 border-[#cbd5e1] rounded-lg px-3 py-2 text-[13px] mt-1 mb-3 focus:border-teal-400 outline-none">
     <label class="text-[11px] font-bold">Kg (1 desimal)</label>
-    <input id="editKg" type="number" step="0.1" class="w-full border-2 border-[#cbd5e1] rounded-lg px-3 py-2 text-[13px] mt-1 mb-4 focus:border-teal-400 outline-none box-border">
-    <div class="grid grid-cols-2 gap-2 w-full">
-      <button id="btnBatalEdit" class="h-9 bg-white border-2 border-[#cbd5e1] rounded-xl font-bold text-[12px]">Batal</button>
-      <button id="btnSimpanEdit" class="h-9 bg-[#0f766e] text-white rounded-xl font-bold text-[12px]">Simpan</button>
+    <input id="editKg" type="number" step="0.1" class="w-full border-2 border-[#cbd5e1] rounded-lg px-3 py-2 text-[13px] mt-1 mb-4 focus:border-teal-400 outline-none">
+    <div class="flex gap-2">
+      <button id="btnBatalEdit" class="flex-1 h-10 bg-white border-2 border-[#cbd5e1] rounded-lg font-bold text-[13px]">Batal</button>
+      <button id="btnSimpanEdit" class="flex-1 h-10 bg-[#0f766e] text-white rounded-lg font-bold text-[13px]">Simpan</button>
     </div>
   </div>
 </div>
 
 <div id="modalHapus" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
-  <div class="bg-white rounded-2xl p-4 w-[90%] max-w-[300px] border-2 border-[#e2e8f0] text-center box-border mx-auto overflow-hidden">
+  <div class="bg-white rounded-2xl p-5 w-full max-w-[340px] border-2 border-[#e2e8f0] text-center">
     <h3 class="font-black text-[14px] mb-1">Hapus Nota?</h3>
-    <p class="text-[11px] text-[#64748b] mb-3 leading-tight">Yakin hapus nota ini?</p>
-    <div class="grid grid-cols-2 gap-2 w-full">
-      <button id="btnBatalHapus" class="h-9 bg-white border-2 border-[#cbd5e1] rounded-xl font-bold text-[12px]">Batal</button>
-      <button id="btnKonfirmHapus" class="h-9 bg-red-500 text-white rounded-xl font-bold text-[12px]">Hapus</button>
+    <p class="text-[10px] text-[#94a3b8] mb-4">Data akan dihapus dari LocalStorage + Supabase</p>
+    <div class="flex gap-2">
+      <button id="btnBatalHapus" class="flex-1 h-10 bg-white border-2 border-[#cbd5e1] rounded-lg font-bold text-[13px]">Batal</button>
+      <button id="btnKonfirmHapus" class="flex-1 h-10 bg-red-500 text-white rounded-lg font-bold text-[13px]">Hapus</button>
     </div>
   </div>
 </div>
 
 <div id="modalHapusSemua" class="fixed inset-0 bg-black/40 hidden items-center justify-center p-4 z-50">
-  <div class="bg-white rounded-2xl p-4 w-[90%] max-w-[300px] border-2 border-[#e2e8f0] text-center box-border mx-auto overflow-hidden">
-    <h3 class="font-black text-[14px] mb-1 leading-tight">Hapus Semua?</h3>
-    <p class="text-[11px] text-[#64748b] mb-3 leading-tight">Hapus semua nota hari ini</p>
-    <div class="grid grid-cols-2 gap-2 w-full">
-      <button id="btnBatalHapusSemua" class="h-9 bg-white border-2 border-[#cbd5e1] rounded-xl font-bold text-[12px]">Batal</button>
-      <button id="btnKonfirmHapusSemua" class="h-9 bg-red-600 text-white rounded-xl font-bold text-[11px]">Hapus Semua</button>
+  <div class="bg-white rounded-2xl p-5 w-full max-w-[340px] border-2 border-[#e2e8f0] text-center">
+    <h3 class="font-black text-[14px] mb-2">Hapus Semua?</h3>
+    <p class="text-[11px] text-[#64748b] mb-4">Hapus semua nota hari ini</p>
+    <div class="flex gap-2">
+      <button id="btnBatalHapusSemua" class="flex-1 h-10 bg-white border-2 rounded-lg font-bold">Batal</button>
+      <button id="btnKonfirmHapusSemua" class="flex-1 h-10 bg-red-600 text-white rounded-lg font-bold">Hapus Semua</button>
     </div>
   </div>
 </div>
 
 
+<div id="modalSusulan" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-[60]">
+  <div class="bg-white rounded-2xl p-5 w-[95%] max-w-[360px] border-2 border-[#f59e0b] box-border mx-auto overflow-hidden shadow-2xl">
+    <div class="text-center mb-3">
+      <div class="text-[28px]">⚠️</div>
+      <h3 class="font-black text-[16px] text-[#92400e] leading-tight">Tanggal Sudah Ada Data!</h3>
+      <p id="susulanInfo" class="text-[11px] text-[#64748b] mt-2 leading-tight">14/10/24 sudah 60.0kg | Tier Rp 12.500 + Hadir Rp 7.500</p>
+      <p id="susulanBaruInfo" class="text-[11px] font-bold text-[#0f766e] mt-1">Baru: 10.0kg | Tier Rp 0</p>
+    </div>
+    <div class="bg-[#fffbeb] border border-[#fde68a] rounded-xl p-2.5 mb-3 text-[10px] leading-4">
+      <div class="font-bold text-[#92400e] mb-1">Pilih:</div>
+      <div><span class="font-bold">SUSULAN:</span> Gabung, Tier lanjut (60+10=70kg), Hadir tetep 1x</div>
+      <div class="mt-1"><span class="font-bold">NOTA BARU:</span> Batch baru, Tier reset 0, Hadir +1 lagi (lupa input kemarin)</div>
+    </div>
+    <div class="grid grid-cols-2 gap-3 w-full">
+      <button id="btnSusulan" class="h-12 bg-[#f59e0b] text-white rounded-xl font-black text-[13px] leading-tight hover:bg-[#d97706] active:scale-[0.97] transition">📦<br>SUSULAN<br><span class="text-[9px] font-medium">Tier Lanjut</span></button>
+      <button id="btnNotaBaru" class="h-12 bg-[#0f766e] text-white rounded-xl font-black text-[13px] leading-tight hover:bg-[#115e59] active:scale-[0.97] transition">🆕<br>NOTA BARU<br><span class="text-[9px] font-medium">Hadir +1 Lagi</span></button>
+    </div>
+    <button id="btnBatalSusulan" class="w-full mt-2 h-8 bg-white border-2 border-[#cbd5e1] rounded-xl font-bold text-[11px]">Batal</button>
+  </div>
+</div>
+
+
+<script>
+
 <script>
 const LS_KEY = "nota_data";
+const LS_UANG_HADIR_KEY = "uang_hadir_data";
+const LS_BATCH_KEY = "batch_meta";
 let editKey = null; let hapusKey = null;
+let pendingPasteData = null; // untuk susulan/nota baru
+let currentBatchChoice = null;
+
 function todayLocal(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function hitungKomisi(t){ let n=parseFloat(Number(t).toFixed(1)); if(n<=50) return 0; let r=0; if(n>50) r+=(Math.min(n,70)-50)*1250; if(n>70) r+=(n-70)*1500; return Math.round(r); }
 function rincianKomisi(t){ let n=parseFloat(Number(t).toFixed(1)); if(n<=50) return "0 - 50kg = Rp 0"; let r=[]; if(n>50){ let k1=Math.min(n,70)-50; r.push("50-70kg: "+k1.toFixed(1)+"kg x 1250 = Rp "+Math.round(k1*1250).toLocaleString('id-ID')); } if(n>70){ let k2=n-70; r.push(">70kg: "+k2.toFixed(1)+"kg x 1500 = Rp "+Math.round(k2*1500).toLocaleString('id-ID')); } return r.join("<br>"); }
-function makeKey(c,k,d){ return String(c).toLowerCase().trim()+"|"+parseFloat(Number(k).toFixed(1))+"|"+d; }
+function makeKey(c,k,d,batchId){ return String(c).toLowerCase().trim()+"|"+parseFloat(Number(k).toFixed(1))+"|"+d+"|"+(batchId||""); }
 function getAll(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||"[]"); }catch{ return []; } }
+function getUangHadirAll(){ try{ return JSON.parse(localStorage.getItem(LS_UANG_HADIR_KEY)||"{}"); }catch{ return {}; } }
+function getBatchMeta(){ try{ return JSON.parse(localStorage.getItem(LS_BATCH_KEY)||"{}"); }catch{ return {}; } }
 function saveAll(arr){ localStorage.setItem(LS_KEY, JSON.stringify(arr)); window.dispatchEvent(new CustomEvent("nota-updated",{detail:{count:arr.length}})); if(window.SupabaseSync && window.SupabaseSync.sync) setTimeout(function(){window.SupabaseSync.sync();}, 400); }
+function saveUangHadir(obj){ localStorage.setItem(LS_UANG_HADIR_KEY, JSON.stringify(obj)); }
+function saveBatchMeta(obj){ localStorage.setItem(LS_BATCH_KEY, JSON.stringify(obj)); }
+function getUangHadirForDate(date){ const all=getUangHadirAll(); return all[date] !== undefined ? parseInt(all[date]) : 7500; }
+function setUangHadirForDate(date, nominal){ const all=getUangHadirAll(); all[date]=parseInt(nominal)||0; saveUangHadir(all); }
+function getBatchesForDate(date){ const all=getAll(); return all.filter(r=>r.date===date); }
+function getBatchIdsForDate(date){ const batches=getBatchesForDate(date); const ids=[...new Set(batches.map(b=>b.batchId||date+"_1"))]; return ids; }
+function generateBatchId(date){ const existing=getBatchIdsForDate(date); const nextNum=existing.length+1; return date+"_"+nextNum; }
 function parserBersih(line){ let s=line.trim(); if(!s) return null; s=s.replace(/^\[.*?\]\s*/, ""); s=s.replace(/^\d{1,2}[\/\-].*?-\s*/, ""); s=s.replace(/^[^:]{1,25}:\s*/, ""); s=s.replace(/^(p|b|mb|bu|pak|mas)\s+/i, ""); if(!s) return null; const m=s.match(/(\d+(?:[\.,]\d+)?)\s*(?:kg)?\s*$/i); if(!m) return null; let kg=parseFloat(m[1].replace(",",".")); if(!(kg>0 && kg<100)) return null; let customer=s.slice(0,m.index).trim().replace(/\s*\d+[\.,]?\d*\s*$/, "").trim(); if(customer.length<2) return null; return {customer:customer, kg:parseFloat(kg.toFixed(1))}; }
 function parseWA(t){ return t.split("\n").map(function(l){return parserBersih(l);}).filter(Boolean); }
+
+function getSelectedDate(){
+  const el=document.getElementById("tglInput");
+  if(el && el.value) return el.value;
+  return todayLocal();
+}
+
 function render(){
-  const all=getAll(); const today=todayLocal(); const todayData=all.filter(function(r){return r.date===today;}); const totalKg=todayData.reduce(function(s,e){return s+(e.kg||0);},0); const totalKom=hitungKomisi(totalKg);
-  document.getElementById("barisCount").textContent = (document.getElementById("waInput").value.split("\n").filter(Boolean).length) + " baris • LS+SUPA";
-  document.getElementById("totalKg").textContent = totalKg.toFixed(1); document.getElementById("totalCount").textContent = todayData.length; document.getElementById("totalKomisi").textContent = "Rp " + totalKom.toLocaleString("id-ID"); document.getElementById("notaCount").textContent = todayData.length+" nota • "+today; document.getElementById("rincian").innerHTML = totalKg>0 ? rincianKomisi(totalKg) : "Belum ada data";
+  const all=getAll(); 
+  const selectedDate=getSelectedDate();
+  const todayData=all.filter(function(r){return r.date===selectedDate;}); 
+  const totalKg=todayData.reduce(function(s,e){return s+(e.kg||0);},0); 
+  // hitung tier per batch untuk tanggal terpilih
+  const batchIds=[...new Set(todayData.map(r=>r.batchId||selectedDate+"_1"))];
+  let totalKomisiTier=0;
+  batchIds.forEach(function(bid){
+    const batchData=todayData.filter(r=>(r.batchId||selectedDate+"_1")===bid);
+    const batchKg=batchData.reduce((s,e)=>s+(e.kg||0),0);
+    totalKomisiTier+=hitungKomisi(batchKg);
+  });
+  if(batchIds.length===0) totalKomisiTier=hitungKomisi(totalKg);
+  const uangHadir=getUangHadirForDate(selectedDate);
+  const totalBatchCount=batchIds.length;
+  const totalUangHadir= totalBatchCount>0 ? batchIds.reduce((s,bid)=>{
+    // tiap batch ada uang hadirnya sendiri kalau Nota Baru
+    const meta=getBatchMeta();
+    const m=meta[bid];
+    if(m && m.uangHadir !== undefined) return s+parseInt(m.uangHadir);
+    // fallback: kalau cuma 1 batch, pakai uang hadir tanggal
+    return s;
+  },0) : 0;
+  // Jika totalUangHadir 0 (belum ada batch meta), pakai uang hadir per tanggal x jumlah batch
+  let finalUangHadir = totalUangHadir>0 ? totalUangHadir : (todayData.length>0 ? getUangHadirForDate(selectedDate)* (totalBatchCount>0?totalBatchCount:1) : getUangHadirForDate(selectedDate));
+  // Untuk Susulan, uang hadir cuma 1x, jadi override kalau ada flag susulan
+  const batchMeta=getBatchMeta();
+  let isSusulanMode=false;
+  batchIds.forEach(bid=>{ if(batchMeta[bid] && batchMeta[bid].type==="susulan") isSusulanMode=true; });
+  // Sederhanakan: kalau ada batch dengan type susulan, uang hadir cuma 1x
+  // Tapi kalau Nota Baru, uang hadir per batch
+  // Kita hitung: jumlah batch Nota Baru = yang type nota_baru atau batch >1
+  const notaBaruCount=batchIds.filter(bid=>{ const m=batchMeta[bid]; return m && m.type==="nota_baru"; }).length;
+  if(notaBaruCount===0 && batchIds.length>0){
+    // semua susulan atau batch pertama, uang hadir 1x
+    finalUangHadir=getUangHadirForDate(selectedDate);
+  }else if(notaBaruCount>0){
+    // ada nota baru, tiap batch punya hadir
+    finalUangHadir=0;
+    batchIds.forEach(bid=>{
+      const m=batchMeta[bid];
+      if(m && m.uangHadir!==undefined) finalUangHadir+=parseInt(m.uangHadir);
+      else finalUangHadir+=getUangHadirForDate(selectedDate);
+    });
+  }else{
+    finalUangHadir=getUangHadirForDate(selectedDate);
+  }
+  if(todayData.length===0) finalUangHadir=getUangHadirForDate(selectedDate);
+
+  const jumlahTotal=totalKomisiTier+finalUangHadir;
+
+  document.getElementById("barisCount").textContent = (document.getElementById("waInput").value.split("\n").filter(Boolean).length) + " baris • "+selectedDate;
+  document.getElementById("totalKg").textContent = totalKg.toFixed(1); 
+  document.getElementById("totalCount").textContent = todayData.length; 
+  document.getElementById("totalKomisi").textContent = "Rp " + jumlahTotal.toLocaleString("id-ID");
+  document.getElementById("notaCount").textContent = todayData.length+" nota • "+selectedDate+" • "+batchIds.length+" batch";
+  document.getElementById("rincian").innerHTML = totalKg>0 ? (rincianKomisi(totalKg)+"<br><span class='font-bold text-[#92400e]'>💰 Uang Hadir: Rp "+finalUangHadir.toLocaleString('id-ID')+(totalBatchCount>1?" ("+totalBatchCount+"x hadir)":"")+"</span><br><span class='font-black'>Jumlah Total: Rp "+jumlahTotal.toLocaleString('id-ID')+"</span>") : "Belum ada data";
+  
+  // update uang hadir input sesuai tanggal terpilih
+  const uangInput=document.getElementById("uangHadirInput");
+  if(uangInput && document.activeElement!==uangInput){
+    uangInput.value=getUangHadirForDate(selectedDate);
+  }
+
   const listEl=document.getElementById("list"); const emptyEl=document.getElementById("emptyList"); const headerEl=document.getElementById("listHeader");
-  if(todayData.length===0){ listEl.innerHTML=""; emptyEl.classList.remove("hidden"); emptyEl.classList.add("flex"); headerEl.classList.add("hidden"); }else{ emptyEl.classList.add("hidden"); emptyEl.classList.remove("flex"); headerEl.classList.remove("hidden"); listEl.innerHTML = todayData.slice().reverse().map(function(r){
-      const kom=hitungKomisi(r.kg);
-      // 3 kolom rapi: customer | satuan | komisi
-      return '<div class="border-b border-[#f1f5f9] hover:bg-[#f8fafc]"><div class="grid grid-cols-12 items-center px-4 py-2.5 text-[12px]"><div class="col-span-6 truncate font-medium pr-2">'+r.customer+'</div><div class="col-span-3 text-center font-semibold">'+r.kg.toFixed(1)+'kg</div><div class="col-span-3 text-right font-bold text-[11px]">Rp '+kom.toLocaleString('id-ID')+'</div></div><div class="flex justify-end gap-1 px-4 pb-2"><button onclick="openEdit(\''+r._key+'\')" class="text-[9px] bg-[#f1f5f9] border px-2 py-0.5 rounded">Edit</button><button onclick="openHapus(\''+r._key+'\')" class="text-[9px] bg-red-50 text-red-600 border border-red-100 px-2 py-0.5 rounded">Hapus</button></div></div>';
-    }).join(""); }
+  if(todayData.length===0){ listEl.innerHTML=""; emptyEl.classList.remove("hidden"); emptyEl.classList.add("flex"); headerEl.classList.add("hidden"); }else{ emptyEl.classList.add("hidden"); emptyEl.classList.remove("flex"); headerEl.classList.remove("hidden"); 
+    // group by batch
+    let htmlByBatch="";
+    batchIds.slice().reverse().forEach(function(bid){
+      const batchData=todayData.filter(r=>(r.batchId||selectedDate+"_1")===bid);
+      const batchKg=batchData.reduce((s,e)=>s+(e.kg||0),0);
+      const batchKom=hitungKomisi(batchKg);
+      const meta=getBatchMeta()[bid];
+      const batchType=meta?meta.type:"utama";
+      const batchHadir=meta && meta.uangHadir!==undefined ? meta.uangHadir : getUangHadirForDate(selectedDate);
+      htmlByBatch+='<div class="bg-[#f8fafc] border-b-2 border-[#e2e8f0] px-3 py-1 flex justify-between text-[10px] font-bold"><span>Batch '+bid.split("_").pop()+' ('+batchType+')</span><span>'+batchKg.toFixed(1)+'kg | Tier Rp '+batchKom.toLocaleString('id-ID')+' + Hadir Rp '+parseInt(batchHadir).toLocaleString('id-ID')+'</span></div>';
+      htmlByBatch+=batchData.slice().reverse().map(function(r){
+        const kom=hitungKomisi(r.kg);
+        return '<div class="border-b border-[#f1f5f9] hover:bg-[#f8fafc]"><div class="grid grid-cols-12 items-center px-4 py-2.5 text-[12px]"><div class="col-span-6 truncate font-medium pr-2">'+r.customer+'</div><div class="col-span-3 text-center font-semibold">'+r.kg.toFixed(1)+'kg</div><div class="col-span-3 text-right font-bold text-[11px]">Rp '+kom.toLocaleString('id-ID')+'</div></div><div class="flex justify-end gap-1 px-4 pb-2"><button onclick="openEdit(\''+r._key+'\')" class="text-[9px] bg-[#f1f5f9] border px-2 py-0.5 rounded">Edit</button><button onclick="openHapus(\''+r._key+'\')" class="text-[9px] bg-red-50 text-red-600 border border-red-100 px-2 py-0.5 rounded">Hapus</button></div></div>';
+      }).join("");
+    });
+    listEl.innerHTML=htmlByBatch;
+  }
   renderLaporan();
 }
+
+
 let laporanMode = localStorage.getItem("laporan_mode") || "Harian";
 function Fn(d){ const y=d.getFullYear(); const m=String(d.getMonth()+1).padStart(2,"0"); const day=String(d.getDate()).padStart(2,"0"); return y+"-"+m+"-"+day; }
 function Fi(s){ try{ const parts=s.split("-").map(Number); return new Date(parts[0], parts[1]-1, parts[2]); }catch{ return new Date(); } }
@@ -200,31 +334,41 @@ function setLaporanMode(mode){
 
 function renderLaporan(){
   const all=getAll();
+  const batchMeta=getBatchMeta();
   const el=document.getElementById("laporan"); const emptyEl=document.getElementById("laporanEmpty");
   document.getElementById("tsCount").textContent = all.length; document.getElementById("lapJumlah").textContent = all.length;
   if(all.length===0){ el.innerHTML=""; emptyEl.classList.remove("hidden"); const te=document.getElementById("laporanTotal"); if(te) te.remove(); return; }
   emptyEl.classList.add("hidden");
-  // Step 1: hitung harian dulu - komisi berdasar hasil harian
   const dailyMap=new Map();
+  const dailyBatchMap=new Map();
   all.forEach(function(r){
     if(!r || typeof r.kg!=="number") return;
-    let L;
-    try{
-      if(r.date && /^\d{4}-\d{2}-\d{2}$/.test(r.date)) L=Fi(r.date);
-      else if(r.createdAt){ L=new Date(r.createdAt); if(isNaN(L.getTime())) L=new Date(); }
-      else L=new Date();
-    }catch{ L=new Date(); }
-    const key=Fn(L);
-    const ex=dailyMap.get(key);
-    if(ex) ex.totalKg=parseFloat((ex.totalKg+r.kg).toFixed(1));
-    else dailyMap.set(key, {totalKg:parseFloat(r.kg.toFixed(1)), dateObj:Fi(key)});
+    const date=r.date;
+    if(!dailyMap.has(date)) dailyMap.set(date, {totalKg:0, batches:new Set()});
+    const entry=dailyMap.get(date);
+    entry.totalKg=parseFloat((entry.totalKg+r.kg).toFixed(1));
+    const bid=r.batchId||date+"_1";
+    entry.batches.add(bid);
+    if(!dailyBatchMap.has(date)) dailyBatchMap.set(date, new Map());
+    const bm=dailyBatchMap.get(date);
+    if(!bm.has(bid)) bm.set(bid, {kg:0});
+    bm.get(bid).kg=parseFloat((bm.get(bid).kg+r.kg).toFixed(1));
   });
-  // dailyRows = hasil komisi harian (dasar yang benar)
   let dailyRows=[];
   dailyMap.forEach(function(v,k){
-    const total=parseFloat(v.totalKg.toFixed(1));
-    const kom=hitungKomisi(total);
-    dailyRows.push({key:k, label:Ui(k), totalKg:total, totalKomisi:kom, dateObj:v.dateObj});
+    const batches=dailyBatchMap.get(k);
+    let totalTier=0;
+    let totalHadir=0;
+    batches.forEach(function(bv, bid){
+      totalTier+=hitungKomisi(bv.kg);
+      const meta=batchMeta[bid];
+      if(meta && meta.uangHadir!==undefined) totalHadir+=parseInt(meta.uangHadir);
+      else totalHadir+=getUangHadirForDate(k);
+    });
+    const totalJumlah=totalTier+totalHadir;
+    let dateObj;
+    try{ const parts=k.split("-").map(Number); dateObj=new Date(parts[0], parts[1]-1, parts[2]); }catch{ dateObj=new Date(); }
+    dailyRows.push({key:k, label:Ui(k), totalKg:v.totalKg, totalTier:totalTier, totalHadir:totalHadir, totalJumlah:totalJumlah, dateObj:dateObj, batchCount:batches.size});
   });
   dailyRows.sort(function(a,b){ return b.dateObj.getTime()-a.dateObj.getTime(); });
 
@@ -232,44 +376,43 @@ function renderLaporan(){
   if(laporanMode==="Harian"){
     rows=dailyRows;
   }else if(laporanMode==="Mingguan"){
-    // group harian by minggu, komisi = sum komisi harian (berdasar hasil harian)
     const weekMap=new Map();
     dailyRows.forEach(function(d){
       const monday=Lv(d.dateObj);
       const wKey=Fn(monday);
       const ex=weekMap.get(wKey);
-      if(ex){ ex.totalKg=parseFloat((ex.totalKg+d.totalKg).toFixed(1)); ex.totalKomisi+=d.totalKomisi; }
-      else { weekMap.set(wKey, {totalKg:d.totalKg, totalKomisi:d.totalKomisi, dateObj:monday}); }
+      if(ex){ ex.totalKg=parseFloat((ex.totalKg+d.totalKg).toFixed(1)); ex.totalTier+=d.totalTier; ex.totalHadir+=d.totalHadir; ex.totalJumlah+=d.totalJumlah; }
+      else weekMap.set(wKey, {totalKg:d.totalKg, totalTier:d.totalTier, totalHadir:d.totalHadir, totalJumlah:d.totalJumlah, dateObj:monday});
     });
     weekMap.forEach(function(v,k){
       const monday=Fi(k); const sunday=Iv(monday);
       const label=Ui(Fn(monday))+" - "+Ui(Fn(sunday));
-      rows.push({key:k, label:label, totalKg:parseFloat(v.totalKg.toFixed(1)), totalKomisi:v.totalKomisi, dateObj:v.dateObj});
+      rows.push({key:k, label:label, totalKg:v.totalKg, totalTier:v.totalTier, totalHadir:v.totalHadir, totalJumlah:v.totalJumlah, dateObj:v.dateObj});
     });
     rows.sort(function(a,b){ return b.dateObj.getTime()-a.dateObj.getTime(); });
-  }else{ // Bulanan - komisi = sum komisi harian dalam bulan
+  }else{
     const monthMap=new Map();
     dailyRows.forEach(function(d){
       const mKey=d.dateObj.getFullYear()+"-"+String(d.dateObj.getMonth()+1).padStart(2,"0");
       const ex=monthMap.get(mKey);
-      if(ex){ ex.totalKg=parseFloat((ex.totalKg+d.totalKg).toFixed(1)); ex.totalKomisi+=d.totalKomisi; }
-      else { const first=new Date(d.dateObj.getFullYear(), d.dateObj.getMonth(), 1); monthMap.set(mKey, {totalKg:d.totalKg, totalKomisi:d.totalKomisi, dateObj:first}); }
+      if(ex){ ex.totalKg=parseFloat((ex.totalKg+d.totalKg).toFixed(1)); ex.totalTier+=d.totalTier; ex.totalHadir+=d.totalHadir; ex.totalJumlah+=d.totalJumlah; }
+      else { const first=new Date(d.dateObj.getFullYear(), d.dateObj.getMonth(), 1); monthMap.set(mKey, {totalKg:d.totalKg, totalTier:d.totalTier, totalHadir:d.totalHadir, totalJumlah:d.totalJumlah, dateObj:first}); }
     });
     monthMap.forEach(function(v,k){
-      const parts=k.split("-").map(Number);
-      const label=String(parts[1]).padStart(2,"0")+"/"+parts[0];
-      rows.push({key:k, label:label, totalKg:parseFloat(v.totalKg.toFixed(1)), totalKomisi:v.totalKomisi, dateObj:v.dateObj});
+      const p=k.split("-"); const label=p[1]+"/"+p[0];
+      rows.push({key:k, label:label, totalKg:v.totalKg, totalTier:v.totalTier, totalHadir:v.totalHadir, totalJumlah:v.totalJumlah, dateObj:v.dateObj});
     });
     rows.sort(function(a,b){ return b.dateObj.getTime()-a.dateObj.getTime(); });
   }
 
   const displayRows=rows.slice(0,30);
   el.innerHTML = displayRows.map(function(r){
-    return '<div class="flex justify-between items-center bg-[#f8fafc] border rounded-xl px-3 py-2 w-full max-w-full overflow-hidden box-border"><div class="min-w-0 flex-1 pr-2"><div class="font-bold text-[12px] truncate">'+r.label+'</div><div class="text-[10px] text-[#64748b] truncate">Total: '+r.totalKg.toFixed(1)+'kg</div></div><div class="text-right shrink-0 ml-2"><div class="font-bold text-[12px]">Rp '+r.totalKomisi.toLocaleString('id-ID')+'</div><div class="text-[9px] text-[#64748b]">'+(laporanMode==='Harian' ? 'Harian' : laporanMode==='Mingguan' ? 'Mingguan' : 'Bulanan')+'</div></div></div>';
+    return '<div class="flex flex-col bg-[#f8fafc] border rounded-xl px-3 py-2 w-full max-w-full overflow-hidden box-border"><div class="flex justify-between items-center w-full"><div class="min-w-0 flex-1 pr-2"><div class="font-bold text-[12px] truncate">'+r.label+'</div><div class="text-[10px] text-[#64748b] truncate">'+r.totalKg.toFixed(1)+'kg | '+(r.batchCount?r.batchCount+" batch":"")+'</div></div><div class="text-right shrink-0 ml-2"><div class="font-bold text-[12px]">Rp '+r.totalJumlah.toLocaleString('id-ID')+'</div><div class="text-[9px] text-[#64748b]">Tier '+r.totalTier.toLocaleString('id-ID')+' + Hadir '+r.totalHadir.toLocaleString('id-ID')+'</div></div></div></div>';
   }).join("");
-  // total berdasar hasil komisi harian (sum daily)
-  const totalKgAll=parseFloat(dailyRows.reduce(function(s,e){return s+e.totalKg;},0).toFixed(1));
-  const totalKomAll=dailyRows.reduce(function(s,e){return s+e.totalKomisi;},0);
+  const totalKgAll=dailyRows.reduce(function(s,e){return s+e.totalKg;},0);
+  const totalTierAll=dailyRows.reduce(function(s,e){return s+e.totalTier;},0);
+  const totalHadirAll=dailyRows.reduce(function(s,e){return s+e.totalHadir;},0);
+  const totalJumlahAll=dailyRows.reduce(function(s,e){return s+e.totalJumlah;},0);
   let totalEl=document.getElementById("laporanTotal");
   if(!totalEl){
     const cont=el.parentElement;
@@ -278,12 +421,143 @@ function renderLaporan(){
     totalEl.className="mt-3 w-full max-w-full overflow-hidden bg-[#f0fdfa] border border-[#14b8a6]/30 rounded-xl p-2.5 flex flex-col gap-1 box-border";
     cont.appendChild(totalEl);
   }
-  totalEl.innerHTML='<div class="flex justify-between items-center w-full"><span class="text-[11px] font-bold text-[#0f172a] truncate">Total '+laporanMode+'</span><span class="text-[11px] font-black text-[#0f766e] shrink-0 ml-2">'+totalKgAll.toFixed(1)+'kg</span></div><div class="text-[12px] font-black text-[#0f172a]">'+formatRupiah(totalKomAll)+' <span class="text-[9px] font-medium text-[#64748b]">(sum harian)</span></div>';
+  totalEl.innerHTML='<div class="flex justify-between items-center w-full"><span class="text-[11px] font-bold text-[#0f172a] truncate">Total '+laporanMode+' (Tier+Hadir)</span><span class="text-[11px] font-black text-[#0f766e] shrink-0 ml-2">'+totalKgAll.toFixed(1)+'kg</span></div><div class="text-[12px] font-black text-[#0f172a]">Tier Rp '+totalTierAll.toLocaleString('id-ID')+' + Hadir Rp '+totalHadirAll.toLocaleString('id-ID')+' = Rp '+totalJumlahAll.toLocaleString('id-ID')+'</div>';
 }
+
 
 function setStatus(m){ const el=document.getElementById("status"); el.textContent=m; setTimeout(function(){ if(el.textContent===m) el.textContent="Siap • LocalStorage + Supabase"; }, 3000); }
 document.getElementById("waInput").addEventListener("input", function(){ document.getElementById("barisCount").textContent = document.getElementById("waInput").value.split("\n").filter(Boolean).length + " baris • LS+SUPA"; });
-document.getElementById("btnProses").onclick = function(){ const text=document.getElementById("waInput").value; const parsed=parseWA(text); if(parsed.length===0){ setStatus("Tidak ada data valid"); return; } const date=todayLocal(); const now=new Date().toISOString(); let all=getAll(); const existing=new Set(all.map(function(r){return makeKey(r.customer,r.kg,r.date);})); let added=0; parsed.forEach(function(p){ const k=makeKey(p.customer,p.kg,date); if(!existing.has(k)){ all.push({customer:p.customer, kg:p.kg, date:date, createdAt:now, _key:k+"|"+Math.random().toString(36).slice(2,5)}); existing.add(k); added++; } }); const map=new Map(); all.forEach(function(r){ const k=makeKey(r.customer,r.kg,r.date); if(!map.has(k)) map.set(k,r); }); all=Array.from(map.values()).map(function(r){ return {customer:r.customer, kg:r.kg, date:r.date, createdAt:r.createdAt, _key:makeKey(r.customer,r.kg,r.date)+"|"+Math.random().toString(36).slice(2,4)}; }); saveAll(all); render(); setStatus("Berhasil: "+added+" baru / "+parsed.length+" diparse"); document.getElementById("waInput").value=""; };
+document.getElementById("tglInput").valueAsDate = new Date();
+document.getElementById("uangHadirInput").addEventListener("input", function(){
+  const date=getSelectedDate();
+  const val=parseInt(this.value)||0;
+  setUangHadirForDate(date, val);
+  render();
+});
+document.getElementById("tglInput").addEventListener("change", function(){
+  const date=this.value;
+  if(date){
+    document.getElementById("uangHadirInput").value=getUangHadirForDate(date);
+    render();
+  }
+});
+
+document.getElementById("btnProses").onclick = function(){ 
+  const text=document.getElementById("waInput").value; 
+  const parsed=parseWA(text); 
+  if(parsed.length===0){ setStatus("Tidak ada data valid"); return; } 
+  const selectedDate=getSelectedDate();
+  const existingData=getAll().filter(r=>r.date===selectedDate);
+  const newTotalKg=parsed.reduce((s,p)=>s+p.kg,0);
+  const newTotalKom=hitungKomisi(newTotalKg);
+  const uangHadirVal=parseInt(document.getElementById("uangHadirInput").value)||7500;
+
+  if(existingData.length>0){
+    // ada data di tanggal itu, tampilkan notice susulan/nota baru
+    pendingPasteData={parsed:parsed, date:selectedDate, newTotalKg:newTotalKg, newTotalKom:newTotalKom, uangHadir:uangHadirVal};
+    const existingKg=existingData.reduce((s,e)=>s+(e.kg||0),0);
+    const existingBatchIds=[...new Set(existingData.map(r=>r.batchId||selectedDate+"_1"))];
+    let existingTier=0;
+    existingBatchIds.forEach(bid=>{
+      const bd=existingData.filter(r=>(r.batchId||selectedDate+"_1")===bid);
+      const bKg=bd.reduce((s,e)=>s+e.kg,0);
+      existingTier+=hitungKomisi(bKg);
+    });
+    const existingHadir=existingBatchIds.reduce((s,bid)=>{
+      const m=getBatchMeta()[bid];
+      return s+(m && m.uangHadir!==undefined ? parseInt(m.uangHadir) : getUangHadirForDate(selectedDate));
+    },0) || getUangHadirForDate(selectedDate);
+
+    document.getElementById("susulanInfo").textContent=selectedDate+" sudah ada "+existingKg.toFixed(1)+"kg | Tier Rp "+existingTier.toLocaleString('id-ID')+" + Hadir Rp "+existingHadir.toLocaleString('id-ID')+" ("+existingBatchIds.length+" batch)";
+    document.getElementById("susulanBaruInfo").textContent="Baru dipaste: "+newTotalKg.toFixed(1)+"kg | Tier Rp "+newTotalKom.toLocaleString('id-ID')+" + Hadir Rp "+uangHadirVal.toLocaleString('id-ID');
+    document.getElementById("modalSusulan").classList.remove("hidden");
+    document.getElementById("modalSusulan").classList.add("flex");
+    return;
+  }
+
+  // tidak ada data, langsung proses sebagai batch baru
+  processPasteAsNewBatch(parsed, selectedDate, uangHadirVal, "utama");
+};
+
+function processPasteAsNewBatch(parsed, date, uangHadirVal, type){
+  const now=new Date().toISOString();
+  let all=getAll();
+  const batchId=generateBatchId(date);
+  const batchMeta=getBatchMeta();
+  batchMeta[batchId]={type:type, uangHadir:uangHadirVal, createdAt:now, totalKg:parsed.reduce((s,p)=>s+p.kg,0), komisi:hitungKomisi(parsed.reduce((s,p)=>s+p.kg,0))};
+  saveBatchMeta(batchMeta);
+  setUangHadirForDate(date, uangHadirVal);
+  const existing=new Set(all.map(function(r){return makeKey(r.customer,r.kg,r.date,r.batchId);}));
+  let added=0;
+  parsed.forEach(function(p){
+    const k=makeKey(p.customer,p.kg,date,batchId);
+    if(!existing.has(k)){
+      all.push({customer:p.customer, kg:p.kg, date:date, batchId:batchId, createdAt:now, _key:k+"|"+Math.random().toString(36).slice(2,5)});
+      existing.add(k);
+      added++;
+    }
+  });
+  saveAll(all);
+  render();
+  setStatus("Berhasil: "+added+" baru / "+parsed.length+" diparse ("+type+") • "+date);
+  document.getElementById("waInput").value="";
+  document.getElementById("modalSusulan").classList.add("hidden");
+  document.getElementById("modalSusulan").classList.remove("flex");
+}
+
+function processPasteAsSusulan(parsed, date, uangHadirVal){
+  // gabung ke batch terakhir atau buat merge? Untuk susulan, kita gabung ke batch terakhir dan recalc
+  const now=new Date().toISOString();
+  let all=getAll();
+  const existingBatchIds=getBatchIdsForDate(date);
+  const lastBatchId=existingBatchIds[existingBatchIds.length-1] || generateBatchId(date);
+  // update batch meta untuk susulan (tier lanjut, hadir tetap 1x)
+  const batchMeta=getBatchMeta();
+  if(!batchMeta[lastBatchId]) batchMeta[lastBatchId]={type:"susulan", uangHadir:uangHadirVal};
+  else batchMeta[lastBatchId].type="susulan";
+  // total kg existing + baru untuk tier
+  const existingData=all.filter(r=>r.date===date);
+  const existingKg=existingData.reduce((s,e)=>s+e.kg,0);
+  const newKg=parsed.reduce((s,p)=>s+p.kg,0);
+  const combinedKg=existingKg+newKg;
+  batchMeta[lastBatchId].totalKg=combinedKg;
+  batchMeta[lastBatchId].komisi=hitungKomisi(combinedKg);
+  saveBatchMeta(batchMeta);
+  setUangHadirForDate(date, uangHadirVal);
+
+  const existingKeys=new Set(all.map(r=>makeKey(r.customer,r.kg,r.date,r.batchId)));
+  let added=0;
+  parsed.forEach(function(p){
+    const k=makeKey(p.customer,p.kg,date,lastBatchId);
+    if(!existingKeys.has(k)){
+      all.push({customer:p.customer, kg:p.kg, date:date, batchId:lastBatchId, createdAt:now, _key:k+"|"+Math.random().toString(36).slice(2,5)});
+      existingKeys.add(k);
+      added++;
+    }
+  });
+  saveAll(all);
+  render();
+  setStatus("Susulan: +"+added+" baru / "+parsed.length+" diparse • Total "+combinedKg.toFixed(1)+"kg • "+date);
+  document.getElementById("waInput").value="";
+  document.getElementById("modalSusulan").classList.add("hidden");
+  document.getElementById("modalSusulan").classList.remove("flex");
+}
+
+document.getElementById("btnSusulan").onclick = function(){
+  if(!pendingPasteData) return;
+  processPasteAsSusulan(pendingPasteData.parsed, pendingPasteData.date, pendingPasteData.uangHadir);
+};
+document.getElementById("btnNotaBaru").onclick = function(){
+  if(!pendingPasteData) return;
+  processPasteAsNewBatch(pendingPasteData.parsed, pendingPasteData.date, pendingPasteData.uangHadir, "nota_baru");
+};
+document.getElementById("btnBatalSusulan").onclick = function(){
+  document.getElementById("modalSusulan").classList.add("hidden");
+  document.getElementById("modalSusulan").classList.remove("flex");
+  pendingPasteData=null;
+};
+
+document.getElementById("btnBersih").onclick = function(){ document.getElementById("waInput").value=""; setStatus("Textarea dibersihkan"); document.getElementById("barisCount").textContent="0 baris • "+getSelectedDate(); };
 document.getElementById("btnBersih").onclick = function(){ document.getElementById("waInput").value=""; setStatus("Textarea dibersihkan"); document.getElementById("barisCount").textContent="0 baris • LS+SUPA"; };
 document.getElementById("btnHapusSemua").onclick = function(){ document.getElementById("modalHapusSemua").classList.remove("hidden"); document.getElementById("modalHapusSemua").classList.add("flex"); };
 document.getElementById("btnBatalHapusSemua").onclick = function(){ document.getElementById("modalHapusSemua").classList.add("hidden"); document.getElementById("modalHapusSemua").classList.remove("flex"); };
@@ -301,12 +575,27 @@ document.getElementById("btnKonfirmHapus").onclick = function(){ let all=getAll(
 function formatRupiah(n){ return "Rp "+n.toLocaleString('id-ID'); }
 function formatKg(n){ return parseFloat(n).toFixed(1); }
 function buatNotaWA(){
-  const all=getAll(); const today=todayLocal(); const todayData=all.filter(function(r){return r.date===today;}); 
+  const selectedDate=getSelectedDate();
+  const all=getAll(); const todayData=all.filter(function(r){return r.date===selectedDate;}); 
   if(todayData.length===0) return null;
   const totalKg=todayData.reduce(function(s,e){return s+(e.kg||0);},0);
-  const totalKom=hitungKomisi(totalKg);
-  const tgl=new Date().toLocaleDateString('id-ID');
-  // helper padding untuk 3 kolom rapi monospace WA
+  const batchIds=[...new Set(todayData.map(r=>r.batchId||selectedDate+"_1"))];
+  let totalKomisiTier=0;
+  batchIds.forEach(function(bid){
+    const batchData=todayData.filter(r=>(r.batchId||selectedDate+"_1")===bid);
+    const batchKg=batchData.reduce((s,e)=>s+(e.kg||0),0);
+    totalKomisiTier+=hitungKomisi(batchKg);
+  });
+  const batchMeta=getBatchMeta();
+  let totalUangHadir=0;
+  batchIds.forEach(function(bid){
+    const m=batchMeta[bid];
+    if(m && m.uangHadir!==undefined) totalUangHadir+=parseInt(m.uangHadir);
+    else totalUangHadir+=getUangHadirForDate(selectedDate);
+  });
+  if(batchIds.length===0) totalUangHadir=getUangHadirForDate(selectedDate);
+  const jumlahTotal=totalKomisiTier+totalUangHadir;
+  const tgl=new Date(selectedDate).toLocaleDateString('id-ID');
   function padRight(str, len){ str=String(str); if(str.length>len) return str.slice(0,len-1)+"…"; return str + " ".repeat(len-str.length); }
   function padLeft(str, len){ str=String(str); if(str.length>len) return str.slice(-len); return " ".repeat(len-str.length)+str; }
   const COL_CUST=18, COL_SAT=7, COL_KOM=10;
@@ -316,63 +605,116 @@ function buatNotaWA(){
   lines.push("-".repeat(COL_CUST+COL_SAT+COL_KOM+4));
   lines.push(padRight("Customer", COL_CUST)+" "+padLeft("Satuan", COL_SAT)+" "+padLeft("Komisi", COL_KOM));
   lines.push("-".repeat(COL_CUST+COL_SAT+COL_KOM+4));
-  todayData.slice().reverse().forEach(function(z){
-    const prop = totalKg>0 ? (z.kg/totalKg)*totalKom : 0;
-    const cust=padRight(z.customer, COL_CUST);
-    const satuan=padLeft(formatKg(z.kg)+"kg", COL_SAT);
-    const kom=padLeft(formatRupiah(Math.round(prop)), COL_KOM);
-    lines.push(cust+" "+satuan+" "+kom);
+  // per batch
+  batchIds.forEach(function(bid){
+    const batchData=todayData.filter(r=>(r.batchId||selectedDate+"_1")===bid);
+    const batchKg=batchData.reduce((s,e)=>s+(e.kg||0),0);
+    const batchKom=hitungKomisi(batchKg);
+    const m=batchMeta[bid];
+    const batchType=m?m.type:"utama";
+    const batchHadir=m && m.uangHadir!==undefined ? m.uangHadir : getUangHadirForDate(selectedDate);
+    lines.push(padRight("Batch "+bid.split("_").pop()+" ("+batchType+") "+batchKg.toFixed(1)+"kg", COL_CUST+COL_SAT+COL_KOM+4));
+    batchData.slice().reverse().forEach(function(z){
+      const cust=padRight(z.customer, COL_CUST);
+      const satuan=padLeft(formatKg(z.kg)+"kg", COL_SAT);
+      const kom=padLeft(formatRupiah(hitungKomisi(z.kg)), COL_KOM);
+      lines.push(cust+" "+satuan+" "+kom);
+    });
   });
   lines.push("-".repeat(COL_CUST+COL_SAT+COL_KOM+4));
-  lines.push(padRight("Total:", COL_CUST)+" "+padLeft(formatKg(totalKg)+"kg", COL_SAT)+" "+padLeft(formatRupiah(totalKom), COL_KOM));
+  lines.push(padRight("Subtotal Tier:", COL_CUST)+" "+padLeft(formatKg(totalKg)+"kg", COL_SAT)+" "+padLeft(formatRupiah(totalKomisiTier), COL_KOM));
+  lines.push(padRight("Uang Hadir:", COL_CUST)+" "+padLeft("("+batchIds.length+"x)", COL_SAT)+" "+padLeft(formatRupiah(totalUangHadir), COL_KOM));
+  lines.push(padRight("Jumlah Total:", COL_CUST)+" "+padLeft("", COL_SAT)+" "+padLeft(formatRupiah(jumlahTotal), COL_KOM));
   lines.push("```");
   lines.push("");
-  lines.push("Rincian: "+(rincianKomisi(totalKg).replace(/<br>/g, ", ")));
-  if(totalKg>50){
-    let hitung = totalKg<=70 ? formatKg(totalKg-50)+"kg ×1250" : "20.0kg×1250 + "+formatKg(totalKg-70)+"kg×1500";
-    lines.push("Hitung: "+hitung+" = "+formatRupiah(totalKom));
-  }
+  lines.push("Rincian Tier: "+(rincianKomisi(totalKg).replace(/<br>/g, ", ")));
+  lines.push("Uang Hadir: "+batchIds.length+"x Rp "+getUangHadirForDate(selectedDate).toLocaleString('id-ID')+" = "+formatRupiah(totalUangHadir));
+  lines.push("Total: Tier "+formatRupiah(totalKomisiTier)+" + Hadir "+formatRupiah(totalUangHadir)+" = "+formatRupiah(jumlahTotal));
   return lines.join("\n");
 }
+
 function buatLaporanWA(){
   const all=getAll();
-  // Hitung harian dulu sebagai dasar yang benar
+  const batchMeta=getBatchMeta();
+  // Hitung harian dulu
   const dailyMap=new Map();
+  const dailyBatchMap=new Map(); // date -> batchIds
   all.forEach(function(r){
     if(!r || typeof r.kg!=="number") return;
-    let L; try{ if(r.date && /^\d{4}-\d{2}-\d{2}$/.test(r.date)) L=Fi(r.date); else if(r.createdAt){ L=new Date(r.createdAt); if(isNaN(L.getTime())) L=new Date(); } else L=new Date(); }catch{ L=new Date(); }
-    const key=Fn(L);
-    const ex=dailyMap.get(key);
-    if(ex) ex.totalKg=parseFloat((ex.totalKg+r.kg).toFixed(1));
-    else dailyMap.set(key, {totalKg:parseFloat(r.kg.toFixed(1)), dateObj:Fi(key)});
+    const date=r.date;
+    if(!dailyMap.has(date)) dailyMap.set(date, {totalKg:0, batches:new Set()});
+    const entry=dailyMap.get(date);
+    entry.totalKg=parseFloat((entry.totalKg+r.kg).toFixed(1));
+    const bid=r.batchId||date+"_1";
+    entry.batches.add(bid);
+    if(!dailyBatchMap.has(date)) dailyBatchMap.set(date, new Map());
+    const bm=dailyBatchMap.get(date);
+    if(!bm.has(bid)) bm.set(bid, {kg:0});
+    bm.get(bid).kg=parseFloat((bm.get(bid).kg+r.kg).toFixed(1));
   });
-  let dailyRows=[]; dailyMap.forEach(function(v,k){ const total=parseFloat(v.totalKg.toFixed(1)); const kom=hitungKomisi(total); dailyRows.push({key:k, label:Ui(k), totalKg:total, totalKomisi:kom, dateObj:v.dateObj}); });
+  let dailyRows=[];
+  dailyMap.forEach(function(v,k){
+    const batches=dailyBatchMap.get(k);
+    let totalTier=0;
+    let totalHadir=0;
+    batches.forEach(function(bv, bid){
+      totalTier+=hitungKomisi(bv.kg);
+      const meta=batchMeta[bid];
+      if(meta && meta.uangHadir!==undefined) totalHadir+=parseInt(meta.uangHadir);
+      else totalHadir+=getUangHadirForDate(k);
+    });
+    const totalJumlah=totalTier+totalHadir;
+    let dateObj;
+    try{ const parts=k.split("-").map(Number); dateObj=new Date(parts[0], parts[1]-1, parts[2]); }catch{ dateObj=new Date(); }
+    dailyRows.push({key:k, label:k.split("-").reverse().join("/"), totalKg:v.totalKg, totalTier:totalTier, totalHadir:totalHadir, totalJumlah:totalJumlah, dateObj:dateObj, batchCount:batches.size});
+  });
   dailyRows.sort(function(a,b){ return b.dateObj.getTime()-a.dateObj.getTime(); });
 
   let rows=[];
   if(laporanMode==="Harian"){ rows=dailyRows; }
   else if(laporanMode==="Mingguan"){
     const weekMap=new Map();
-    dailyRows.forEach(function(d){ const monday=Lv(d.dateObj); const wKey=Fn(monday); const ex=weekMap.get(wKey); if(ex){ ex.totalKg=parseFloat((ex.totalKg+d.totalKg).toFixed(1)); ex.totalKomisi+=d.totalKomisi; } else weekMap.set(wKey, {totalKg:d.totalKg, totalKomisi:d.totalKomisi, dateObj:monday}); });
-    weekMap.forEach(function(v,k){ const monday=Fi(k); const sunday=Iv(monday); const label=Ui(Fn(monday))+" - "+Ui(Fn(sunday)); rows.push({label:label, totalKg:parseFloat(v.totalKg.toFixed(1)), totalKomisi:v.totalKomisi, key:k, dateObj:v.dateObj}); });
-    rows.sort(function(a,b){ return b.key.localeCompare(a.key); });
+    dailyRows.forEach(function(d){
+      const monday=Lv(d.dateObj);
+      const wKey=Fn(monday);
+      const ex=weekMap.get(wKey);
+      if(ex){ ex.totalKg=parseFloat((ex.totalKg+d.totalKg).toFixed(1)); ex.totalTier+=d.totalTier; ex.totalHadir+=d.totalHadir; ex.totalJumlah+=d.totalJumlah; }
+      else weekMap.set(wKey, {totalKg:d.totalKg, totalTier:d.totalTier, totalHadir:d.totalHadir, totalJumlah:d.totalJumlah, dateObj:monday});
+    });
+    weekMap.forEach(function(v,k){
+      const monday=Fi(k); const sunday=Iv(monday);
+      const label=Ui(Fn(monday))+" - "+Ui(Fn(sunday));
+      rows.push({key:k, label:label, totalKg:v.totalKg, totalTier:v.totalTier, totalHadir:v.totalHadir, totalJumlah:v.totalJumlah, dateObj:v.dateObj});
+    });
+    rows.sort(function(a,b){ return b.dateObj.getTime()-a.dateObj.getTime(); });
   }else{
     const monthMap=new Map();
-    dailyRows.forEach(function(d){ const mKey=d.dateObj.getFullYear()+"-"+String(d.dateObj.getMonth()+1).padStart(2,"0"); const ex=monthMap.get(mKey); if(ex){ ex.totalKg=parseFloat((ex.totalKg+d.totalKg).toFixed(1)); ex.totalKomisi+=d.totalKomisi; } else { const first=new Date(d.dateObj.getFullYear(), d.dateObj.getMonth(), 1); monthMap.set(mKey, {totalKg:d.totalKg, totalKomisi:d.totalKomisi, dateObj:first}); } });
-    monthMap.forEach(function(v,k){ const p=k.split("-"); const label=p[1]+"/"+p[0]; rows.push({label:label, totalKg:parseFloat(v.totalKg.toFixed(1)), totalKomisi:v.totalKomisi, key:k, dateObj:v.dateObj}); });
-    rows.sort(function(a,b){ return b.key.localeCompare(a.key); });
+    dailyRows.forEach(function(d){
+      const mKey=d.dateObj.getFullYear()+"-"+String(d.dateObj.getMonth()+1).padStart(2,"0");
+      const ex=monthMap.get(mKey);
+      if(ex){ ex.totalKg=parseFloat((ex.totalKg+d.totalKg).toFixed(1)); ex.totalTier+=d.totalTier; ex.totalHadir+=d.totalHadir; ex.totalJumlah+=d.totalJumlah; }
+      else { const first=new Date(d.dateObj.getFullYear(), d.dateObj.getMonth(), 1); monthMap.set(mKey, {totalKg:d.totalKg, totalTier:d.totalTier, totalHadir:d.totalHadir, totalJumlah:d.totalJumlah, dateObj:first}); }
+    });
+    monthMap.forEach(function(v,k){
+      const p=k.split("-"); const label=p[1]+"/"+p[0];
+      rows.push({key:k, label:label, totalKg:v.totalKg, totalTier:v.totalTier, totalHadir:v.totalHadir, totalJumlah:v.totalJumlah, dateObj:v.dateObj});
+    });
+    rows.sort(function(a,b){ return b.dateObj.getTime()-a.dateObj.getTime(); });
   }
 
-  let lines=[]; lines.push("LAPORAN RINGKAS SETRIKA - "+laporanMode+" (berdasar harian)");
+  let lines=[]; lines.push("LAPORAN RINGKAS SETRIKA - "+laporanMode+" (Tier + Hadir)");
   if(rows.length>0){ lines.push(rows[rows.length-1].label+" - "+rows[0].label); } else { lines.push(new Date().toLocaleDateString('id-ID')+" ("+laporanMode+")"); }
   lines.push("");
-  if(rows.length===0){ lines.push("Tidak ada data"); } else { rows.slice(0,20).forEach(function(r){ lines.push(r.label+" | "+formatKg(r.totalKg)+"kg | "+formatRupiah(r.totalKomisi)+" (sum harian)"); }); }
+  if(rows.length===0){ lines.push("Tidak ada data"); } else { rows.slice(0,20).forEach(function(r){ lines.push(r.label+" | "+formatKg(r.totalKg)+"kg | Tier "+formatRupiah(r.totalTier)+" + Hadir "+formatRupiah(r.totalHadir)+" = "+formatRupiah(r.totalJumlah)); }); }
   const totalKgAll=dailyRows.reduce(function(s,e){return s+e.totalKg;},0);
-  const totalKomAll=dailyRows.reduce(function(s,e){return s+e.totalKomisi;},0);
-  lines.push(""); lines.push("Total: "+formatKg(totalKgAll)+"kg | Komisi: "+formatRupiah(totalKomAll)+" (sum komisi harian)");
-  lines.push("Rincian progresif harian: 0-50kg=0, 51-70kg=1250, 71+kg=1500");
+  const totalTierAll=dailyRows.reduce(function(s,e){return s+e.totalTier;},0);
+  const totalHadirAll=dailyRows.reduce(function(s,e){return s+e.totalHadir;},0);
+  const totalJumlahAll=dailyRows.reduce(function(s,e){return s+e.totalJumlah;},0);
+  lines.push(""); lines.push("Total: "+formatKg(totalKgAll)+"kg | Tier "+formatRupiah(totalTierAll)+" + Hadir "+formatRupiah(totalHadirAll)+" = "+formatRupiah(totalJumlahAll));
+  lines.push("Rincian: Tier progresif 0-50=0, 51-70=1250, 71+=1500 + Uang Hadir per batch");
   return lines.join("\n");
 }
+
 function shareWA(isBisnis){
   const all=getAll(); const today=todayLocal(); const todayData=all.filter(function(r){return r.date===today;});
   if(todayData.length===0){ setStatus("⚠ Nota kosong - proses WA dulu"); return; }

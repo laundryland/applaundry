@@ -1,0 +1,26 @@
+{
+  "version": "v16_uang_hadir_susulan_nota_baru_date_picker",
+  "timestamp": "20261020_075831",
+  "date": "2026-10-20 07:58 WIB",
+  "cache_name": "nota-ls-supa-exact-v16-uang-hadir-susulan",
+  "features": {
+    "date_picker": "📅 Tanggal input type=date default hari ini, bisa pilih -30 hari, untuk susulan kemarin",
+    "uang_hadir": "💰 Uang Hadir Rp 7500 default, input di atas Share WA, per tanggal, editable, disimpan di uang_hadir_data LS + batch_meta",
+    "susulan_nota_baru": {
+      "trigger": "Jika tanggal terpilih sudah ada data, muncul modal besar SUSULAN vs NOTA BARU",
+      "susulan": "Gabung kg, Tier lanjut kumulatif (60+10=70kg hitungKomisi 70kg), Hadir tetap 1x",
+      "nota_baru": "Batch baru, Tier reset dari 0 (hitungKomisi per batch), Hadir +1 lagi otomatis (karena lupa input kemarin, karyawan hadir kemarin)",
+      "storage": "batchId = date_1, date_2, batch_meta[batchId] = {type, uangHadir, totalKg, komisi}"
+    },
+    "preview_nota": "Per batch: Batch 1 (utama) 60kg | Tier + Hadir, Batch 2 (nota_baru) 10kg | Tier + Hadir, Subtotal Tier + Subtotal Hadir = Jumlah Total",
+    "share_WA": "3 kolom monospace + Subtotal Tier + Uang Hadir (n x) + Jumlah Total",
+    "laporan": "Harian/Mingguan/Bulanan: totalKg, totalTier=sum tier per batch, totalHadir=sum hadir per batch, totalJumlah=tier+hadir"
+  },
+  "paren_check": "Paren ( 1168 vs ) 1168 balanced, Curly { 452 vs } 452 balanced - tidak bocor",
+  "files": [
+    "index.html",
+    "manifest.json",
+    "supabase.js",
+    "sw.js"
+  ]
+}
