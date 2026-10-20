@@ -1,22 +1,37 @@
 {
-  "name": "WA Nota Setrika",
-  "short_name": "Nota Setrika",
-  "description": "LS+SUPA only, komisi mingguan/bulanan berdasar sum harian, 3 kolom rapi",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
   "background_color": "#f8fafc",
-  "theme_color": "#14b8a6",
+  "description": "LaundryLand POS - Madiun - Supabase Real Sync",
+  "display": "standalone",
   "icons": [
     {
-      "src": "./icon-192.png",
-      "sizes": "192x192",
+      "sizes": "32x32",
+      "src": "icon-32.png",
       "type": "image/png"
     },
     {
-      "src": "./icon-512.png",
+      "sizes": "64x64",
+      "src": "icon-64.png",
+      "type": "image/png"
+    },
+    {
+      "sizes": "180x180",
+      "src": "icon-180.png",
+      "type": "image/png"
+    },
+    {
+      "sizes": "192x192",
+      "src": "icon-192.png",
+      "type": "image/png"
+    },
+    {
       "sizes": "512x512",
+      "src": "icon-512.png",
       "type": "image/png"
     }
-  ]
+  ],
+  "name": "LaundryLand Project",
+  "orientation": "portrait",
+  "short_name": "LaundryLand",
+  "start_url": "./index.html",
+  "theme_color": "#0fb9a0"
 }

@@ -112,6 +112,15 @@ body{display:flex;justify-content:center;min-height:100vh}
 </style>
 
   <link rel="manifest" href="manifest.json">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.43.4/dist/umd/supabase.min.js"></script>
+  <script>
+    const SUPABASE_URL = "https://zfyjcaklaithzykkdrne.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_xnLqevbuQVG_U6XDATKSHw_nBBZs161";
+    const supa = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+    console.log("Supabase client ready:", !!supa, SUPABASE_URL);
+  </script>
+
   <meta name="theme-color" content="#0fb9a0">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4850,15 +4859,126 @@ function doDelete(){try{
   if(type==='nota'){ DB.notas=DB.notas.filter(n=>n.id!==id); }
   saveDB(); closeModal('modalConfirmDelete'); pendingDelete=null; renderAll();
 }catch(e){logError(e);}}
-function backupOnline(){try{
+async function backupOnline(){try{
   const seen={}; const unique=[];
   DB.notas.forEach(n=>{if(!seen[n.no_nota]){seen[n.no_nota]=true; unique.push(n);}});
   DB.notas=unique; saveDB();
   const status=document.getElementById('onlineStatus');
+  if(status){status.textContent='SYNC...'; status.style.background='#f59e0b';}
+  
+  if(!supa){
+    alert('Supabase client belum siap - cek internet');
+    if(status){status.textContent=navigator.onLine?'ONLINE':'OFFLINE'; status.style.background=navigator.onLine?'#10b981':'#ef4444';}
+    return;
+  }
+  
+  let totalSynced = 0;
+  let errors = [];
+  
+  // Helper upsert
+  async function syncTable(tableName, dataArray, mapFn){
+    if(!dataArray || dataArray.length===0) return 0;
+    try{
+      const payload = dataArray.map(mapFn).filter(Boolean);
+      if(payload.length===0) return 0;
+      // Supabase upsert in batches of 100
+      for(let i=0;i<payload.length;i+=100){
+        const batch = payload.slice(i,i+100);
+        const { error } = await supa.from(tableName).upsert(batch, { onConflict: 'id' });
+        if(error) throw error;
+      }
+      return payload.length;
+    }catch(e){
+      console.error('Sync error '+tableName, e);
+      errors.push(tableName+': '+e.message);
+      return 0;
+    }
+  }
+  
+  // Sync outlets
+  totalSynced += await syncTable('outlets', DB.outlets, o=>({
+    id: o.id,
+    nama: o.nama,
+    alamat: o.alamat||'',
+    aktif: !!o.aktif,
+    last_modified: o.last_modified||Date.now()
+  }));
+  
+  // Sync karyawans
+  totalSynced += await syncTable('karyawans', DB.karyawans, k=>({
+    id: k.id,
+    nama: k.nama,
+    pin: k.pin,
+    level: k.level,
+    outlet_id: k.outlet_id,
+    lintas: !!k.lintas,
+    last_modified: k.last_modified||Date.now()
+  }));
+  
+  // Sync pelanggans
+  totalSynced += await syncTable('pelanggans', DB.pelanggans, p=>({
+    id: p.id,
+    nama: p.nama,
+    nohp: p.nohp||'',
+    alamat: p.alamat||'',
+    deposito: p.deposito||0,
+    outlet_id: p.outlet_id,
+    created_at: p.created_at||Date.now(),
+    last_modified: p.last_modified||Date.now()
+  }));
+  
+  // Sync layanans
+  totalSynced += await syncTable('layanans', DB.layanans, l=>({
+    id: l.id,
+    kode: l.kode,
+    nama: l.nama,
+    harga: l.harga||0,
+    satuan: l.satuan||'Kg',
+    min_qty: l.min_qty||1,
+    estimasi_jenis: l.estimasi_jenis||'Hari',
+    estimasi_nilai: l.estimasi_nilai||1,
+    last_modified: l.last_modified||Date.now()
+  }));
+  
+  // Sync notas (pakai jsonb untuk items)
+  totalSynced += await syncTable('notas', DB.notas, n=>({
+    id: n.id,
+    no_nota: n.no_nota,
+    tanggal: n.tanggal||Date.now(),
+    pelanggan_id: n.pelanggan_id,
+    jumlah: n.jumlah||0,
+    outlet_id: n.outlet_id,
+    status: n.status||'Antrian',
+    statusBayar: n.statusBayar||'Belum Lunas',
+    metode: n.metode||'Tunai',
+    items: n.items||[],
+    estimasi: n.estimasi||Date.now(),
+    last_modified: n.last_modified||Date.now()
+  }));
+  
+  // Sync pengeluarans
+  if(DB.pengeluarans){
+    totalSynced += await syncTable('pengeluarans', DB.pengeluarans, p=>({
+      id: p.id,
+      kategori: p.kategori||'',
+      keterangan: p.keterangan||'',
+      nominal: p.nominal||0,
+      tanggal: p.tanggal||Date.now(),
+      outlet_id: p.outlet_id||'',
+      last_modified: p.last_modified||Date.now()
+    }));
+  }
+  
   if(status){status.textContent='SYNC OK'; status.style.background='#10b981';}
-  alert('Backup Online Berhasil! Anti dobel OK - '+DB.notas.length+' nota');
-  setTimeout(()=>{const st=document.getElementById('onlineStatus'); if(st){const isOn=navigator.onLine; st.textContent=isOn?'ONLINE':'OFFLINE'; st.style.background=isOn?'#10b981':'#ef4444';}},2000);
-}catch(e){logError(e);}}
+  
+  if(errors.length>0){
+    alert('Backup sebagian berhasil: '+totalSynced+' data\nError: '+errors.join('\n')+'\n\nCek Table Editor - tabel yang belum ada harus dibuat dulu (lihat file supabase-setup.sql)');
+  } else {
+    alert('Backup Online Berhasil! Anti dobel OK - '+DB.notas.length+' nota, total '+totalSynced+' record ke Supabase');
+  }
+  
+  setTimeout(()=>{const st=document.getElementById('onlineStatus'); if(st){const isOn=navigator.onLine; st.textContent=isOn?'ONLINE':'OFFLINE'; st.style.background=isOn?'#10b981':'#ef4444';}},2500);
+}catch(e){console.error('backupOnline real error', e); alert('Gagal backup: '+e.message); const st=document.getElementById('onlineStatus'); if(st){st.textContent='ERROR'; st.style.background='#ef4444';}}}
 function navigate(page){try{
   if(!currentUser && (typeof LOGIN_PAUSED==='undefined' || !LOGIN_PAUSED)){
     const pm=document.getElementById('modalPin'); if(pm) pm.classList.add('active');
