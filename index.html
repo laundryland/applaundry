@@ -38,8 +38,9 @@ Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] 
       <button id="btnProses" class="flex-1 h-10 bg-[#0f766e] text-white rounded-[8px] font-bold text-sm hover:bg-[#115e59] active:scale-[0.98] transition">Proses → LS+SUPA</button>
       <button id="btnBersih" class="flex-1 h-10 bg-white border-2 border-[#cbd5e1] text-[#334155] rounded-[8px] font-bold text-sm hover:bg-[#f1f5f9] active:scale-[0.98] transition">Bersihkan</button>
     </div>
-    <div class="min-h-[28px] rounded-lg bg-[#f0fdfa] border border-[#99f6e0] px-2.5 py-1.5 flex items-center">
+    <div class="min-h-[28px] rounded-lg bg-[#f0fdfa] border border-[#99f6e0] px-2.5 py-1.5 flex items-center justify-between">
       <span id="status" class="text-[11px] font-medium text-[#0f766e] leading-tight">Siap • LocalStorage + Supabase • karakter [ ] aman</span>
+      <button id="btnReloadSupa" class="ml-2 text-[9px] bg-white border border-[#99f6e0] px-2 py-0.5 rounded-lg font-bold shrink-0">↻ Reload Supa</button>
     </div>
   </div>
 
@@ -189,8 +190,6 @@ Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] 
   </div>
 </div>
 
-
-<script>
 
 <script>
 const LS_KEY = "nota_data";
@@ -454,7 +453,7 @@ function renderLaporan(){
 
 function setStatus(m){ const el=document.getElementById("status"); el.textContent=m; setTimeout(function(){ if(el.textContent===m) el.textContent="Siap • LocalStorage + Supabase"; }, 3000); }
 document.getElementById("waInput").addEventListener("input", function(){ document.getElementById("barisCount").textContent = document.getElementById("waInput").value.split("\n").filter(Boolean).length + " baris • LS+SUPA"; });
-document.getElementById("tglInput").valueAsDate = new Date();
+try{ const tglEl=document.getElementById("tglInput"); if(tglEl){ tglEl.valueAsDate = new Date(); } }catch(e){ console.log("tgl init fail", e); }
 document.getElementById("uangHadirInput").addEventListener("input", function(){
   const date=getSelectedDate();
   const val=parseInt(this.value)||0;
@@ -585,6 +584,17 @@ document.getElementById("btnBatalSusulan").onclick = function(){
 };
 
 document.getElementById("btnBersih").onclick = function(){ document.getElementById("waInput").value=""; setStatus("Textarea dibersihkan"); document.getElementById("barisCount").textContent="0 baris • "+getSelectedDate(); };
+document.getElementById("btnReloadSupa").onclick = async function(){
+  setStatus("⏳ Load dari Supabase 90 hari...");
+  if(window.SupabaseSync && window.SupabaseSync.load){
+    const res=await window.SupabaseSync.load();
+    setStatus("✅ Load selesai: "+(res.imported||0)+" baru");
+    setTimeout(function(){ render(); }, 500);
+  }else{
+    setStatus("❌ SupabaseSync belum siap");
+  }
+};
+
 document.getElementById("btnBersih").onclick = function(){ document.getElementById("waInput").value=""; setStatus("Textarea dibersihkan"); document.getElementById("barisCount").textContent="0 baris • LS+SUPA"; };
 document.getElementById("btnHapusSemua").onclick = function(){ document.getElementById("modalHapusSemua").classList.remove("hidden"); document.getElementById("modalHapusSemua").classList.add("flex"); };
 document.getElementById("btnBatalHapusSemua").onclick = function(){ document.getElementById("modalHapusSemua").classList.add("hidden"); document.getElementById("modalHapusSemua").classList.remove("flex"); };
@@ -743,7 +753,7 @@ function buatLaporanWA(){
 }
 
 function shareWA(isBisnis){
-  const all=getAll(); const today=todayLocal(); const todayData=all.filter(function(r){return r.date===today;});
+  const all=getAll(); const today=getSelectedDate(); const todayData=all.filter(function(r){return r.date===today;});
   if(todayData.length===0){ setStatus("⚠ Nota kosong - proses WA dulu"); return; }
   try{
     const txt=buatNotaWA(); const url="https://wa.me/?text="+encodeURIComponent(txt);
@@ -767,7 +777,16 @@ document.getElementById("btnTabBulanan").onclick = function(){ setLaporanMode("B
 setLaporanMode(laporanMode);
 
 
-render(); window.addEventListener("storage", function(){render();});
+try{ const tglEl2=document.getElementById("tglInput"); if(tglEl2 && !tglEl2.value){ tglEl2.valueAsDate=new Date(); } }catch(e){}
+render(); 
+window.addEventListener("storage", function(){render();});
+setTimeout(function(){ 
+  const all=getAll();
+  if(all.length===0){
+    setStatus("ℹ️ LS kosong, coba ↻ Reload Supa untuk tarik data lama");
+  }
+}, 1500);
+
 if('serviceWorker' in navigator){ window.addEventListener('load', function(){ navigator.serviceWorker.register('./sw.js').then(function(r){console.log('SW ok');}).catch(function(){}); }); }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>

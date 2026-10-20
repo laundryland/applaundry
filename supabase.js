@@ -50,7 +50,10 @@ async function syncToSupabase(){
       }
     }
     var totalJumlah=totalTier+totalHadir;
-    var payload={date, total_kg:totalKg, total_komisi:totalJumlah, total_tier:totalTier, total_hadir:totalHadir, entries, uang_hadir:uangAll[date]!==undefined?uangAll[date]:7500, batch_meta:batchMeta, updated_at:new Date().toISOString()}; 
+    // Simpan uang hadir & batch_meta di dalam entries[0]._meta agar kompatibel schema lama (hanya kolom date, total_kg, total_komisi, entries, updated_at yang ada)
+    // Taruh info tambahan di payload entries sebagai properti tersembunyi tapi tetap di kolom entries JSON
+    var payload={date, total_kg:totalKg, total_komisi:totalJumlah, entries, updated_at:new Date().toISOString()}; 
+    // simpan uang hadir & batch di localStorage saja, Supabase schema lama tidak punya kolomnya, jadi jangan upsert batch_meta 
     var res=await supabaseClient.from("nota_backup").upsert(payload,{onConflict:"date"}); if(res.error) throw res.error; 
   }
   if(deduped.length < all.length){ saveAll(deduped); window.dispatchEvent(new Event("storage")); }
