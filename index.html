@@ -218,6 +218,32 @@ function generateBatchId(date){ const existing=getBatchIdsForDate(date); const n
 function parserBersih(line){ let s=line.trim(); if(!s) return null; s=s.replace(/^\[.*?\]\s*/, ""); s=s.replace(/^\d{1,2}[\/\-].*?-\s*/, ""); s=s.replace(/^[^:]{1,25}:\s*/, ""); s=s.replace(/^(p|b|mb|bu|pak|mas)\s+/i, ""); if(!s) return null; const m=s.match(/(\d+(?:[\.,]\d+)?)\s*(?:kg)?\s*$/i); if(!m) return null; let kg=parseFloat(m[1].replace(",",".")); if(!(kg>0 && kg<100)) return null; let customer=s.slice(0,m.index).trim().replace(/\s*\d+[\.,]?\d*\s*$/, "").trim(); if(customer.length<2) return null; return {customer:customer, kg:parseFloat(kg.toFixed(1))}; }
 function parseWA(t){ return t.split("\n").map(function(l){return parserBersih(l);}).filter(Boolean); }
 
+
+function migrateOldData(){
+  try{
+    const all=getAll();
+    let changed=false;
+    const batchMeta=getBatchMeta();
+    const uangAll=getUangHadirAll();
+    all.forEach(function(r){
+      if(!r.batchId){
+        r.batchId=r.date+"_1";
+        changed=true;
+      }
+      if(!batchMeta[r.batchId]){
+        batchMeta[r.batchId]={type:"utama", uangHadir:getUangHadirForDate(r.date), totalKg:0, komisi:0};
+        changed=true;
+      }
+    });
+    if(changed){
+      saveAll(all);
+      saveBatchMeta(batchMeta);
+      console.log("[Migrasi] Old data tanpa batchId dimigrasi ke batchId date_1");
+    }
+  }catch(e){ console.log("Migrasi fail", e); }
+}
+
+
 function getSelectedDate(){
   const el=document.getElementById("tglInput");
   if(el && el.value) return el.value;
@@ -225,6 +251,7 @@ function getSelectedDate(){
 }
 
 function render(){
+  migrateOldData();
   const all=getAll(); 
   const selectedDate=getSelectedDate();
   const todayData=all.filter(function(r){return r.date===selectedDate;}); 
