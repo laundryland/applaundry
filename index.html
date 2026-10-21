@@ -232,20 +232,31 @@ Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] 
         </div>
       </div>
 
-      <div class="flex flex-col gap-1 bg-white border rounded-lg px-2 py-1.5 overflow-hidden">
+      <div class="flex flex-col gap-1 bg-white border rounded-lg px-3 py-2 overflow-hidden">
         <div class="flex items-center gap-1.5 w-full">
           <input type="checkbox" id="chkHadir" checked class="w-4 h-4 shrink-0">
           <label class="text-[11px] font-bold shrink-0">Uang Hadir</label>
           <div class="flex items-center gap-1 ml-auto">
-            <span class="text-[10px] shrink-0">Rp</span>
-            <input id="inpHadirTarif" type="number" value="7500" class="w-[55px] text-[11px] font-bold border rounded px-1 py-1 text-right shrink-0" maxlength="5">
-            <span class="text-[10px] shrink-0">x</span>
-            <input id="inpHadirKehadiran" type="number" value="0" class="w-[32px] text-[11px] font-bold border rounded px-1 py-1 text-center bg-[#f0fdfa] shrink-0">
-            <span class="text-[10px] shrink-0">=</span>
-            <span id="lblHadirTotal" class="text-[10px] font-black w-[62px] text-right truncate shrink-0">Rp 0</span>
+            <span class="text-[9px] shrink-0">Rp</span>
+            <input id="inpHadirTarif" type="number" value="7500" class="w-[45px] text-[11px] font-bold border rounded px-1 py-1 text-right shrink-0" maxlength="5" title="5 digit">
+            <span class="text-[9px] shrink-0">x</span>
+            <input id="inpHadirKehadiran" type="number" value="0" class="w-[28px] text-[11px] font-bold border rounded px-1 py-1 text-center bg-[#f0fdfa] shrink-0">
+            <span class="text-[9px] shrink-0">=</span>
+            <span id="lblHadirTotal" class="text-[10px] font-black w-[68px] text-right truncate shrink-0 pr-1">Rp 0</span>
           </div>
         </div>
-        <div class="text-[9px] text-[#64748b] ml-6">Auto dari laporan: <span id="hadirAutoInfo">0 hari</span></div>
+        <div class="text-[9px] text-[#64748b] ml-6">Auto akumulasi bulanan dari timestamps laporan: <span id="hadirAutoInfo">0 hari</span></div>
+      </div>
+
+      <div class="flex flex-col gap-1 bg-white border-2 border-[#14b8a6]/20 rounded-lg px-3 py-2 overflow-hidden">
+        <div class="flex items-center gap-1.5 w-full">
+          <input type="checkbox" id="chkTier" checked class="w-4 h-4 shrink-0">
+          <label class="text-[11px] font-bold shrink-0">Hasil Tier (akumulasi 1 bulan)</label>
+          <div class="flex items-center gap-1 ml-auto">
+            <span id="lblTierTotal" class="text-[10px] font-black w-[90px] text-right truncate shrink-0 pr-1">Rp 0</span>
+          </div>
+        </div>
+        <div class="text-[9px] text-[#64748b] ml-6">Auto dari sum tier bulanan: <span id="tierAutoInfo">0kg = Rp 0</span> • jika Setrika, jika Kasir uncheck</div>
       </div>
 
       <div class="flex items-center gap-2 bg-white border rounded-lg px-2 py-1.5">
@@ -1061,6 +1072,28 @@ function refreshKaryawanSelect(){
 
 function getGajiAll(){ try{ return JSON.parse(localStorage.getItem(LS_GAJI_KEY)||"{}"); }catch{ return {}; } }
 function saveGajiAll(o){ localStorage.setItem(LS_GAJI_KEY, JSON.stringify(o)); }
+function getTierForMonth(monthStr){
+  // akumulasi 1 bulan: sum tier per batch per tanggal
+  const all=getAll();
+  const filtered=all.filter(function(r){ return r.date && r.date.startsWith(monthStr); });
+  if(filtered.length===0) return {totalKg:0, totalTier:0, detail:"0kg"};
+  const batchMap=new Map();
+  filtered.forEach(function(r){
+    const bid=r.batchId||r.date+"_1";
+    const key=r.date+"|"+bid;
+    if(!batchMap.has(key)) batchMap.set(key, 0);
+    batchMap.set(key, batchMap.get(key)+ (r.kg||0));
+  });
+  let totalKg=0;
+  let totalTier=0;
+  batchMap.forEach(function(kg, key){
+    totalKg+=kg;
+    totalTier+=hitungKomisi(kg);
+  });
+  totalKg=parseFloat(totalKg.toFixed(1));
+  return {totalKg:totalKg, totalTier:totalTier, detail: totalKg.toFixed(1)+"kg = Rp "+totalTier.toLocaleString('id-ID')};
+}
+
 function getKehadiranForMonth(monthStr){
   // monthStr YYYY-MM
   const all=getAll();
@@ -1082,7 +1115,7 @@ function getGajiForMonth(monthStr, karyawanId){
     pokok:1000000, tarifHadir:7500, kehadiran:0, bonus:0, tukin:0,
     hutang:0, absen:0, dll:0,
     keterangan:"",
-    checklist:{pokok:true, hadir:true, bonus:true, tukin:true, hutang:true, absen:true, dll:true},
+    checklist:{pokok:true, hadir:true, tier:true, bonus:true, tukin:true, hutang:true, absen:true, dll:true},
     timestamp:new Date().toISOString(),
     karyawanId:karyawanId
   };
@@ -1116,6 +1149,7 @@ function calcGaji(){
   const dll=parseInt(document.getElementById("inpDll").value)||0;
   const chkPokok=document.getElementById("chkPokok").checked;
   const chkHadir=document.getElementById("chkHadir").checked;
+  const chkTier=document.getElementById("chkTier") ? document.getElementById("chkTier").checked : true;
   const chkBonus=document.getElementById("chkBonus").checked;
   const chkTukin=document.getElementById("chkTukin").checked;
   const chkHutang=document.getElementById("chkHutang").checked;
@@ -1123,24 +1157,32 @@ function calcGaji(){
   const chkDll=document.getElementById("chkDll").checked;
 
   const hadirTotal=tarif*hadirCount;
+  // Tier akumulasi bulanan auto dari laporan timestamps
+  const monthStrForTier=document.getElementById("gajiBulanInput").value;
+  const tierData=getTierForMonth(monthStrForTier);
+  const tierTotal=tierData.totalTier;
+
   let sub1=0;
   if(chkPokok) sub1+=pokok;
   if(chkHadir) sub1+=hadirTotal;
+  if(chkTier) sub1+=tierTotal;
   if(chkBonus) sub1+=bonus;
   if(chkTukin) sub1+=tukin;
 
   let sub2=0;
   if(chkHutang) sub2+=hutang;
-  if(chkAbsen) sub2+=absen;
+  if(chkAbsen) sub2+=absen; // absen manual berdiri sendiri, libur tanpa potongan tanpa hadir tanpa tier
   if(chkDll) sub2+=dll;
 
   const total=sub1-sub2;
 
   document.getElementById("lblHadirTotal").textContent="Rp "+hadirTotal.toLocaleString('id-ID');
+  if(document.getElementById("lblTierTotal")) document.getElementById("lblTierTotal").textContent="Rp "+tierTotal.toLocaleString('id-ID');
+  if(document.getElementById("tierAutoInfo")) document.getElementById("tierAutoInfo").textContent=tierData.detail;
   document.getElementById("lblSub1").textContent="Rp "+sub1.toLocaleString('id-ID');
   document.getElementById("lblSub2").textContent="Rp "+sub2.toLocaleString('id-ID');
   document.getElementById("lblTotalGaji").textContent="Rp "+total.toLocaleString('id-ID');
-  document.getElementById("lblGajiFormula").textContent="Subtotal Pendapatan Rp "+sub1.toLocaleString('id-ID')+" - Potongan Rp "+sub2.toLocaleString('id-ID')+" = Rp "+total.toLocaleString('id-ID');
+  document.getElementById("lblGajiFormula").textContent="Subtotal (Pokok+Hadir+Tier+Bonus+Tukin) Rp "+sub1.toLocaleString('id-ID')+" - Potongan Rp "+sub2.toLocaleString('id-ID')+" = Rp "+total.toLocaleString('id-ID');
 
   // update timestamp header with karyawan
   const fmt=formatGajiBulanKe(monthStr);
@@ -1150,7 +1192,7 @@ function calcGaji(){
   const kNama=kData?kData.nama:"-";
   document.getElementById("gajiHeaderTimestamp").textContent="Gaji Bulan ke "+fmt.bulanKe+" • "+fmt.label+" • "+kNama+" • "+now+" • Kehadiran "+hadirCount+" hari";
   
-  return {pokok, tarifHadir:tarif, kehadiran:hadirCount, hadirTotal, bonus, tukin, hutang, absen, dll, sub1, sub2, total, checklist:{pokok:chkPokok, hadir:chkHadir, bonus:chkBonus, tukin:chkTukin, hutang:chkHutang, absen:chkAbsen, dll:chkDll}, monthStr, fmt, now};
+  return {pokok, tarifHadir:tarif, kehadiran:hadirCount, hadirTotal, tierTotal, tierData, bonus, tukin, hutang, absen, dll, sub1, sub2, total, checklist:{pokok:chkPokok, hadir:chkHadir, tier:chkTier, bonus:chkBonus, tukin:chkTukin, hutang:chkHutang, absen:chkAbsen, dll:chkDll}, monthStr, fmt, now};
 }
 
 function loadGajiModal(){
@@ -1177,12 +1219,15 @@ function loadGajiModal(){
   document.getElementById("inpKeterangan").value=data.keterangan||"";
   document.getElementById("chkPokok").checked=data.checklist.pokok!==false;
   document.getElementById("chkHadir").checked=data.checklist.hadir!==false;
+  if(document.getElementById("chkTier")) document.getElementById("chkTier").checked=data.checklist.tier!==false;
   document.getElementById("chkBonus").checked=data.checklist.bonus!==false;
   document.getElementById("chkTukin").checked=data.checklist.tukin!==false;
   document.getElementById("chkHutang").checked=data.checklist.hutang!==false;
   document.getElementById("chkAbsen").checked=data.checklist.absen!==false;
   document.getElementById("chkDll").checked=data.checklist.dll!==false;
-  document.getElementById("hadirAutoInfo").textContent=kehadiranAuto+" hari (auto dari laporan "+monthStr+")";
+  document.getElementById("hadirAutoInfo").textContent=kehadiranAuto+" hari (auto akumulasi bulanan dari timestamps laporan "+monthStr+" - libur tanpa potongan/tanpa hadir/tanpa tier)";
+  const tierAuto=getTierForMonth(monthStr);
+  if(document.getElementById("tierAutoInfo")) document.getElementById("tierAutoInfo").textContent=tierAuto.detail+" (libur = netral, tidak dihitung hadir/absen/tier)";
   calcGaji();
 }
 
@@ -1226,7 +1271,7 @@ document.getElementById("btnCloseGaji2").onclick=function(){
 };
 
 // auto calc on input
-["inpPokok","inpHadirTarif","inpHadirKehadiran","inpBonus","inpTukin","inpHutang","inpAbsen","inpDll","chkPokok","chkHadir","chkBonus","chkTukin","chkHutang","chkAbsen","chkDll"].forEach(function(id){
+["inpPokok","inpHadirTarif","inpHadirKehadiran","inpBonus","inpTukin","inpHutang","inpAbsen","inpDll","chkPokok","chkHadir","chkTier","chkBonus","chkTukin","chkHutang","chkAbsen","chkDll"].forEach(function(id){
   const el=document.getElementById(id);
   if(el) el.addEventListener("input", function(){ calcGaji(); saveCurrentGaji(); });
   if(el && el.type==="checkbox") el.addEventListener("change", function(){ calcGaji(); saveCurrentGaji(); });
@@ -1277,6 +1322,7 @@ function buatGajiWA(){
   lines.push("-".repeat(COL_LABEL+COL_VAL+1));
   if(calc.checklist.pokok) lines.push(padR("Gaji Pokok", COL_LABEL)+" "+padL("Rp "+calc.pokok.toLocaleString('id-ID'), COL_VAL));
   if(calc.checklist.hadir) lines.push(padR("Uang Hadir", COL_LABEL)+" "+padL("Rp "+calc.tarifHadir.toLocaleString('id-ID')+" x"+calc.kehadiran+"=Rp "+calc.hadirTotal.toLocaleString('id-ID'), COL_VAL));
+  if(calc.checklist.tier) lines.push(padR("Hasil Tier", COL_LABEL)+" "+padL("Rp "+calc.tierTotal.toLocaleString('id-ID')+" ("+calc.tierData.totalKg.toFixed(1)+"kg)", COL_VAL));
   if(calc.checklist.bonus) lines.push(padR("Bonus", COL_LABEL)+" "+padL("Rp "+calc.bonus.toLocaleString('id-ID'), COL_VAL));
   if(calc.checklist.tukin) lines.push(padR("Tukin", COL_LABEL)+" "+padL("Rp "+calc.tukin.toLocaleString('id-ID'), COL_VAL));
   lines.push(padR("Sub Total", COL_LABEL)+" "+padL("Rp "+calc.sub1.toLocaleString('id-ID'), COL_VAL));
@@ -1425,6 +1471,7 @@ async function shareGajiImage(){
 
   if(calc.checklist.pokok) drawRow("Gaji Pokok", "Rp "+calc.pokok.toLocaleString('id-ID'));
   if(calc.checklist.hadir) drawRow("Uang Hadir Rp "+calc.tarifHadir.toLocaleString('id-ID')+" x "+calc.kehadiran, "Rp "+calc.hadirTotal.toLocaleString('id-ID'));
+  if(calc.checklist.tier) drawRow("Hasil Tier ("+calc.tierData.totalKg.toFixed(1)+"kg) Akumulasi 1 Bulan", "Rp "+calc.tierTotal.toLocaleString('id-ID'));
   if(calc.checklist.bonus) drawRow("Bonus", "Rp "+calc.bonus.toLocaleString('id-ID'));
   if(calc.checklist.tukin) drawRow("Tukin", "Rp "+calc.tukin.toLocaleString('id-ID'));
   drawRow("Sub Total Pendapatan", "Rp "+calc.sub1.toLocaleString('id-ID'), true);
