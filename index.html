@@ -30,7 +30,10 @@ body{font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Int
     </div>
     <div class="flex items-center justify-between bg-[#f0fdfa] border border-[#99f6e0] rounded-lg px-3 py-2">
       <label class="text-[11px] font-bold text-[#0f766e]">📅 Tanggal:</label>
-      <input id="tglInput" type="date" class="text-[12px] font-bold bg-white border border-[#cbd5e1] rounded-lg px-2 py-1 outline-none focus:border-[#14b8a6]">
+      <div class="flex items-center gap-1">
+        <input id="tglInput" type="date" class="text-[12px] font-bold bg-white border border-[#cbd5e1] rounded-lg px-2 py-1 outline-none focus:border-[#14b8a6]">
+        <button id="btnResetTgl" class="text-[9px] bg-[#0f766e] text-white px-2 py-1 rounded-lg font-bold">Hari Ini</button>
+      </div>
     </div>
     <textarea id="waInput" placeholder="Paste chat WA di sini...
 Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] rounded-[8px] border border-[#cbd5e1] p-3 text-[14px] outline-none focus:ring-2 focus:ring-[#14b8a6]/30 focus:border-[#14b8a6] bg-[#f8fafc] resize-y"></textarea>
@@ -460,13 +463,60 @@ document.getElementById("uangHadirInput").addEventListener("input", function(){
   setUangHadirForDate(date, val);
   render();
 });
+let isManualDate=false;
 document.getElementById("tglInput").addEventListener("change", function(){
   const date=this.value;
+  isManualDate=true;
   if(date){
     document.getElementById("uangHadirInput").value=getUangHadirForDate(date);
     render();
+    setStatus("📅 Tanggal manual: "+date+" (mode susulan)");
   }
 });
+
+document.getElementById("btnResetTgl").onclick = function(){
+  isManualDate=false;
+  const today=todayLocal();
+  document.getElementById("tglInput").value=today;
+  document.getElementById("uangHadirInput").value=getUangHadirForDate(today);
+  render();
+  setStatus("📅 Reset ke hari ini: "+today);
+};
+
+function checkMidnightRollover(){
+  try{
+    const today=todayLocal();
+    const tglEl=document.getElementById("tglInput");
+    if(!tglEl || !tglEl.value) return;
+    const currentVal=tglEl.value;
+    if(currentVal!==today){
+      if(!isManualDate){
+        // auto rollover tengah malam
+        tglEl.value=today;
+        document.getElementById("uangHadirInput").value=getUangHadirForDate(today);
+        render();
+        setStatus("🌙 Hari baru "+today+" - nota harian kosong, auto ganti tanggal");
+        console.log("[Midnight] Auto rollover "+currentVal+" -> "+today);
+      }else{
+        // manual mode, kasih notice tapi jangan auto ganti
+        const diffDays=Math.round((new Date(today)-new Date(currentVal))/(1000*60*60*24));
+        if(diffDays>=1){
+          setStatus("⚠️ Tanggal masih "+currentVal+", sekarang "+today+" ("+diffDays+" hari lalu) - klik Reset Tgl untuk hari ini");
+        }
+      }
+    }
+  }catch(e){ console.log("midnight check fail", e); }
+}
+
+// cek tiap 60 detik + pas tab balik visible
+setInterval(checkMidnightRollover, 60000);
+document.addEventListener("visibilitychange", function(){
+  if(document.visibilityState==="visible"){
+    checkMidnightRollover();
+    render();
+  }
+});
+
 
 document.getElementById("btnProses").onclick = function(){ 
   const text=document.getElementById("waInput").value; 
