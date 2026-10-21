@@ -18,7 +18,8 @@ body{font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Int
   <div class="w-full flex flex-col gap-1 px-1 pb-1">
     <div class="flex items-center gap-2">
       <h1 class="text-[22px] font-black tracking-tight text-[#0f172a] leading-none">WA Nota Setrika</h1>
-      <span class="ml-auto text-[9px] font-bold bg-[#0f766e] text-white px-2 py-0.5 rounded-full">LS+SUPA</span>
+      <button id="btnOpenGaji" class="ml-auto flex items-center gap-1 bg-[#f618a9] text-white px-3 py-1 rounded-full font-black text-[11px] hover:bg-[#e0169a] active:scale-[0.95] transition"><span>💰</span> Gaji</button>
+      <span class="text-[9px] font-bold bg-[#0f766e] text-white px-2 py-0.5 rounded-full">LS+SUPA</span>
     </div>
     <p class="text-[11px] text-[#64748b] font-medium">LocalStorage + Supabase • progresif 50×0 + 20×1250 + ×1500 • 1 desimal</p>
   </div>
@@ -123,6 +124,15 @@ Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] 
 
       <div id="laporan" class="space-y-2"></div>
       <div id="laporanEmpty" class="text-[11px] text-[#94a3b8] py-3 text-center">Laporan kosong<br><span class="text-[10px]">Belum ada data nota untuk ditampilkan</span></div>
+
+      <div class="mt-4 border-t-2 border-[#f618a9]/20 pt-3">
+        <div class="flex items-center justify-between">
+          <h4 class="font-black text-[12px] text-[#f618a9]">📊 Laporan Gaji Terpisah (Karyawan)</h4>
+          <span id="gajiLaporanCount" class="text-[10px] bg-[#f618a9] text-white px-2 py-0.5 rounded-full">0 karyawan</span>
+        </div>
+        <div id="laporanGaji" class="space-y-2 mt-2"></div>
+        <div id="laporanGajiEmpty" class="text-[11px] text-[#94a3b8] py-2 text-center">Belum ada data gaji<br><span class="text-[10px]">Buat gaji via tombol Gaji</span></div>
+      </div>
       <div class="grid grid-cols-3 gap-2 text-[10px] mt-2">
         <div class="bg-[#f8fafc] border rounded p-2 text-center"><div class="text-[#94a3b8]">Timestamps</div><div id="tsCount" class="font-bold">0</div></div>
         <div class="bg-[#f8fafc] border rounded p-2 text-center"><div class="text-[#94a3b8]">Satuan</div><div class="font-bold">kg 1 desimal</div></div>
@@ -168,6 +178,193 @@ Contoh: [10:30, 12/05/24] Rahma: b dwi bantengan 3" class="w-full min-h-[120px] 
       <button id="btnBatalHapusSemua" class="flex-1 h-10 bg-white border-2 rounded-lg font-bold">Batal</button>
       <button id="btnKonfirmHapusSemua" class="flex-1 h-10 bg-red-600 text-white rounded-lg font-bold">Hapus Semua</button>
     </div>
+  </div>
+</div>
+
+
+
+<div id="modalGaji" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-[70] overflow-auto">
+  <div class="bg-white rounded-2xl w-[380px] max-w-[95%] h-auto border border-[#cbd5e1] p-2 box-border mx-auto shadow-2xl flex flex-col gap-2 max-h-[95vh] overflow-auto">
+    <!-- Logo Picker 54px + Karyawan -->
+    <div class="w-[360px] max-w-full mx-auto flex flex-col items-center gap-2">
+      <label for="logoPicker" class="w-[54px] h-[54px] rounded-full border-2 border-[#f618a9] overflow-hidden flex items-center justify-center bg-[#fff7fd] cursor-pointer shadow-sm relative group">
+        <img id="logoPreview" src="" alt="Logo" class="w-full h-full object-cover hidden">
+        <span id="logoPlaceholder" class="text-[10px] font-bold text-[#f618a9] text-center leading-tight">LOGO<br>54px</span>
+        <span class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition"></span>
+      </label>
+      <input type="file" id="logoPicker" accept="image/*" class="hidden">
+      <div class="w-full flex flex-col gap-1">
+        <div class="flex items-center gap-1">
+          <label class="text-[10px] font-bold shrink-0">Karyawan:</label>
+          <select id="karyawanSelect" class="flex-1 text-[11px] font-bold border rounded-lg px-2 py-1.5 bg-white"></select>
+          <button id="btnAddKaryawan" class="shrink-0 bg-[#f618a9] text-white text-[10px] font-bold px-2 py-1.5 rounded-lg">+ Tambah</button>
+        </div>
+        <div class="flex items-center gap-1">
+          <span id="karyawanInfo" class="text-[9px] text-[#64748b] flex-1">Pilih karyawan untuk gaji terpisah (kasir/setrika)</span>
+          <button id="btnHapusKaryawan" class="text-[9px] bg-white border border-red-200 text-red-500 px-2 py-0.5 rounded">Hapus</button>
+        </div>
+      </div>
+    </div>
+    <!-- Header 360 bg #f618a9 -->
+    <div class="w-[360px] max-w-full h-auto border border-[#e2e8f0] bg-[#f618a9] rounded-xl p-3 mx-auto flex flex-col gap-1">
+      <div class="flex justify-between items-center">
+        <div class="text-white font-black text-[15px]">Laundry Land</div>
+        <button id="btnCloseGaji" class="text-white/80 text-[12px] bg-white/20 px-2 py-0.5 rounded">✕</button>
+      </div>
+      <div id="gajiHeaderTitle" class="text-white font-bold text-[12px]">Struk Gaji</div>
+      <div id="gajiHeaderTimestamp" class="text-white/90 text-[10px] leading-tight">Gaji Bulan ke 10 • 20/10/2024 20:31 • Otomatis dari laporan</div>
+      <div class="flex items-center gap-2 mt-1">
+        <label class="text-[10px] text-white/80 font-bold">Bulan:</label>
+        <input id="gajiBulanInput" type="month" class="text-[11px] font-bold bg-white border rounded px-2 py-1">
+      </div>
+    </div>
+
+    <!-- Form Pendapatan -->
+    <div class="w-[360px] max-w-full mx-auto border border-[#e2e8f0] rounded-xl p-2 flex flex-col gap-2 bg-[#fff7fd]">
+      <div class="font-black text-[11px] text-[#f618a9]">PENDAPATAN</div>
+      
+      <div class="flex items-center gap-2 bg-white border rounded-lg px-2 py-1.5">
+        <input type="checkbox" id="chkPokok" checked class="w-4 h-4">
+        <label class="text-[11px] font-bold flex-1">Gaji Pokok</label>
+        <div class="flex items-center gap-1">
+          <span class="text-[10px]">Rp</span>
+          <input id="inpPokok" type="number" value="1000000" class="w-[100px] text-[12px] font-bold border rounded px-2 py-1 text-right">
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-1 bg-white border rounded-lg px-2 py-1.5 overflow-hidden">
+        <div class="flex items-center gap-1.5 w-full">
+          <input type="checkbox" id="chkHadir" checked class="w-4 h-4 shrink-0">
+          <label class="text-[11px] font-bold shrink-0">Uang Hadir</label>
+          <div class="flex items-center gap-1 ml-auto">
+            <span class="text-[10px] shrink-0">Rp</span>
+            <input id="inpHadirTarif" type="number" value="7500" class="w-[55px] text-[11px] font-bold border rounded px-1 py-1 text-right shrink-0" maxlength="5">
+            <span class="text-[10px] shrink-0">x</span>
+            <input id="inpHadirKehadiran" type="number" value="0" class="w-[32px] text-[11px] font-bold border rounded px-1 py-1 text-center bg-[#f0fdfa] shrink-0">
+            <span class="text-[10px] shrink-0">=</span>
+            <span id="lblHadirTotal" class="text-[10px] font-black w-[62px] text-right truncate shrink-0">Rp 0</span>
+          </div>
+        </div>
+        <div class="text-[9px] text-[#64748b] ml-6">Auto dari laporan: <span id="hadirAutoInfo">0 hari</span></div>
+      </div>
+
+      <div class="flex items-center gap-2 bg-white border rounded-lg px-2 py-1.5">
+        <input type="checkbox" id="chkBonus" checked class="w-4 h-4">
+        <label class="text-[11px] font-bold flex-1">Bonus</label>
+        <div class="flex items-center gap-1">
+          <span class="text-[10px]">Rp</span>
+          <input id="inpBonus" type="number" value="0" class="w-[100px] text-[12px] font-bold border rounded px-2 py-1 text-right">
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 bg-white border rounded-lg px-2 py-1.5">
+        <input type="checkbox" id="chkTukin" checked class="w-4 h-4">
+        <label class="text-[11px] font-bold flex-1">Tukin</label>
+        <div class="flex items-center gap-1">
+          <span class="text-[10px]">Rp</span>
+          <input id="inpTukin" type="number" value="0" class="w-[100px] text-[12px] font-bold border rounded px-2 py-1 text-right">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between bg-[#f618a9]/10 border-2 border-[#f618a9]/20 rounded-lg px-3 py-2">
+        <span class="text-[11px] font-black">Sub Total Pendapatan:</span>
+        <span id="lblSub1" class="text-[12px] font-black">Rp 0</span>
+      </div>
+    </div>
+
+    <!-- Form Potongan -->
+    <div class="w-[360px] max-w-full mx-auto border border-[#e2e8f0] rounded-xl p-2 flex flex-col gap-2 bg-[#fef2f2]">
+      <div class="font-black text-[11px] text-[#dc2626]">POTONGAN</div>
+      
+      <div class="flex items-center gap-2 bg-white border rounded-lg px-2 py-1.5">
+        <input type="checkbox" id="chkHutang" checked class="w-4 h-4">
+        <label class="text-[11px] font-bold flex-1">Hutang</label>
+        <div class="flex items-center gap-1">
+          <span class="text-[10px]">Rp</span>
+          <input id="inpHutang" type="number" value="0" class="w-[100px] text-[12px] font-bold border rounded px-2 py-1 text-right">
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 bg-white border rounded-lg px-2 py-1.5">
+        <input type="checkbox" id="chkAbsen" checked class="w-4 h-4">
+        <label class="text-[11px] font-bold flex-1">Absen</label>
+        <div class="flex items-center gap-1">
+          <span class="text-[10px]">Rp</span>
+          <input id="inpAbsen" type="number" value="0" class="w-[100px] text-[12px] font-bold border rounded px-2 py-1 text-right">
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 bg-white border rounded-lg px-2 py-1.5">
+        <input type="checkbox" id="chkDll" checked class="w-4 h-4">
+        <label class="text-[11px] font-bold flex-1">Dll</label>
+        <div class="flex items-center gap-1">
+          <span class="text-[10px]">Rp</span>
+          <input id="inpDll" type="number" value="0" class="w-[100px] text-[12px] font-bold border rounded px-2 py-1 text-right">
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between bg-[#dc2626]/10 border-2 border-[#dc2626]/20 rounded-lg px-3 py-2">
+        <span class="text-[11px] font-black">Sub Total Potongan:</span>
+        <span id="lblSub2" class="text-[12px] font-black">Rp 0</span>
+      </div>
+    </div>
+
+    <!-- Total Gaji -->
+    <div class="w-[360px] max-w-full mx-auto border-2 border-[#f618a9] rounded-xl p-3 flex flex-col gap-2 bg-[#fff7fd]">
+      <div class="flex items-center justify-between">
+        <span class="text-[12px] font-black">Total Gaji:</span>
+        <span id="lblTotalGaji" class="text-[14px] font-black text-[#f618a9]">Rp 0</span>
+      </div>
+      <div id="lblGajiFormula" class="text-[9px] text-[#64748b] leading-tight">Subtotal1 - Subtotal2</div>
+    </div>
+
+    <!-- Keterangan -->
+    <div class="w-[360px] max-w-full mx-auto border border-[#e2e8f0] rounded-xl p-2 flex flex-col gap-1">
+      <label class="text-[11px] font-bold">Keterangan:</label>
+      <textarea id="inpKeterangan" placeholder="Catatan..." class="w-full min-h-[50px] text-[11px] border rounded-lg p-2"></textarea>
+    </div>
+
+    <!-- Share -->
+    <div class="w-[360px] max-w-full mx-auto flex gap-2">
+      <button id="btnShareGajiWA" class="flex-1 h-10 bg-[#25D366] text-white rounded-xl font-bold text-[12px]">Share WA Bisnis</button>
+      <button id="btnCloseGaji2" class="flex-1 h-10 bg-white border-2 border-[#cbd5e1] rounded-xl font-bold text-[11px]">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalGajiShare" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-[80]">
+  <div class="bg-white rounded-2xl p-4 w-[90%] max-w-[320px] border-2 border-[#f618a9] box-border mx-auto shadow-2xl flex flex-col gap-3">
+    <h3 class="font-black text-[14px] text-center">Pilih Format Share</h3>
+    <button id="btnGajiShareText" class="w-full h-12 bg-[#f8fafc] border-2 border-[#cbd5e1] rounded-xl font-bold text-[12px]">📝 Nota Text (3 kolom)</button>
+    <button id="btnGajiShareImage" class="w-full h-12 bg-[#f618a9] text-white rounded-xl font-bold text-[12px]">🖼️ Nota Gambar PNG (iOS tajam) - Web Share</button>
+    <button id="btnGajiShareBatal" class="w-full h-8 bg-white border rounded-xl font-bold text-[11px]">Batal</button>
+  </div>
+</div>
+
+
+<div id="modalKaryawan" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-[75]">
+  <div class="bg-white rounded-2xl p-4 w-[90%] max-w-[300px] border-2 border-[#f618a9] mx-auto flex flex-col gap-3">
+    <h3 class="font-black text-[13px]">Tambah Karyawan</h3>
+    <div class="flex flex-col gap-1">
+      <label class="text-[11px] font-bold">Nama Karyawan (tanpa alamat/hp):</label>
+      <input id="inpNamaKaryawan" placeholder="Contoh: Kasir - Sari" class="border-2 border-[#cbd5e1] rounded-lg px-3 py-2 text-[12px] font-bold focus:border-[#f618a9] outline-none">
+    </div>
+    <div class="flex gap-2">
+      <button id="btnBatalKaryawan" class="flex-1 h-9 bg-white border-2 rounded-xl font-bold text-[11px]">Batal</button>
+      <button id="btnSimpanKaryawan" class="flex-1 h-9 bg-[#f618a9] text-white rounded-xl font-bold text-[11px]">Simpan</button>
+    </div>
+  </div>
+</div>
+
+
+<div id="gajiCanvasWrapper" class="fixed left-[-9999px] top-0 w-[380px] bg-white p-3" style="border:1px solid #e2e8f0">
+  <div id="gajiCanvasContent" class="w-full flex flex-col gap-2">
+    <div class="w-full bg-[#f618a9] rounded-xl p-3 border border-[#e2e8f0]">
+      <div class="text-white font-black text-[16px]">Laundry Land</div>
+      <div id="canvasGajiTitle" class="text-white font-bold text-[12px]">Struk Gaji Bulan ke 10</div>
+      <div id="canvasGajiTimestamp" class="text-white/90 text-[10px]">20/10/2024 20:45</div>
+    </div>
+    <div id="canvasGajiBody" class="flex flex-col gap-2"></div>
   </div>
 </div>
 
@@ -829,12 +1026,574 @@ setLaporanMode(laporanMode);
 
 try{ const tglEl2=document.getElementById("tglInput"); if(tglEl2 && !tglEl2.value){ tglEl2.valueAsDate=new Date(); } }catch(e){}
 render(); 
-window.addEventListener("storage", function(){render();});
+window.addEventListener("storage", function(){render(); renderLaporanGaji();});
+
+// ===== GAJI LOGIC v18 KARYAWAN TERPISAH =====
+const LS_GAJI_KEY="gaji_data";
+const LS_KARYAWAN_KEY="karyawan_data";
+function getKaryawanAll(){ try{ const arr=JSON.parse(localStorage.getItem(LS_KARYAWAN_KEY)||"[]"); if(arr.length===0){ const def=[{id:"k1", nama:"Setrika - Default"}, {id:"k2", nama:"Kasir - Sari"}]; localStorage.setItem(LS_KARYAWAN_KEY, JSON.stringify(def)); return def; } return arr; }catch{ return [{id:"k1", nama:"Setrika - Default"}]; } }
+function saveKaryawanAll(arr){ localStorage.setItem(LS_KARYAWAN_KEY, JSON.stringify(arr)); }
+function getSelectedKaryawanId(){ const sel=document.getElementById("karyawanSelect"); return sel && sel.value ? sel.value : "k1"; }
+function getKaryawanById(id){ return getKaryawanAll().find(k=>k.id===id); }
+function refreshKaryawanSelect(){
+  const sel=document.getElementById("karyawanSelect");
+  const all=getKaryawanAll();
+  const current=sel ? sel.value : null;
+  if(!sel) return;
+  sel.innerHTML="";
+  all.forEach(function(k){
+    const opt=document.createElement("option");
+    opt.value=k.id;
+    opt.textContent=k.nama;
+    sel.appendChild(opt);
+  });
+  if(current && all.find(k=>k.id===current)) sel.value=current;
+  else if(all[0]) sel.value=all[0].id;
+  const info=document.getElementById("karyawanInfo");
+  if(info){
+    const k=getKaryawanById(sel.value);
+    if(k){
+      const isKasir=k.nama.toLowerCase().includes("kasir");
+      info.textContent=isKasir ? "Kasir: tidak terikat tier, kehadiran manual, bonus saja (uncheck tier)" : "Setrika: terikat tier + kehadiran auto dari laporan";
+    }
+  }
+}
+
+function getGajiAll(){ try{ return JSON.parse(localStorage.getItem(LS_GAJI_KEY)||"{}"); }catch{ return {}; } }
+function saveGajiAll(o){ localStorage.setItem(LS_GAJI_KEY, JSON.stringify(o)); }
+function getKehadiranForMonth(monthStr){
+  // monthStr YYYY-MM
+  const all=getAll();
+  const dates=new Set();
+  all.forEach(function(r){
+    if(r.date && r.date.startsWith(monthStr)) dates.add(r.date);
+  });
+  return dates.size;
+}
+function getGajiKey(monthStr, karyawanId){
+  karyawanId=karyawanId||getSelectedKaryawanId();
+  return karyawanId+"_"+monthStr;
+}
+function getGajiForMonth(monthStr, karyawanId){
+  karyawanId=karyawanId||getSelectedKaryawanId();
+  const key=getGajiKey(monthStr, karyawanId);
+  const all=getGajiAll();
+  return all[key] || {
+    pokok:1000000, tarifHadir:7500, kehadiran:0, bonus:0, tukin:0,
+    hutang:0, absen:0, dll:0,
+    keterangan:"",
+    checklist:{pokok:true, hadir:true, bonus:true, tukin:true, hutang:true, absen:true, dll:true},
+    timestamp:new Date().toISOString(),
+    karyawanId:karyawanId
+  };
+}
+function saveGajiForMonth(monthStr, data, karyawanId){
+  karyawanId=karyawanId||getSelectedKaryawanId();
+  const key=getGajiKey(monthStr, karyawanId);
+  const all=getGajiAll();
+  all[key]=data;
+  saveGajiAll(all);
+}
+function formatGajiBulanKe(monthStr){
+  try{
+    const parts=monthStr.split("-");
+    const monthNum=parseInt(parts[1]);
+    const year=parts[0];
+    const monthNames=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    return {bulanKe:monthNum, label:monthNames[monthNum-1]+" "+year, monthNum:monthNum};
+  }catch{ return {bulanKe:1, label:monthStr, monthNum:1}; }
+}
+function calcGaji(){
+  const monthEl=document.getElementById("gajiBulanInput");
+  const monthStr=monthEl && monthEl.value ? monthEl.value : new Date().toISOString().slice(0,7);
+  const pokok=parseInt(document.getElementById("inpPokok").value)||0;
+  const tarif=parseInt(document.getElementById("inpHadirTarif").value)||0;
+  const hadirCount=parseInt(document.getElementById("inpHadirKehadiran").value)||0;
+  const bonus=parseInt(document.getElementById("inpBonus").value)||0;
+  const tukin=parseInt(document.getElementById("inpTukin").value)||0;
+  const hutang=parseInt(document.getElementById("inpHutang").value)||0;
+  const absen=parseInt(document.getElementById("inpAbsen").value)||0;
+  const dll=parseInt(document.getElementById("inpDll").value)||0;
+  const chkPokok=document.getElementById("chkPokok").checked;
+  const chkHadir=document.getElementById("chkHadir").checked;
+  const chkBonus=document.getElementById("chkBonus").checked;
+  const chkTukin=document.getElementById("chkTukin").checked;
+  const chkHutang=document.getElementById("chkHutang").checked;
+  const chkAbsen=document.getElementById("chkAbsen").checked;
+  const chkDll=document.getElementById("chkDll").checked;
+
+  const hadirTotal=tarif*hadirCount;
+  let sub1=0;
+  if(chkPokok) sub1+=pokok;
+  if(chkHadir) sub1+=hadirTotal;
+  if(chkBonus) sub1+=bonus;
+  if(chkTukin) sub1+=tukin;
+
+  let sub2=0;
+  if(chkHutang) sub2+=hutang;
+  if(chkAbsen) sub2+=absen;
+  if(chkDll) sub2+=dll;
+
+  const total=sub1-sub2;
+
+  document.getElementById("lblHadirTotal").textContent="Rp "+hadirTotal.toLocaleString('id-ID');
+  document.getElementById("lblSub1").textContent="Rp "+sub1.toLocaleString('id-ID');
+  document.getElementById("lblSub2").textContent="Rp "+sub2.toLocaleString('id-ID');
+  document.getElementById("lblTotalGaji").textContent="Rp "+total.toLocaleString('id-ID');
+  document.getElementById("lblGajiFormula").textContent="Subtotal Pendapatan Rp "+sub1.toLocaleString('id-ID')+" - Potongan Rp "+sub2.toLocaleString('id-ID')+" = Rp "+total.toLocaleString('id-ID');
+
+  // update timestamp header with karyawan
+  const fmt=formatGajiBulanKe(monthStr);
+  const now=new Date().toLocaleString('id-ID');
+  const kId=getSelectedKaryawanId();
+  const kData=getKaryawanById(kId);
+  const kNama=kData?kData.nama:"-";
+  document.getElementById("gajiHeaderTimestamp").textContent="Gaji Bulan ke "+fmt.bulanKe+" • "+fmt.label+" • "+kNama+" • "+now+" • Kehadiran "+hadirCount+" hari";
+  
+  return {pokok, tarifHadir:tarif, kehadiran:hadirCount, hadirTotal, bonus, tukin, hutang, absen, dll, sub1, sub2, total, checklist:{pokok:chkPokok, hadir:chkHadir, bonus:chkBonus, tukin:chkTukin, hutang:chkHutang, absen:chkAbsen, dll:chkDll}, monthStr, fmt, now};
+}
+
+function loadGajiModal(){
+  refreshKaryawanSelect();
+  const monthInput=document.getElementById("gajiBulanInput");
+  if(!monthInput.value){
+    monthInput.value=new Date().toISOString().slice(0,7);
+  }
+  const monthStr=monthInput.value;
+  const karyawanId=getSelectedKaryawanId();
+  const kehadiranAuto=getKehadiranForMonth(monthStr);
+  const data=getGajiForMonth(monthStr, karyawanId);
+  // jika kehadiran di data 0, pakai auto
+  if(data.kehadiran===0 && kehadiranAuto>0) data.kehadiran=kehadiranAuto;
+  
+  document.getElementById("inpPokok").value=data.pokok;
+  document.getElementById("inpHadirTarif").value=data.tarifHadir;
+  document.getElementById("inpHadirKehadiran").value=data.kehadiran;
+  document.getElementById("inpBonus").value=data.bonus;
+  document.getElementById("inpTukin").value=data.tukin;
+  document.getElementById("inpHutang").value=data.hutang;
+  document.getElementById("inpAbsen").value=data.absen;
+  document.getElementById("inpDll").value=data.dll;
+  document.getElementById("inpKeterangan").value=data.keterangan||"";
+  document.getElementById("chkPokok").checked=data.checklist.pokok!==false;
+  document.getElementById("chkHadir").checked=data.checklist.hadir!==false;
+  document.getElementById("chkBonus").checked=data.checklist.bonus!==false;
+  document.getElementById("chkTukin").checked=data.checklist.tukin!==false;
+  document.getElementById("chkHutang").checked=data.checklist.hutang!==false;
+  document.getElementById("chkAbsen").checked=data.checklist.absen!==false;
+  document.getElementById("chkDll").checked=data.checklist.dll!==false;
+  document.getElementById("hadirAutoInfo").textContent=kehadiranAuto+" hari (auto dari laporan "+monthStr+")";
+  calcGaji();
+}
+
+function saveCurrentGaji(){
+  const monthStr=document.getElementById("gajiBulanInput").value;
+  const karyawanId=getSelectedKaryawanId();
+  const calc=calcGaji();
+  const data={
+    pokok:parseInt(document.getElementById("inpPokok").value)||0,
+    tarifHadir:parseInt(document.getElementById("inpHadirTarif").value)||0,
+    kehadiran:parseInt(document.getElementById("inpHadirKehadiran").value)||0,
+    bonus:parseInt(document.getElementById("inpBonus").value)||0,
+    tukin:parseInt(document.getElementById("inpTukin").value)||0,
+    hutang:parseInt(document.getElementById("inpHutang").value)||0,
+    absen:parseInt(document.getElementById("inpAbsen").value)||0,
+    dll:parseInt(document.getElementById("inpDll").value)||0,
+    keterangan:document.getElementById("inpKeterangan").value,
+    checklist:calc.checklist,
+    timestamp:new Date().toISOString(),
+    monthStr:monthStr,
+    karyawanId:karyawanId,
+    karyawanNama:(getKaryawanById(karyawanId)||{}).nama||""
+  };
+  saveGajiForMonth(monthStr, data, karyawanId);
+  // update laporan gaji terpisah
+  renderLaporanGaji();
+}
+
+document.getElementById("btnOpenGaji").onclick=function(){
+  loadGajiModal();
+  document.getElementById("modalGaji").classList.remove("hidden");
+  document.getElementById("modalGaji").classList.add("flex");
+};
+document.getElementById("btnCloseGaji").onclick=function(){
+  document.getElementById("modalGaji").classList.add("hidden");
+  document.getElementById("modalGaji").classList.remove("flex");
+};
+document.getElementById("btnCloseGaji2").onclick=function(){
+  document.getElementById("modalGaji").classList.add("hidden");
+  document.getElementById("modalGaji").classList.remove("flex");
+};
+
+// auto calc on input
+["inpPokok","inpHadirTarif","inpHadirKehadiran","inpBonus","inpTukin","inpHutang","inpAbsen","inpDll","chkPokok","chkHadir","chkBonus","chkTukin","chkHutang","chkAbsen","chkDll"].forEach(function(id){
+  const el=document.getElementById(id);
+  if(el) el.addEventListener("input", function(){ calcGaji(); saveCurrentGaji(); });
+  if(el && el.type==="checkbox") el.addEventListener("change", function(){ calcGaji(); saveCurrentGaji(); });
+});
+document.getElementById("gajiBulanInput").addEventListener("change", function(){
+  loadGajiModal();
+});
+document.getElementById("inpKeterangan").addEventListener("input", function(){ saveCurrentGaji(); });
+
+function renderLaporanGaji(){
+  const all=getGajiAll();
+  const karyawanAll=getKaryawanAll();
+  const container=document.getElementById("laporanGaji");
+  const empty=document.getElementById("laporanGajiEmpty");
+  const countEl=document.getElementById("gajiLaporanCount");
+  if(!container) return;
+  const keys=Object.keys(all);
+  if(keys.length===0){
+    container.innerHTML="";
+    if(empty) empty.classList.remove("hidden");
+    if(countEl) countEl.textContent="0 karyawan";
+    return;
+  }
+  if(empty) empty.classList.add("hidden");
+  if(countEl) countEl.textContent=keys.length+" record";
+  // group by bulan
+  let htmlG="";
+  keys.sort().reverse().slice(0,20).forEach(function(key){
+    const d=all[key];
+    const kNama=d.karyawanNama|| (getKaryawanById(d.karyawanId)||{}).nama || key;
+    htmlG+='<div class="bg-white border rounded-lg p-2 text-[11px]"><div class="font-bold">'+kNama+' • '+d.monthStr+'</div><div class="text-[10px] text-[#64748b]">Total Rp '+(d.pokok||0 + (d.tarifHadir||0)*(d.kehadiran||0)).toLocaleString('id-ID')+' → Gaji Bersih Rp '+((d.pokok||0)+(d.tarifHadir||0)*(d.kehadiran||0)+(d.bonus||0)+(d.tukin||0)-(d.hutang||0)-(d.absen||0)-(d.dll||0)).toLocaleString('id-ID')+'</div></div>';
+  });
+  container.innerHTML=htmlG;
+}
+
+function buatGajiWA(){
+  const calc=calcGaji();
+  const monthStr=document.getElementById("gajiBulanInput").value;
+  const fmt=formatGajiBulanKe(monthStr);
+  const ket=document.getElementById("inpKeterangan").value;
+  function padR(s,l){ s=String(s); if(s.length>l) return s.slice(0,l-1)+"…"; return s+" ".repeat(l-s.length); }
+  function padL(s,l){ s=String(s); return " ".repeat(Math.max(0,l-String(s).length))+String(s); }
+  const COL_LABEL=14, COL_VAL=14;
+  let lines=[];
+  lines.push("```");
+  lines.push(padR("Laundry Land - Struk Gaji Bulan ke "+fmt.bulanKe, COL_LABEL+COL_VAL+1));
+  lines.push(padR(fmt.label+" • "+calc.now, COL_LABEL+COL_VAL+1));
+  lines.push("-".repeat(COL_LABEL+COL_VAL+1));
+  if(calc.checklist.pokok) lines.push(padR("Gaji Pokok", COL_LABEL)+" "+padL("Rp "+calc.pokok.toLocaleString('id-ID'), COL_VAL));
+  if(calc.checklist.hadir) lines.push(padR("Uang Hadir", COL_LABEL)+" "+padL("Rp "+calc.tarifHadir.toLocaleString('id-ID')+" x"+calc.kehadiran+"=Rp "+calc.hadirTotal.toLocaleString('id-ID'), COL_VAL));
+  if(calc.checklist.bonus) lines.push(padR("Bonus", COL_LABEL)+" "+padL("Rp "+calc.bonus.toLocaleString('id-ID'), COL_VAL));
+  if(calc.checklist.tukin) lines.push(padR("Tukin", COL_LABEL)+" "+padL("Rp "+calc.tukin.toLocaleString('id-ID'), COL_VAL));
+  lines.push(padR("Sub Total", COL_LABEL)+" "+padL("Rp "+calc.sub1.toLocaleString('id-ID'), COL_VAL));
+  lines.push("-".repeat(COL_LABEL+COL_VAL+1));
+  lines.push(padR("Potongan:", COL_LABEL+COL_VAL+1));
+  if(calc.checklist.hutang) lines.push(padR("Hutang", COL_LABEL)+" "+padL("Rp "+calc.hutang.toLocaleString('id-ID'), COL_VAL));
+  if(calc.checklist.absen) lines.push(padR("Absen", COL_LABEL)+" "+padL("Rp "+calc.absen.toLocaleString('id-ID'), COL_VAL));
+  if(calc.checklist.dll) lines.push(padR("Dll", COL_LABEL)+" "+padL("Rp "+calc.dll.toLocaleString('id-ID'), COL_VAL));
+  lines.push(padR("Sub Potongan", COL_LABEL)+" "+padL("Rp "+calc.sub2.toLocaleString('id-ID'), COL_VAL));
+  lines.push("-".repeat(COL_LABEL+COL_VAL+1));
+  lines.push(padR("Total Gaji", COL_LABEL)+" "+padL("Rp "+calc.total.toLocaleString('id-ID'), COL_VAL));
+  if(ket) lines.push(""); lines.push("Ket: "+ket);
+  lines.push("```");
+  return lines.join("\n");
+}
+
+function buatGajiCanvas(){
+  const calc=calcGaji();
+  const monthStr=document.getElementById("gajiBulanInput").value;
+  const fmt=formatGajiBulanKe(monthStr);
+  const ket=document.getElementById("inpKeterangan").value;
+  const body=document.getElementById("canvasGajiBody");
+  body.innerHTML="";
+  function row(label, val, isSub){
+    const div=document.createElement("div");
+    div.className=isSub?"flex justify-between bg-[#f618a9]/10 border-2 border-[#f618a9]/20 rounded-lg px-3 py-2":"flex justify-between bg-white border rounded-lg px-3 py-2";
+    div.innerHTML="<span class='text-[11px] font-bold'>"+label+"</span><span class='text-[11px] font-black'>"+val+"</span>";
+    return div;
+  }
+  document.getElementById("canvasGajiTitle").textContent="Struk Gaji Bulan ke "+fmt.bulanKe+" - "+fmt.label;
+  document.getElementById("canvasGajiTimestamp").textContent=calc.now+" • Kehadiran "+calc.kehadiran+" hari";
+  if(calc.checklist.pokok) body.appendChild(row("Gaji Pokok", "Rp "+calc.pokok.toLocaleString('id-ID')));
+  if(calc.checklist.hadir) body.appendChild(row("Uang Hadir Rp "+calc.tarifHadir.toLocaleString('id-ID')+" x "+calc.kehadiran, "Rp "+calc.hadirTotal.toLocaleString('id-ID')));
+  if(calc.checklist.bonus) body.appendChild(row("Bonus", "Rp "+calc.bonus.toLocaleString('id-ID')));
+  if(calc.checklist.tukin) body.appendChild(row("Tukin", "Rp "+calc.tukin.toLocaleString('id-ID')));
+  body.appendChild(row("Sub Total Pendapatan", "Rp "+calc.sub1.toLocaleString('id-ID'), true));
+  const potongHeader=document.createElement("div"); potongHeader.className="font-black text-[11px] text-[#dc2626] mt-1"; potongHeader.textContent="POTONGAN"; body.appendChild(potongHeader);
+  if(calc.checklist.hutang) body.appendChild(row("Hutang", "Rp "+calc.hutang.toLocaleString('id-ID')));
+  if(calc.checklist.absen) body.appendChild(row("Absen", "Rp "+calc.absen.toLocaleString('id-ID')));
+  if(calc.checklist.dll) body.appendChild(row("Dll", "Rp "+calc.dll.toLocaleString('id-ID')));
+  body.appendChild(row("Sub Total Potongan", "Rp "+calc.sub2.toLocaleString('id-ID'), true));
+  const totalDiv=document.createElement("div"); totalDiv.className="flex justify-between border-2 border-[#f618a9] rounded-xl p-3 bg-[#fff7fd]"; totalDiv.innerHTML="<span class='text-[12px] font-black'>Total Gaji</span><span class='text-[14px] font-black text-[#f618a9]'>Rp "+calc.total.toLocaleString('id-ID')+"</span>"; body.appendChild(totalDiv);
+  if(ket){ const kDiv=document.createElement("div"); kDiv.className="text-[10px] border rounded-lg p-2 bg-[#f8fafc]"; kDiv.textContent="Ket: "+ket; body.appendChild(kDiv); }
+}
+
+async function loadImageAsync(src){
+  return new Promise(function(resolve, reject){
+    const img=new Image();
+    img.onload=function(){ resolve(img); };
+    img.onerror=function(){ reject(new Error("logo load fail")); };
+    img.src=src;
+  });
+}
+
+async function shareGajiImage(){
+  buatGajiCanvas();
+  const wrapper=document.getElementById("gajiCanvasWrapper");
+  const content=document.getElementById("gajiCanvasContent");
+  const canvas=document.createElement("canvas");
+  const scale=2;
+  canvas.width=380*scale;
+  canvas.height=(content.scrollHeight+20)*scale;
+  const ctx=canvas.getContext("2d");
+  ctx.scale(scale, scale);
+  // background putih
+  ctx.fillStyle="#ffffff";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  // header #f618a9 - tinggi 70, padding header-5
+  ctx.fillStyle="#f618a9";
+  ctx.beginPath();
+  const r=12;
+  const headerH=70;
+  const headerPad=5;
+  ctx.roundRect(12,12,356,headerH,r);
+  ctx.fill();
+  // logo diperbesar menyesuaikan header v+h center batas padding header-5
+  const logoData=getLogoData();
+  const logoSize=headerH - headerPad*2; // 60px
+  const logoX=12+headerPad; // 17
+  const logoY=12+headerPad; // 17
+  if(logoData){
+    try{
+      const logoImg=await loadImageAsync(logoData);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(logoX+logoSize/2, logoY+logoSize/2, logoSize/2, 0, Math.PI*2);
+      ctx.clip();
+      ctx.drawImage(logoImg, logoX, logoY, logoSize, logoSize);
+      ctx.restore();
+      // border putih
+      ctx.strokeStyle="#ffffff";
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.arc(logoX+logoSize/2, logoY+logoSize/2, logoSize/2, 0, Math.PI*2);
+      ctx.stroke();
+    }catch(e){ console.log("logo draw fail", e); }
+  }
+  ctx.fillStyle="#ffffff";
+  ctx.font="bold 15px system-ui";
+  const titleX=logoData ? logoX+logoSize+10 : 24;
+  ctx.fillText("Laundry Land", titleX, 32);
+  const calc=calcGaji();
+  const monthStr=document.getElementById("gajiBulanInput").value;
+  const fmt=formatGajiBulanKe(monthStr);
+  const kId=getSelectedKaryawanId();
+  const kData=getKaryawanById(kId);
+  const kNama=kData?kData.nama:"";
+  ctx.font="bold 11px system-ui";
+  ctx.fillText("Struk Gaji Bulan ke "+fmt.bulanKe+" - "+fmt.label, titleX, 48);
+  ctx.font="10px system-ui";
+  ctx.fillText(kNama+" • "+calc.now+" • "+calc.kehadiran+" hari hadir", titleX, 62);
+
+  let y=100;
+  function drawRow(label, val, isSub, isTotal){
+    const h=isTotal?44:32;
+    if(isSub){
+      ctx.fillStyle=isTotal?"#fff7fd":"#f618a9";
+      ctx.globalAlpha=isTotal?1:0.1;
+      ctx.beginPath();
+      ctx.roundRect(12,y,356,h,8);
+      ctx.fill();
+      ctx.globalAlpha=1;
+      if(isTotal){
+        ctx.strokeStyle="#f618a9";
+        ctx.lineWidth=2;
+        ctx.stroke();
+      }
+    }else{
+      ctx.fillStyle="#ffffff";
+      ctx.beginPath();
+      ctx.roundRect(12,y,356,h,8);
+      ctx.fill();
+      ctx.strokeStyle="#e2e8f0";
+      ctx.lineWidth=1;
+      ctx.stroke();
+    }
+    ctx.fillStyle="#0f172a";
+    ctx.font=isTotal?"black 12px system-ui":"bold 11px system-ui";
+    ctx.fillText(label, 24, y+20);
+    ctx.font=isTotal?"black 14px system-ui":"black 11px system-ui";
+    if(isTotal) ctx.fillStyle="#f618a9";
+    const valW=ctx.measureText(val).width;
+    ctx.fillText(val, 12+356-12-valW, y+20);
+    y+=h+6;
+  }
+
+  if(calc.checklist.pokok) drawRow("Gaji Pokok", "Rp "+calc.pokok.toLocaleString('id-ID'));
+  if(calc.checklist.hadir) drawRow("Uang Hadir Rp "+calc.tarifHadir.toLocaleString('id-ID')+" x "+calc.kehadiran, "Rp "+calc.hadirTotal.toLocaleString('id-ID'));
+  if(calc.checklist.bonus) drawRow("Bonus", "Rp "+calc.bonus.toLocaleString('id-ID'));
+  if(calc.checklist.tukin) drawRow("Tukin", "Rp "+calc.tukin.toLocaleString('id-ID'));
+  drawRow("Sub Total Pendapatan", "Rp "+calc.sub1.toLocaleString('id-ID'), true);
+  y+=4;
+  ctx.fillStyle="#dc2626";
+  ctx.font="black 11px system-ui";
+  ctx.fillText("POTONGAN", 24, y+10);
+  y+=20;
+  if(calc.checklist.hutang) drawRow("Hutang", "Rp "+calc.hutang.toLocaleString('id-ID'));
+  if(calc.checklist.absen) drawRow("Absen", "Rp "+calc.absen.toLocaleString('id-ID'));
+  if(calc.checklist.dll) drawRow("Dll", "Rp "+calc.dll.toLocaleString('id-ID'));
+  drawRow("Sub Total Potongan", "Rp "+calc.sub2.toLocaleString('id-ID'), true);
+  y+=6;
+  drawRow("Total Gaji", "Rp "+calc.total.toLocaleString('id-ID'), true, true);
+
+  const ket=document.getElementById("inpKeterangan").value;
+  if(ket){
+    y+=6;
+    ctx.fillStyle="#f8fafc";
+    ctx.beginPath();
+    ctx.roundRect(12,y,356,40,8);
+    ctx.fill();
+    ctx.fillStyle="#64748b";
+    ctx.font="10px system-ui";
+    ctx.fillText("Ket: "+ket.slice(0,60), 24, y+20);
+    y+=50;
+  }
+
+  return new Promise(function(resolve){
+    canvas.toBlob(function(blob){
+      resolve({blob:blob, canvas:canvas});
+    }, "image/png", 1.0);
+  });
+}
+
+document.getElementById("btnShareGajiWA").onclick=function(){
+  document.getElementById("modalGajiShare").classList.remove("hidden");
+  document.getElementById("modalGajiShare").classList.add("flex");
+};
+document.getElementById("btnGajiShareBatal").onclick=function(){
+  document.getElementById("modalGajiShare").classList.add("hidden");
+  document.getElementById("modalGajiShare").classList.remove("flex");
+};
+document.getElementById("btnGajiShareText").onclick=function(){
+  const txt=buatGajiWA();
+  const url="https://wa.me/?text="+encodeURIComponent(txt);
+  window.open(url, "_blank");
+  setStatus("↗ Share Gaji Text ke WA Bisnis");
+  document.getElementById("modalGajiShare").classList.add("hidden");
+};
+// Karyawan logic
+document.getElementById("karyawanSelect").addEventListener("change", function(){
+  loadGajiModal();
+});
+document.getElementById("btnAddKaryawan").onclick=function(){
+  document.getElementById("modalKaryawan").classList.remove("hidden");
+  document.getElementById("modalKaryawan").classList.add("flex");
+  document.getElementById("inpNamaKaryawan").focus();
+};
+document.getElementById("btnBatalKaryawan").onclick=function(){
+  document.getElementById("modalKaryawan").classList.add("hidden");
+  document.getElementById("modalKaryawan").classList.remove("flex");
+};
+document.getElementById("btnSimpanKaryawan").onclick=function(){
+  const nama=document.getElementById("inpNamaKaryawan").value.trim();
+  if(nama.length<2){ setStatus("⚠ Nama minimal 2 huruf"); return; }
+  const all=getKaryawanAll();
+  const newId="k"+Date.now();
+  all.push({id:newId, nama:nama});
+  saveKaryawanAll(all);
+  refreshKaryawanSelect();
+  document.getElementById("karyawanSelect").value=newId;
+  document.getElementById("modalKaryawan").classList.add("hidden");
+  document.getElementById("inpNamaKaryawan").value="";
+  setStatus("✅ Karyawan "+nama+" ditambah");
+  loadGajiModal();
+};
+document.getElementById("btnHapusKaryawan").onclick=function(){
+  const id=getSelectedKaryawanId();
+  const all=getKaryawanAll();
+  if(all.length<=1){ setStatus("⚠ Minimal 1 karyawan"); return; }
+  const k=getKaryawanById(id);
+  if(!confirm("Hapus karyawan "+(k?k.nama:id)+" ?")) return;
+  const filtered=all.filter(x=>x.id!==id);
+  saveKaryawanAll(filtered);
+  refreshKaryawanSelect();
+  setStatus("🗑️ Karyawan dihapus");
+  loadGajiModal();
+  renderLaporanGaji();
+};
+
+// Logo picker logic 54px auto resize
+const LS_LOGO_KEY="gaji_logo_data";
+function getLogoData(){ try{ return localStorage.getItem(LS_LOGO_KEY)||""; }catch{ return ""; } }
+function saveLogoData(d){ try{ localStorage.setItem(LS_LOGO_KEY, d); }catch{} }
+function loadLogoPreview(){
+  const data=getLogoData();
+  const img=document.getElementById("logoPreview");
+  const ph=document.getElementById("logoPlaceholder");
+  if(data && img){
+    img.src=data;
+    img.classList.remove("hidden");
+    if(ph) ph.classList.add("hidden");
+  }
+}
+document.getElementById("logoPicker").addEventListener("change", function(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    const img=new Image();
+    img.onload=function(){
+      // auto resize to 54px diameter, keep aspect, crop to square 54x54
+      const size=54;
+      const canvas=document.createElement("canvas");
+      canvas.width=size;
+      canvas.height=size;
+      const ctx=canvas.getContext("2d");
+      // draw circular clip
+      ctx.beginPath();
+      ctx.arc(size/2, size/2, size/2, 0, Math.PI*2);
+      ctx.clip();
+      // cover
+      const scale=Math.max(size/img.width, size/img.height);
+      const w=img.width*scale;
+      const h=img.height*scale;
+      const x=(size-w)/2;
+      const y=(size-h)/2;
+      ctx.drawImage(img, x, y, w, h);
+      const dataUrl=canvas.toDataURL("image/png", 1.0);
+      saveLogoData(dataUrl);
+      loadLogoPreview();
+      setStatus("✅ Logo 54px tersimpan");
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+loadLogoPreview();
+
+document.getElementById("btnGajiShareImage").onclick=async function(){
+  try{
+    const result=await shareGajiImage();
+    const file=new File([result.blob], "gaji_"+document.getElementById("gajiBulanInput").value+".png", {type:"image/png"});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file], title:"Struk Gaji Laundry Land"});
+      setStatus("✅ Share Gambar saja via Web Share API (tanpa text)");
+    }else{
+      // fallback download
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(result.blob);
+      a.download="gaji_"+document.getElementById("gajiBulanInput").value+".png";
+      a.click();
+      setStatus("⬇️ PNG didownload (Web Share tidak support), attach manual di WA");
+    }
+  }catch(e){
+    setStatus("⚠ Gagal share gambar: "+e.message);
+  }
+  document.getElementById("modalGajiShare").classList.add("hidden");
+};
+// ===== END GAJI LOGIC v17 =====
+
 setTimeout(function(){ 
   const all=getAll();
   if(all.length===0){
     setStatus("ℹ️ LS kosong, coba ↻ Reload Supa untuk tarik data lama");
   }
+  renderLaporanGaji();
+  refreshKaryawanSelect();
 }, 1500);
 
 if('serviceWorker' in navigator){ window.addEventListener('load', function(){ navigator.serviceWorker.register('./sw.js').then(function(r){console.log('SW ok');}).catch(function(){}); }); }
