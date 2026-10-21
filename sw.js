@@ -1,4 +1,4 @@
-const CACHE_NAME="nota-ls-supa-exact-v16-2-midnight-fix";
+const CACHE_NAME="nota-ls-supa-exact-v18-1-logo-header-fix";
 const ASSETS=["./","./index.html","./supabase.js","./manifest.json"];
 self.addEventListener("install",e=>{self.skipWaiting(); e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(ASSETS).catch(()=>{})))});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});
