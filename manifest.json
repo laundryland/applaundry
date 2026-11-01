@@ -1,22 +1,60 @@
 {
-  "name": "WA Nota Setrika",
-  "short_name": "Nota Setrika",
-  "description": "LS+SUPA + Uang Hadir 7500 + Susulan/Nota Baru + Date Picker, 3 kolom rapi",
+  "name": "Nota Setrika LocalStorage + Supabase - v19 FINAL STABLE",
+  "short_name": "Nota Setrika LS",
+  "description": "Parser WA Nota Setrika localStorage tahan reload, multi-HP Supabase, gaji karyawan terpisah tier akumulasi bulanan",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "portrait",
   "background_color": "#f8fafc",
-  "theme_color": "#14b8a6",
+  "theme_color": "#f618a9",
+  "lang": "id",
+  "categories": [
+    "business",
+    "productivity"
+  ],
   "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/Sutanto-FxArtgeneration/laundry-land/main/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable",
+      "padding": "12.5%"
+    },
+    {
+      "src": "https://raw.githubusercontent.com/Sutanto-FxArtgeneration/laundry-land/main/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable",
+      "padding": "12.5%"
+    },
     {
       "src": "./icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "./icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Paste WA Baru",
+      "description": "Langsung paste chat WA",
+      "url": "./#paste"
+    },
+    {
+      "name": "Laporan Gaji",
+      "description": "Buka laporan gaji karyawan",
+      "url": "./#gaji"
     }
   ]
 }
